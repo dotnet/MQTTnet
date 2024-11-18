@@ -7,11 +7,24 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Server;
+using System;
 
 namespace MQTTnet.AspNetCore;
 
 public static class ServiceCollectionExtensions
 {
+    /// <summary>
+    /// Register MqttServer as a singleton service
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configure"></param>
+    /// <returns></returns>
+    public static IMqttServerBuilder AddMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure)
+    {
+        services.Configure(configure);
+        return services.AddMqttServer();
+    }
+
     /// <summary>
     /// Register MqttServer as a singleton service
     /// </summary>
@@ -22,6 +35,7 @@ public static class ServiceCollectionExtensions
         services.AddOptions();
         services.AddConnections();
         services.TryAddSingleton<MqttConnectionHandler>();
+        services.TryAddSingleton<MqttConnectionMiddleware>();
         services.TryAddSingleton<AspNetCoreMqttOptionsBuilder>();
         services.TryAddSingleton(s => s.GetRequiredService<AspNetCoreMqttOptionsBuilder>().BuildServerOptions());
         services.TryAddSingleton(s => s.GetRequiredService<AspNetCoreMqttOptionsBuilder>().BuildServerStopOptions());

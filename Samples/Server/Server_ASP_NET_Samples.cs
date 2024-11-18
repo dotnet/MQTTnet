@@ -23,22 +23,18 @@ public static class Server_ASP_NET_Samples
     public static Task Start_Server_With_WebSockets_Support()
     {
         var builder = WebApplication.CreateBuilder();
-        builder.Services.AddMqttServer().ConfigureMqttServer(s => s.WithDefaultEndpoint().WithEncryptedEndpoint());
+        builder.Services.AddMqttServer(s => s.WithDefaultEndpoint().WithEncryptedEndpoint());
         builder.Services.AddMqttClient();
         builder.Services.AddHostedService<MqttClientController>();
 
         builder.WebHost.UseKestrel(kestrel =>
         {
-            // Need ConfigureMqttServer(s => s.WithDefaultEndpoint().WithEncryptedEndpoint())
+            // Need ConfigureMqttServer(s => ...) to enable the endpoints
             kestrel.ListenMqtt();
 
             // We can also manually listen to a specific port without ConfigureMqttServer()
             // kestrel.ListenAnyIP(1883, l => l.UseMqtt());  // mqtt over tcp          
-            // kestrel.ListenAnyIP(8883, l => l.UseHttps().UseMqtt());   // mqtt over tls over tcp
-
-            // This will allow MQTT connections based on HTTP WebSockets with URI "localhost:5000/mqtt"
-            // See code below for URI configuration.
-            kestrel.ListenAnyIP(5000); // Default HTTP pipeline
+            // kestrel.ListenLocalhost(8883, l => l.UseHttps().UseMqtt());   // mqtt over tls over tcp
         });
 
         var app = builder.Build();
@@ -87,7 +83,16 @@ public static class Server_ASP_NET_Samples
         {
             await Task.Delay(1000);
             using var client = _mqttClientFactory.CreateMqttClient();
-            var options = new MqttClientOptionsBuilder().WithConnectionUri("mqtt://127.0.0.1:1883").Build();
+
+            // var mqttUri = "mqtt://localhost:1883";
+            // var mqttsUri = "mqtt://localhost:8883";
+            // var wsMqttUri = "ws://localhost:1883/mqtt";
+            var wssMqttUri = "wss://localhost:8883/mqtt";
+
+            var options = new MqttClientOptionsBuilder()
+                .WithConnectionUri(wssMqttUri)
+                .Build();
+
             await client.ConnectAsync(options, stoppingToken);
             await client.DisconnectAsync();
         }

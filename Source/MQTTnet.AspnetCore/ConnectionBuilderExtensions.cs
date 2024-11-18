@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
+using System;
 
 namespace MQTTnet.AspNetCore
 {
@@ -13,11 +14,22 @@ namespace MQTTnet.AspNetCore
         /// Treat the obtained connection as an mqtt connection
         /// </summary>
         /// <param name="builder"></param>
+        /// <param name="protocols"></param>
         /// <returns></returns>
-        public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder)
+        public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder, MqttProtocols protocols = MqttProtocols.MqttAndHttp)
         {
             builder.ApplicationServices.GetRequiredService<MqttConnectionHandler>().UseFlag = true;
-            return builder.UseConnectionHandler<MqttConnectionHandler>();
+            if (protocols == MqttProtocols.Mqtt)
+            {
+                return builder.UseConnectionHandler<MqttConnectionHandler>();
+            }
+            else if (protocols == MqttProtocols.MqttAndHttp)
+            {
+                var middleware = builder.ApplicationServices.GetRequiredService<MqttConnectionMiddleware>();
+                return builder.Use(next => context => middleware.InvokeAsync(next, context));
+            }
+
+            throw new NotSupportedException(protocols.ToString());
         }
     }
 }

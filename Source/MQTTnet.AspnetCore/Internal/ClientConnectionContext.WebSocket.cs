@@ -16,15 +16,13 @@ namespace MQTTnet.AspNetCore
     {
         public static async Task<ClientConnectionContext> CreateAsync(MqttClientWebSocketOptions options, CancellationToken cancellationToken)
         {
-            var uri = new UriBuilder(new Uri(options.Uri, UriKind.Absolute))
-            {
-                Scheme = options.TlsOptions?.UseTls == true ? Uri.UriSchemeWss : Uri.UriSchemeWs
-            }.Uri;
-
             var clientWebSocket = new ClientWebSocket();
+            var uri = new Uri(options.Uri, UriKind.Absolute);
+            var useTls = options.TlsOptions?.UseTls == true || uri.Scheme == Uri.UriSchemeWss;
+
             try
             {
-                SetupClientWebSocket(clientWebSocket, options);
+                SetupClientWebSocket(clientWebSocket.Options, options, useTls);
                 await clientWebSocket.ConnectAsync(uri, cancellationToken).ConfigureAwait(false);
             }
             catch
@@ -48,18 +46,18 @@ namespace MQTTnet.AspNetCore
             return connection;
         }
 
-        private static void SetupClientWebSocket(ClientWebSocket clientWebSocket, MqttClientWebSocketOptions options)
+        private static void SetupClientWebSocket(ClientWebSocketOptions webSocketOptions, MqttClientWebSocketOptions options, bool useTls)
         {
             if (options.ProxyOptions != null)
             {
-                clientWebSocket.Options.Proxy = CreateProxy(options);
+                webSocketOptions.Proxy = CreateProxy(options);
             }
 
             if (options.RequestHeaders != null)
             {
                 foreach (var requestHeader in options.RequestHeaders)
                 {
-                    clientWebSocket.Options.SetRequestHeader(requestHeader.Key, requestHeader.Value);
+                    webSocketOptions.SetRequestHeader(requestHeader.Key, requestHeader.Value);
                 }
             }
 
@@ -67,21 +65,21 @@ namespace MQTTnet.AspNetCore
             {
                 foreach (var subProtocol in options.SubProtocols)
                 {
-                    clientWebSocket.Options.AddSubProtocol(subProtocol);
+                    webSocketOptions.AddSubProtocol(subProtocol);
                 }
             }
 
             if (options.CookieContainer != null)
             {
-                clientWebSocket.Options.Cookies = options.CookieContainer;
+                webSocketOptions.Cookies = options.CookieContainer;
             }
 
-            if (options.TlsOptions?.UseTls == true)
+            if (useTls)
             {
                 var certificates = options.TlsOptions?.ClientCertificatesProvider?.GetCertificates();
                 if (certificates?.Count > 0)
                 {
-                    clientWebSocket.Options.ClientCertificates = certificates;
+                    webSocketOptions.ClientCertificates = certificates;
                 }
             }
 
@@ -89,23 +87,23 @@ namespace MQTTnet.AspNetCore
             // and will throw a _PlatformNotSupported_ (i.e. WASM) exception when being used regardless of the actual value.
             if (options.UseDefaultCredentials)
             {
-                clientWebSocket.Options.UseDefaultCredentials = options.UseDefaultCredentials;
+                webSocketOptions.UseDefaultCredentials = options.UseDefaultCredentials;
             }
 
             if (options.KeepAliveInterval != WebSocket.DefaultKeepAliveInterval)
             {
-                clientWebSocket.Options.KeepAliveInterval = options.KeepAliveInterval;
+                webSocketOptions.KeepAliveInterval = options.KeepAliveInterval;
             }
 
             if (options.Credentials != null)
             {
-                clientWebSocket.Options.Credentials = options.Credentials;
+                webSocketOptions.Credentials = options.Credentials;
             }
 
             var certificateValidationHandler = options.TlsOptions?.CertificateValidationHandler;
             if (certificateValidationHandler != null)
             {
-                clientWebSocket.Options.RemoteCertificateValidationCallback = (_, certificate, chain, sslPolicyErrors) =>
+                webSocketOptions.RemoteCertificateValidationCallback = (_, certificate, chain, sslPolicyErrors) =>
                 {
                     // TODO: Find a way to add client options to same callback. Problem is that they have a different type.
                     var context = new MqttClientCertificateValidationEventArgs(certificate, chain, sslPolicyErrors, options);

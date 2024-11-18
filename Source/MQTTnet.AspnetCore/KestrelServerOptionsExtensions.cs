@@ -20,36 +20,39 @@ namespace MQTTnet.AspNetCore
         /// Listen all endponts in MqttServerOptions
         /// </summary>
         /// <param name="kestrel"></param>
+        /// <param name="protocols"></param>
         /// <exception cref="MqttConfigurationException"></exception>
         /// <returns></returns>
-        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel)
+        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, MqttProtocols protocols = MqttProtocols.MqttAndHttp)
         {
-            return kestrel.ListenMqtt(default(Action<HttpsConnectionAdapterOptions>));
+            return kestrel.ListenMqtt(protocols, default(Action<HttpsConnectionAdapterOptions>));
         }
 
         /// <summary>
         /// Listen all endponts in MqttServerOptions
         /// </summary>
         /// <param name="kestrel"></param>
+        /// <param name="protocols"></param>
         /// <param name="serverCertificate"></param>
         /// <exception cref="MqttConfigurationException"></exception>
         /// <returns></returns>
-        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, X509Certificate2? serverCertificate)
+        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, MqttProtocols protocols, X509Certificate2? serverCertificate)
         {
-            return kestrel.ListenMqtt(tls => tls.ServerCertificate = serverCertificate);
+            return kestrel.ListenMqtt(protocols, tls => tls.ServerCertificate = serverCertificate);
         }
 
         /// <summary>
         /// Listen all endponts in MqttServerOptions
         /// </summary>
         /// <param name="kestrel"></param>
+        /// <param name="protocols"></param>
         /// <param name="tlsConfigure"></param>
         /// <exception cref="MqttConfigurationException"></exception>
         /// <returns></returns>
-        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, Action<HttpsConnectionAdapterOptions>? tlsConfigure)
+        public static KestrelServerOptions ListenMqtt(this KestrelServerOptions kestrel, MqttProtocols protocols, Action<HttpsConnectionAdapterOptions>? tlsConfigure)
         {
-            var serverOptions = kestrel.ApplicationServices.GetRequiredService<MqttServerOptions>();
             var connectionHandler = kestrel.ApplicationServices.GetRequiredService<MqttConnectionHandler>();
+            var serverOptions = kestrel.ApplicationServices.GetRequiredService<MqttServerOptions>();
 
             Listen(serverOptions.DefaultEndpointOptions);
             Listen(serverOptions.TlsEndpointOptions);
@@ -84,7 +87,7 @@ namespace MQTTnet.AspNetCore
                             tlsConfigure?.Invoke(httpsOptions);
                         });
                     }
-                    listenOptions.UseMqtt();
+                    listenOptions.UseMqtt(protocols);
                 }
             }
         }

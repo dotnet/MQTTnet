@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets;
 
@@ -21,7 +21,7 @@ public sealed class MqttPublishPacket : MqttPacketWithIdentifier
 
     public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
-    public ArraySegment<byte> PayloadSegment { set { Payload = new ReadOnlySequence<byte>(value); } }
+    public ReadOnlyMemory<byte> PayloadSegment { set { Payload = new ReadOnlySequence<byte>(value); } }
 
     public ReadOnlySequence<byte> Payload { get; set; }
 

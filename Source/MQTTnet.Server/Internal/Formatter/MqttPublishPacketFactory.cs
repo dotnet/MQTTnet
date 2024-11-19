@@ -16,18 +16,12 @@ public static class MqttPublishPacketFactory
         if (!connectPacket.WillFlag)
         {
             throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
-        }
-
-        ArraySegment<byte> willMessageBuffer = default;
-        if (connectPacket.WillMessage?.Length > 0)
-        {
-            willMessageBuffer = new ArraySegment<byte>(connectPacket.WillMessage);
-        }
-
+        } 
+         
         var packet = new MqttPublishPacket
         {
             Topic = connectPacket.WillTopic,
-            PayloadSegment = willMessageBuffer,
+            PayloadSegment = connectPacket.WillMessage,
             QualityOfServiceLevel = connectPacket.WillQoS,
             Retain = connectPacket.WillRetain,
             ContentType = connectPacket.WillContentType,

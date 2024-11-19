@@ -78,7 +78,7 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(false, deserialized.WildcardSubscriptionAvailable);
             Assert.IsNull(deserialized.UserProperties); // Not supported in v3.1.1
         }
-        
+
         [TestMethod]
         public void Serialize_Full_MqttConnAckPacket_V310()
         {
@@ -179,7 +179,7 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(connectPacket.ClientId, deserialized.ClientId);
             CollectionAssert.AreEqual(null, deserialized.AuthenticationData); // Not supported in v3.1.1
             Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1
-            Assert.AreEqual(connectPacket.CleanSession, deserialized.CleanSession); 
+            Assert.AreEqual(connectPacket.CleanSession, deserialized.CleanSession);
             Assert.AreEqual(0L, deserialized.ReceiveMaximum); // Not supported in v3.1.1
             Assert.AreEqual(connectPacket.WillFlag, deserialized.WillFlag);
             Assert.AreEqual(connectPacket.WillTopic, deserialized.WillTopic);
@@ -299,7 +299,7 @@ namespace MQTTnet.Tests.Formatter
                 PacketIdentifier = 123,
                 Dup = true,
                 Retain = true,
-                PayloadSegment = new ArraySegment<byte>(Encoding.ASCII.GetBytes("Payload")),
+                PayloadSegment = Encoding.ASCII.GetBytes("Payload"),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
                 Topic = "Topic",
                 ResponseTopic = "/Response",
@@ -400,7 +400,7 @@ namespace MQTTnet.Tests.Formatter
             };
 
             var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(subAckPacket, MqttProtocolVersion.V311);
-            
+
             Assert.AreEqual(subAckPacket.PacketIdentifier, deserialized.PacketIdentifier);
             Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
             Assert.AreEqual(subAckPacket.ReasonCodes.Count, deserialized.ReasonCodes.Count);

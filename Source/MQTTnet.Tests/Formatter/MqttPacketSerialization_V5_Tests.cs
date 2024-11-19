@@ -246,7 +246,7 @@ public sealed class MqttPacketSerialization_V5_Tests
             PacketIdentifier = 123,
             Dup = true,
             Retain = true,
-            PayloadSegment = new ArraySegment<byte>("Payload"u8.ToArray()),
+            PayloadSegment = "Payload"u8.ToArray(),
             QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
             Topic = "Topic",
             ResponseTopic = "/Response",

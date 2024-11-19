@@ -110,9 +110,9 @@ namespace MQTTnet.Formatter
             WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
         }
 
-        public void WriteBinary(byte[] value)
+        public void WriteBinary(ReadOnlySpan<byte> value)
         {
-            if (value == null || value.Length == 0)
+            if (value.IsEmpty)
             {
                 EnsureAdditionalCapacity(2);
 
@@ -130,7 +130,7 @@ namespace MQTTnet.Formatter
                 _buffer[_position] = (byte)(valueLength >> 8);
                 _buffer[_position + 1] = (byte)valueLength;
 
-                MqttMemoryHelper.Copy(value, 0, _buffer, _position + 2, valueLength);
+                value[..valueLength].CopyTo(_buffer.AsSpan(_position + 2));
                 IncreasePosition(valueLength + 2);
             }
         }

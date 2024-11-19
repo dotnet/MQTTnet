@@ -26,6 +26,7 @@ class MqttChannel : IDisposable
     readonly PipeReader _input;
     readonly PipeWriter _output;
     readonly MqttPacketInspector? _packetInspector;
+    readonly bool _serverModeWebSocket;
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
@@ -53,10 +54,17 @@ class MqttChannel : IDisposable
         Endpoint = GetRemoteEndPoint(httpContextFeature, connection.RemoteEndPoint);
         IsSecureConnection = IsTlsConnection(httpContextFeature, tlsConnectionFeature);
         ClientCertificate = GetClientCertificate(httpContextFeature, tlsConnectionFeature);
+        _serverModeWebSocket = IsServerModeWebSocket(httpContextFeature);
 
         _input = connection.Transport.Input;
         _output = connection.Transport.Output;
     }
+
+    private static bool IsServerModeWebSocket(IHttpContextFeature? _httpContextFeature)
+    {
+        return _httpContextFeature != null && _httpContextFeature.HttpContext != null && _httpContextFeature.HttpContext.WebSockets.IsWebSocketRequest;
+    }
+
 
     private static string? GetRemoteEndPoint(IHttpContextFeature? _httpContextFeature, EndPoint? remoteEndPoint)
     {
@@ -188,10 +196,19 @@ class MqttChannel : IDisposable
                     // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
                     await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
                 }
-                else
+                else if (_serverModeWebSocket) // server channel, and client is MQTT over WebSocket
                 {
+                    // Make sure the MQTT packet is in a WebSocket frame to be compatible with JavaScript WebSocket
                     WritePacketBuffer(_output, buffer);
                     await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
+                }
+                else
+                {
+                    await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
+                    foreach (var block in buffer.Payload)
+                    {
+                        await _output.WriteAsync(block, cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
                 BytesSent += buffer.Length;

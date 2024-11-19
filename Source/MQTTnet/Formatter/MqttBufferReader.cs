@@ -3,9 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 using System;
-using System.Buffers.Binary;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -14,30 +13,27 @@ namespace MQTTnet.Formatter
 {
     public sealed class MqttBufferReader
     {
-        byte[] _buffer = EmptyBuffer.Array;
-        int _maxPosition;
-        int _offset;
-        int _position;
+        ReadOnlySequence<byte> _buffer = ReadOnlySequence<byte>.Empty;
+        long _position;
 
-        public int BytesLeft => _maxPosition - _position;
+        public long BytesLeft => _buffer.Length - _position;
 
         public bool EndOfStream => BytesLeft == 0;
 
-        public int Position => _position - _offset;
+        public long Position => _position;
 
-        public byte[] ReadBinaryData()
+        public ReadOnlySequence<byte> ReadBinaryData()
         {
             var length = ReadTwoByteInteger();
 
             if (length == 0)
             {
-                return EmptyBuffer.Array;
+                return ReadOnlySequence<byte>.Empty;
             }
 
             ValidateReceiveBuffer(length);
 
-            var result = GC.AllocateUninitializedArray<byte>(length);
-            MqttMemoryHelper.Copy(_buffer, _position, result, 0, length);
+            var result = _buffer.Slice(_position, length);
             _position += length;
 
             return result;
@@ -46,39 +42,54 @@ namespace MQTTnet.Formatter
         public byte ReadByte()
         {
             ValidateReceiveBuffer(1);
-            return _buffer[_position++];
+
+            var reader = new SequenceReader<byte>(_buffer);
+            reader.Advance(_position);
+            reader.TryRead(out var value);
+            _position += 1;
+
+            return value;
         }
+
+        public ushort ReadTwoByteInteger()
+        {
+            ValidateReceiveBuffer(2);
+
+            var reader = new SequenceReader<byte>(_buffer);
+            reader.Advance(_position);
+            reader.TryReadBigEndian(out short value);
+            _position += 2;
+
+            return Unsafe.As<short, ushort>(ref value);
+        }
+
 
         public uint ReadFourByteInteger()
         {
             ValidateReceiveBuffer(4);
 
-            var value = BinaryPrimitives.ReadUInt32BigEndian(_buffer.AsSpan(_position));
-
+            var reader = new SequenceReader<byte>(_buffer);
+            reader.Advance(_position);
+            reader.TryReadBigEndian(out int value);
             _position += 4;
-            return value;
+
+            return Unsafe.As<int, uint>(ref value);
         }
 
-        public byte[] ReadRemainingData()
+        public ReadOnlySequence<byte> ReadRemainingData()
         {
             var bufferLength = BytesLeft;
             if (bufferLength == 0)
             {
-                return EmptyBuffer.Array;
+                return ReadOnlySequence<byte>.Empty;
             }
 
-            var buffer = GC.AllocateUninitializedArray<byte>(bufferLength);
-            MqttMemoryHelper.Copy(_buffer, _position, buffer, 0, bufferLength);
+            var buffer = _buffer.Slice(_position, bufferLength);
             _position += bufferLength;
 
             return buffer;
         }
 
-        public ArraySegment<byte> ReadRemainingDataSegment()
-        {
-            var bufferLength = BytesLeft;
-            return bufferLength == 0 ? EmptyBuffer.ArraySegment : new ArraySegment<byte>(_buffer, _position, bufferLength);
-        }
 
         public string ReadString()
         {
@@ -92,20 +103,10 @@ namespace MQTTnet.Formatter
             ValidateReceiveBuffer(length);
 
             // AsSpan() version is slightly faster. Not much but at least a little bit.
-            var result = Encoding.UTF8.GetString(_buffer.AsSpan(_position, length));
+            var result = Encoding.UTF8.GetString(_buffer.Slice(_position, length));
 
             _position += length;
             return result;
-        }
-
-        public ushort ReadTwoByteInteger()
-        {
-            ValidateReceiveBuffer(2);
-
-            var value = BinaryPrimitives.ReadUInt16BigEndian(_buffer.AsSpan(_position));
-
-            _position += 2;
-            return value;
         }
 
         public uint ReadVariableByteInteger()
@@ -130,31 +131,25 @@ namespace MQTTnet.Formatter
             return value;
         }
 
-        public void Seek(int position)
+        public void SetBuffer(ReadOnlyMemory<byte> buffer)
         {
-            _position = _offset + position;
+            SetBuffer(new ReadOnlySequence<byte>(buffer));
         }
 
-        public void SetBuffer(ArraySegment<byte> buffer)
+        public void SetBuffer(ReadOnlySequence<byte> buffer)
         {
-            SetBuffer(buffer.Array, buffer.Offset, buffer.Count);
-        }
-
-        public void SetBuffer(byte[] buffer, int offset, int length)
-        {
-            _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
-            _offset = offset;
-            _position = offset;
-            _maxPosition = offset + length;
+            _buffer = buffer;
+            _position = 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ValidateReceiveBuffer(int length)
         {
             var newPosition = _position + length;
-            if (_maxPosition < newPosition)
+            var maxPosition = _buffer.Length;
+            if (maxPosition < newPosition)
             {
-                throw new MqttProtocolViolationException($"Expected at least {newPosition} bytes but there are only {_maxPosition} bytes");
+                throw new MqttProtocolViolationException($"Expected at least {newPosition} bytes but there are only {maxPosition} bytes");
             }
         }
     }

@@ -170,9 +170,7 @@ namespace MQTTnet.Benchmarks
                 }
 
                 var bodySlice = copy.Slice(0, bodyLength);
-                var buffer = GetMemory(bodySlice).ToArray();
-
-                var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, new ArraySegment<byte>(buffer, 0, buffer.Length), buffer.Length + 2);
+                var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySlice, (int)bodySlice.Length + 2);
 
                 if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
                 {

@@ -397,7 +397,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         var fixedHeader = readFixedHeaderResult.FixedHeader;
         if (fixedHeader.RemainingLength == 0)
         {
-            return new ReceivedMqttPacket(fixedHeader.Flags, EmptyBuffer.ArraySegment, 2);
+            return new ReceivedMqttPacket(fixedHeader.Flags, ReadOnlySequence<byte>.Empty, 2);
         }
 
         var bodyLength = fixedHeader.RemainingLength;
@@ -432,7 +432,8 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         PacketInspector?.FillReceiveBuffer(body);
 
         var bodySegment = new ArraySegment<byte>(body, 0, bodyLength);
-        return new ReceivedMqttPacket(fixedHeader.Flags, bodySegment, fixedHeader.TotalLength);
+        var bodySequence = new ReadOnlySequence<byte>(bodySegment);
+        return new ReceivedMqttPacket(fixedHeader.Flags, bodySequence, fixedHeader.TotalLength);
     }
 
     static bool WrapAndThrowException(Exception exception)

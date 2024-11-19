@@ -39,7 +39,7 @@ namespace MQTTnet.Tests.Formatter
             var buffer = writer.GetBuffer();
 
             var reader = new MqttBufferReader();
-            reader.SetBuffer(buffer, 0, writer.Length);
+            reader.SetBuffer(buffer.AsMemory(0, writer.Length));
 
             Assert.AreEqual("AString", reader.ReadString());
             Assert.IsTrue(reader.ReadByte() == 1);
@@ -77,12 +77,10 @@ namespace MQTTnet.Tests.Formatter
 
             var readPayload = new ArraySegment<byte>(writer.GetBuffer(), 0, writer.Length).ToArray();
 
-            var reader = new MqttBufferReader();
-            reader.SetBuffer(readPayload, 0, readPayload.Length);
-
             for (var i = 0; i < 100000; i++)
             {
-                reader.Seek(0);
+                var reader = new MqttBufferReader();
+                reader.SetBuffer(readPayload.AsMemory(0, readPayload.Length));
 
                 reader.ReadString();
                 reader.ReadBinaryData();

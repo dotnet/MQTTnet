@@ -4,6 +4,7 @@
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
+using System;
 
 namespace MQTTnet.Tests
 {
@@ -22,7 +23,7 @@ namespace MQTTnet.Tests
                 var buffer = writer.GetBuffer();
 
                 var reader = new MqttBufferReader();
-                reader.SetBuffer(buffer, 0, writer.Length);
+                reader.SetBuffer(buffer.AsMemory(0, writer.Length));
                 var checkValue = reader.ReadVariableByteInteger();
 
                 Assert.AreEqual(value, checkValue);
@@ -43,7 +44,7 @@ namespace MQTTnet.Tests
                 var buffer = writer.GetBuffer();
 
                 var reader = new MqttBufferReader();
-                reader.SetBuffer(buffer, 0, writer.Length);
+                reader.SetBuffer(buffer.AsMemory(0, writer.Length));
                 var checkValue = reader.ReadTwoByteInteger();
 
                 Assert.AreEqual(value, checkValue);

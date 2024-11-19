@@ -121,7 +121,7 @@ namespace MQTTnet.Formatter.V3
             _bufferWriter.WriteByte(fixedHeader);
             _bufferWriter.WriteVariableByteInteger(remainingLength);
 
-            var firstSegment = new ArraySegment<byte>(_bufferWriter.GetBuffer(), headerOffset, _bufferWriter.Length - headerOffset);
+            var firstSegment = _bufferWriter.GetBuffer().AsMemory(headerOffset, _bufferWriter.Length - headerOffset);
 
             return payload.Length == 0
                 ? new MqttPacketBuffer(firstSegment)

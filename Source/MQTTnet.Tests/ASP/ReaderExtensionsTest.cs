@@ -20,7 +20,7 @@ public sealed class ReaderExtensionsTest
 
         var buffer = serializer.Encode(new MqttPublishPacket { Topic = "a", PayloadSegment = new byte[5] }).Join();
 
-        var sequence = new ReadOnlySequence<byte>(buffer.Array, buffer.Offset, buffer.Count);
+        var sequence = new ReadOnlySequence<byte>(buffer);
 
         var part = sequence;
         var consumed = part.Start;

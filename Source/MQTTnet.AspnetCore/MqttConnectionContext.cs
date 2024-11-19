@@ -231,8 +231,8 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
 
         var span = output.GetSpan(buffer.Length);
 
-        buffer.Packet.AsSpan().CopyTo(span);
-        int offset = buffer.Packet.Count;
+        buffer.Packet.Span.CopyTo(span);
+        int offset = buffer.Packet.Length;
         buffer.Payload.CopyTo(destination: span.Slice(offset));
         output.Advance(buffer.Length);
     }

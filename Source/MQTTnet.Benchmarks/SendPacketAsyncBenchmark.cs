@@ -21,7 +21,7 @@ namespace MQTTnet.Benchmarks
         public void GlobalSetup()
         {
             stream = new MemoryStream(1024);
-            var packet = new ArraySegment<byte>(new byte[10]);
+            var packet = new byte[10];
             buffer = new MqttPacketBuffer(packet);
         }
 
@@ -60,8 +60,8 @@ namespace MQTTnet.Benchmarks
 
             var span = output.GetSpan(buffer.Length);
 
-            buffer.Packet.AsSpan().CopyTo(span);
-            buffer.Payload.CopyTo(span.Slice(buffer.Packet.Count));
+            buffer.Packet.Span.CopyTo(span);
+            buffer.Payload.CopyTo(span.Slice(buffer.Packet.Length));
 
             output.Advance(buffer.Length);
         }

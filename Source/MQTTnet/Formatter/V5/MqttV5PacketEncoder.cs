@@ -57,9 +57,11 @@ public sealed class MqttV5PacketEncoder
         _bufferWriter.WriteVariableByteInteger(remainingLength);
 
         var buffer = _bufferWriter.GetBuffer();
-        var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _bufferWriter.Length - headerOffset);
+        var firstSegment = buffer.AsMemory(headerOffset, _bufferWriter.Length - headerOffset);
 
-        return publishPacket == null ? new MqttPacketBuffer(firstSegment) : new MqttPacketBuffer(firstSegment, publishPacket.Payload);
+        return publishPacket == null
+            ? new MqttPacketBuffer(firstSegment)
+            : new MqttPacketBuffer(firstSegment, publishPacket.Payload);
     }
 
     byte EncodeAuthPacket(MqttAuthPacket packet)

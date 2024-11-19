@@ -16,11 +16,24 @@ namespace MQTTnet.AspNetCore
         /// Configure MqttServerOptionsBuilder
         /// </summary>
         /// <param name="builder"></param>
-        /// <param name="configure"></param>
+        /// <param name="builderConfigure"></param>
         /// <returns></returns>
-        public static IMqttServerBuilder ConfigureMqttServer(this IMqttServerBuilder builder, Action<MqttServerOptionsBuilder> configure)
+        public static IMqttServerBuilder ConfigureMqttServer(this IMqttServerBuilder builder, Action<MqttServerOptionsBuilder> builderConfigure)
         {
-            builder.Services.Configure(configure);
+            builder.Services.Configure(builderConfigure);
+            return builder;
+        }
+
+        /// <summary>
+        /// Configure MqttServerOptionsBuilder and MqttServerOptions
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="builderConfigure"></param>
+        /// <param name="optionsConfigure"></param> 
+        /// <returns></returns>
+        public static IMqttServerBuilder ConfigureMqttServer(this IMqttServerBuilder builder, Action<MqttServerOptionsBuilder> builderConfigure, Action<MqttServerOptions> optionsConfigure)
+        {
+            builder.Services.Configure(builderConfigure).Configure(optionsConfigure);
             return builder;
         }
 
@@ -28,14 +41,27 @@ namespace MQTTnet.AspNetCore
         /// Configure MqttServerStopOptionsBuilder
         /// </summary>
         /// <param name="builder"></param>
-        /// <param name="configure"></param>
+        /// <param name="builderConfigure"></param>
         /// <returns></returns>
-        public static IMqttServerBuilder ConfigureMqttServerStop(this IMqttServerBuilder builder, Action<MqttServerStopOptionsBuilder> configure)
+        public static IMqttServerBuilder ConfigureMqttServerStop(this IMqttServerBuilder builder, Action<MqttServerStopOptionsBuilder> builderConfigure)
         {
-            builder.Services.Configure(configure);
+            builder.Services.Configure(builderConfigure);
             return builder;
         }
-         
+
+        /// <summary>
+        /// Configure MqttServerStopOptionsBuilder and MqttServerStopOptions
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="builderConfigure"></param>
+        /// <param name="optionsConfigure"></param>
+        /// <returns></returns>
+        public static IMqttServerBuilder ConfigureMqttServerStop(this IMqttServerBuilder builder, Action<MqttServerStopOptionsBuilder> builderConfigure, Action<MqttServerStopOptions> optionsConfigure)
+        {
+            builder.Services.Configure(builderConfigure).Configure(optionsConfigure);
+            return builder;
+        }
+
         /// <summary>
         /// Add an IMqttServerAdapter to MqttServer
         /// </summary>

@@ -53,7 +53,7 @@ namespace MQTTnet
         /// <summary>
         ///     Set an ArraySegment as Payload.
         /// </summary>
-        public ArraySegment<byte> PayloadSegment
+        public ReadOnlyMemory<byte> PayloadSegment
         {
             set { Payload = new ReadOnlySequence<byte>(value); }
         }

@@ -26,7 +26,7 @@ namespace MQTTnet
         ///     published message.
         ///     Hint: MQTT 5 feature only.
         /// </summary>
-        public byte[] CorrelationData { get; set; }
+        public ReadOnlyMemory<byte> CorrelationData { get; set; }
 
         /// <summary>
         ///     If the DUP flag is set to 0, it indicates that this is the first occasion that the Client or Server has attempted
@@ -64,7 +64,7 @@ namespace MQTTnet
         ///     It can be used in combination with a RecyclableMemoryStream to publish
         ///     large buffered messages without allocating large chunks of memory.
         /// </summary>
-        public ReadOnlySequence<byte> Payload { get; set; } = EmptyBuffer.ReadOnlySequence;
+        public ReadOnlySequence<byte> Payload { get; set; }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

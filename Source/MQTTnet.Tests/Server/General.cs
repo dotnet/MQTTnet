@@ -225,7 +225,7 @@ namespace MQTTnet.Tests.Server
                                         // Clear retained message.
                                         await client.PublishAsync(
                                             new MqttApplicationMessageBuilder().WithTopic("r" + i2)
-                                                .WithPayload(EmptyBuffer.Array)
+                                                .WithPayload(ReadOnlyMemory<byte>.Empty)
                                                 .WithRetainFlag()
                                                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                                                 .Build());

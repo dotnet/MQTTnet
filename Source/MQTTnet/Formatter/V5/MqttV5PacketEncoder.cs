@@ -67,7 +67,7 @@ public sealed class MqttV5PacketEncoder
     byte EncodeAuthPacket(MqttAuthPacket packet)
     {
         _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData.Span);
         _propertiesWriter.WriteReasonString(packet.ReasonString);
         _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
@@ -99,7 +99,7 @@ public sealed class MqttV5PacketEncoder
 
         _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
         _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData.Span);
         _propertiesWriter.WriteRetainAvailable(packet.RetainAvailable);
         _propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
         _propertiesWriter.WriteMaximumQoS(packet.MaximumQoS);
@@ -148,12 +148,12 @@ public sealed class MqttV5PacketEncoder
             }
         }
 
-        if (packet.Password != null && packet.Username == null)
+        if (packet.Password.Length > 0 && packet.Username == null)
         {
             throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
         }
 
-        if (packet.Password != null)
+        if (packet.Password.Length > 0)
         {
             connectFlags |= 0x40;
         }
@@ -168,7 +168,7 @@ public sealed class MqttV5PacketEncoder
 
         _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
         _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData.Span);
         _propertiesWriter.WriteRequestProblemInformation(packet.RequestProblemInformation);
         _propertiesWriter.WriteRequestResponseInformation(packet.RequestResponseInformation);
         _propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
@@ -186,7 +186,7 @@ public sealed class MqttV5PacketEncoder
             _propertiesWriter.WritePayloadFormatIndicator(packet.WillPayloadFormatIndicator);
             _propertiesWriter.WriteMessageExpiryInterval(packet.WillMessageExpiryInterval);
             _propertiesWriter.WriteResponseTopic(packet.WillResponseTopic);
-            _propertiesWriter.WriteCorrelationData(packet.WillCorrelationData);
+            _propertiesWriter.WriteCorrelationData(packet.WillCorrelationData.Span);
             _propertiesWriter.WriteContentType(packet.WillContentType);
             _propertiesWriter.WriteUserProperties(packet.WillUserProperties);
             _propertiesWriter.WriteWillDelayInterval(packet.WillDelayInterval);
@@ -195,7 +195,7 @@ public sealed class MqttV5PacketEncoder
             _propertiesWriter.Reset();
 
             _bufferWriter.WriteString(packet.WillTopic);
-            _bufferWriter.WriteBinary(packet.WillMessage);
+            _bufferWriter.WriteBinary(packet.WillMessage.Span);
         }
 
         if (packet.Username != null)
@@ -203,9 +203,9 @@ public sealed class MqttV5PacketEncoder
             _bufferWriter.WriteString(packet.Username);
         }
 
-        if (packet.Password != null)
+        if (packet.Password.Length > 0)
         {
-            _bufferWriter.WriteBinary(packet.Password);
+            _bufferWriter.WriteBinary(packet.Password.Span);
         }
 
         return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);
@@ -344,7 +344,7 @@ public sealed class MqttV5PacketEncoder
         }
 
         _propertiesWriter.WriteContentType(packet.ContentType);
-        _propertiesWriter.WriteCorrelationData(packet.CorrelationData);
+        _propertiesWriter.WriteCorrelationData(packet.CorrelationData.Span);
         _propertiesWriter.WriteMessageExpiryInterval(packet.MessageExpiryInterval);
         _propertiesWriter.WritePayloadFormatIndicator(packet.PayloadFormatIndicator);
         _propertiesWriter.WriteResponseTopic(packet.ResponseTopic);

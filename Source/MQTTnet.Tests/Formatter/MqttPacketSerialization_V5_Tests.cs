@@ -38,7 +38,7 @@ public sealed class MqttPacketSerialization_V5_Tests
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(authPacket, MqttProtocolVersion.V500);
 
-        CollectionAssert.AreEqual(authPacket.AuthenticationData, deserialized.AuthenticationData);
+        Assert.IsTrue(authPacket.AuthenticationData.Span.SequenceEqual(deserialized.AuthenticationData.Span));
         Assert.AreEqual(authPacket.AuthenticationMethod, deserialized.AuthenticationMethod);
         Assert.AreEqual(authPacket.ReasonCode, deserialized.ReasonCode);
         Assert.AreEqual(authPacket.ReasonString, deserialized.ReasonString);
@@ -74,7 +74,7 @@ public sealed class MqttPacketSerialization_V5_Tests
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connAckPacket, MqttProtocolVersion.V500);
 
-        CollectionAssert.AreEqual(connAckPacket.AuthenticationData, deserialized.AuthenticationData);
+        Assert.IsTrue(connAckPacket.AuthenticationData.Span.SequenceEqual(deserialized.AuthenticationData.Span));
         Assert.AreEqual(connAckPacket.AuthenticationMethod, deserialized.AuthenticationMethod);
         Assert.AreEqual(connAckPacket.ReasonCode, deserialized.ReasonCode);
         Assert.AreEqual(connAckPacket.ReasonString, deserialized.ReasonString);
@@ -132,15 +132,15 @@ public sealed class MqttPacketSerialization_V5_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connectPacket, MqttProtocolVersion.V500);
 
         Assert.AreEqual(connectPacket.Username, deserialized.Username);
-        CollectionAssert.AreEqual(connectPacket.Password, deserialized.Password);
+        Assert.IsTrue(connectPacket.Password.Span.SequenceEqual(deserialized.Password.Span));
         Assert.AreEqual(connectPacket.ClientId, deserialized.ClientId);
-        CollectionAssert.AreEqual(connectPacket.AuthenticationData, deserialized.AuthenticationData);
+        Assert.IsTrue(connectPacket.AuthenticationData.Span.SequenceEqual(deserialized.AuthenticationData.Span));
         Assert.AreEqual(connectPacket.AuthenticationMethod, deserialized.AuthenticationMethod);
         Assert.AreEqual(connectPacket.CleanSession, deserialized.CleanSession);
         Assert.AreEqual(connectPacket.ReceiveMaximum, deserialized.ReceiveMaximum);
         Assert.AreEqual(connectPacket.WillFlag, deserialized.WillFlag);
         Assert.AreEqual(connectPacket.WillTopic, deserialized.WillTopic);
-        CollectionAssert.AreEqual(connectPacket.WillMessage, deserialized.WillMessage);
+        Assert.IsTrue(connectPacket.WillMessage.Span.SequenceEqual(deserialized.WillMessage.Span));
         Assert.AreEqual(connectPacket.WillRetain, deserialized.WillRetain);
         Assert.AreEqual(connectPacket.KeepAlivePeriod, deserialized.KeepAlivePeriod);
         Assert.AreEqual(connectPacket.MaximumPacketSize, deserialized.MaximumPacketSize);
@@ -149,7 +149,7 @@ public sealed class MqttPacketSerialization_V5_Tests
         Assert.AreEqual(connectPacket.SessionExpiryInterval, deserialized.SessionExpiryInterval);
         Assert.AreEqual(connectPacket.TopicAliasMaximum, deserialized.TopicAliasMaximum);
         Assert.AreEqual(connectPacket.WillContentType, deserialized.WillContentType);
-        CollectionAssert.AreEqual(connectPacket.WillCorrelationData, deserialized.WillCorrelationData);
+        Assert.IsTrue(connectPacket.WillCorrelationData.Span.SequenceEqual(deserialized.WillCorrelationData.Span));
         Assert.AreEqual(connectPacket.WillDelayInterval, deserialized.WillDelayInterval);
         Assert.AreEqual(connectPacket.WillQoS, deserialized.WillQoS);
         Assert.AreEqual(connectPacket.WillResponseTopic, deserialized.WillResponseTopic);
@@ -269,7 +269,7 @@ public sealed class MqttPacketSerialization_V5_Tests
         Assert.AreEqual(publishPacket.Topic, deserialized.Topic);
         Assert.AreEqual(publishPacket.ResponseTopic, deserialized.ResponseTopic);
         Assert.AreEqual(publishPacket.ContentType, deserialized.ContentType);
-        CollectionAssert.AreEqual(publishPacket.CorrelationData, deserialized.CorrelationData);
+        Assert.IsTrue(publishPacket.CorrelationData.Span.SequenceEqual(deserialized.CorrelationData.Span));
         Assert.AreEqual(publishPacket.TopicAlias, deserialized.TopicAlias);
         CollectionAssert.AreEqual(publishPacket.SubscriptionIdentifiers, deserialized.SubscriptionIdentifiers);
         Assert.AreEqual(publishPacket.MessageExpiryInterval, deserialized.MessageExpiryInterval);

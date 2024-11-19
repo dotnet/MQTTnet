@@ -29,21 +29,14 @@ public static class MqttServerExtensions
         ArgumentNullException.ThrowIfNull(server);
         ArgumentNullException.ThrowIfNull(topic);
 
-        var payloadBuffer = EmptyBuffer.Array;
-        if (payload is string stringPayload)
-        {
-            payloadBuffer = Encoding.UTF8.GetBytes(stringPayload);
-        }
+        var message = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
+            .WithPayload(payload)
+            .WithQualityOfServiceLevel(qualityOfServiceLevel)
+            .WithRetainFlag(retain)
+            .Build();
 
-        return server.InjectApplicationMessage(
-            new InjectedMqttApplicationMessage(
-                new MqttApplicationMessage
-                {
-                    Topic = topic,
-                    Payload = new ReadOnlySequence<byte>(payloadBuffer),
-                    QualityOfServiceLevel = qualityOfServiceLevel,
-                    Retain = retain
-                }));
+        return server.InjectApplicationMessage(new InjectedMqttApplicationMessage(message));
     }
 
     public static Task StopAsync(this MqttServer server)

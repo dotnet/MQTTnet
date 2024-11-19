@@ -13,7 +13,7 @@ public sealed class MqttPublishPacket : MqttPacketWithIdentifier
 {
     public string ContentType { get; set; }
 
-    public byte[] CorrelationData { get; set; }
+    public ReadOnlyMemory<byte> CorrelationData { get; set; }
 
     public bool Dup { get; set; }
 

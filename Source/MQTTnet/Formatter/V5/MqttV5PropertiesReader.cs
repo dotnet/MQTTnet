@@ -6,6 +6,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -82,9 +83,9 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadString();
         }
 
-        public byte[] ReadAuthenticationData()
+        public ReadOnlyMemory<byte> ReadAuthenticationData()
         {
-            return _body.ReadBinaryData().ToArray();
+            return _body.ReadBinaryData().Join();
         }
 
         public string ReadAuthenticationMethod()
@@ -97,9 +98,9 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadString();
         }
 
-        public byte[] ReadCorrelationData()
+        public ReadOnlyMemory<byte> ReadCorrelationData()
         {
-            return _body.ReadBinaryData().ToArray();
+            return _body.ReadBinaryData().Join();
         }
 
         public uint ReadMaximumPacketSize()

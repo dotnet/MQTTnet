@@ -2,24 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Exceptions;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet
 {
     public sealed class MqttApplicationMessageBuilder
     {
         string _contentType;
-        byte[] _correlationData;
+        ReadOnlyMemory<byte> _correlationData;
         uint _messageExpiryInterval;
 
         MqttPayloadFormatIndicator _payloadFormatIndicator;
@@ -72,7 +69,7 @@ namespace MQTTnet
         ///     Adds the correlation data to the message.
         ///     <remarks>MQTT 5.0.0+ feature.</remarks>
         /// </summary>
-        public MqttApplicationMessageBuilder WithCorrelationData(byte[] correlationData)
+        public MqttApplicationMessageBuilder WithCorrelationData(ReadOnlyMemory<byte> correlationData)
         {
             _correlationData = correlationData;
             return this;
@@ -88,48 +85,32 @@ namespace MQTTnet
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayload(byte[] payload)
+        public MqttApplicationMessageBuilder WithPayload(ReadOnlySequence<byte> payload)
         {
-            _payload = payload == null || payload.Length == 0 ? EmptyBuffer.ReadOnlySequence : new ReadOnlySequence<byte>(payload);
+            _payload = payload;
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayload(ArraySegment<byte> payloadSegment)
+        public MqttApplicationMessageBuilder WithPayload(ReadOnlyMemory<byte> payload)
         {
-            _payload = new ReadOnlySequence<byte>(payloadSegment);
-            return this;
+            return WithPayload(new ReadOnlySequence<byte>(payload));
         }
 
-        public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte> payload)
+        public MqttApplicationMessageBuilder WithPayload(string payload)
         {
-            if (payload == null)
-            {
-                return WithPayload(default(byte[]));
-            }
-
-            if (payload is byte[] byteArray)
-            {
-                return WithPayload(byteArray);
-            }
-
-            if (payload is ArraySegment<byte> arraySegment)
-            {
-                return WithPayloadSegment(arraySegment);
-            }
-
-            return WithPayload(payload.ToArray());
+            return string.IsNullOrEmpty(payload) ? this : WithPayload(Encoding.UTF8.GetBytes(payload));
         }
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload)
         {
-            return payload == null ? WithPayload(default(byte[])) : WithPayload(payload, payload.Length - payload.Position);
+            return payload == null ? this : WithPayload(payload, payload.Length - payload.Position);
         }
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
         {
             if (payload == null || length == 0)
             {
-                return WithPayload(default(byte[]));
+                return this;
             }
 
             var payloadBuffer = new byte[length];
@@ -148,22 +129,6 @@ namespace MQTTnet
             return WithPayload(payloadBuffer);
         }
 
-        public MqttApplicationMessageBuilder WithPayload(string payload)
-        {
-            if (string.IsNullOrEmpty(payload))
-            {
-                return WithPayload(default(byte[]));
-            }
-
-            var payloadBuffer = Encoding.UTF8.GetBytes(payload);
-            return WithPayload(payloadBuffer);
-        }
-
-        public MqttApplicationMessageBuilder WithPayload(ReadOnlySequence<byte> payload)
-        {
-            _payload = payload;
-            return this;
-        }
 
         /// <summary>
         ///     Adds the payload format indicator to the message.
@@ -175,16 +140,6 @@ namespace MQTTnet
             return this;
         }
 
-        public MqttApplicationMessageBuilder WithPayloadSegment(ArraySegment<byte> payloadSegment)
-        {
-            _payload = new ReadOnlySequence<byte>(payloadSegment);
-            return this;
-        }
-
-        public MqttApplicationMessageBuilder WithPayloadSegment(ReadOnlyMemory<byte> payloadSegment)
-        {
-            return MemoryMarshal.TryGetArray(payloadSegment, out var segment) ? WithPayloadSegment(segment) : WithPayload(payloadSegment.ToArray());
-        }
 
         /// <summary>
         ///     The quality of service level.
@@ -266,11 +221,7 @@ namespace MQTTnet
         /// </summary>
         public MqttApplicationMessageBuilder WithUserProperty(string name, string value)
         {
-            if (_userProperties == null)
-            {
-                _userProperties = new List<MqttUserProperty>();
-            }
-
+            _userProperties ??= new List<MqttUserProperty>();
             _userProperties.Add(new MqttUserProperty(name, value));
             return this;
         }

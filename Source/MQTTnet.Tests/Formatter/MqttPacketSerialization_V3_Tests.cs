@@ -57,7 +57,7 @@ namespace MQTTnet.Tests.Formatter
 
             var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connAckPacket, MqttProtocolVersion.V311);
 
-            CollectionAssert.AreEqual(null, deserialized.AuthenticationData); // Not supported in v3.1.1
+            Assert.AreEqual(true, deserialized.AuthenticationData.IsEmpty); // Not supported in v3.1.1
             Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1
             //Assert.AreEqual(connAckPacket.ReasonCode, deserialized.ReasonCode);
             Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
@@ -111,7 +111,7 @@ namespace MQTTnet.Tests.Formatter
 
             var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connAckPacket, MqttProtocolVersion.V310);
 
-            CollectionAssert.AreEqual(null, deserialized.AuthenticationData); // Not supported in v3.1.1
+            Assert.AreEqual(true, deserialized.AuthenticationData.IsEmpty); // Not supported in v3.1.1
             Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1
             //Assert.AreEqual(connAckPacket.ReasonCode, deserialized.ReasonCode);
             Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
@@ -175,15 +175,16 @@ namespace MQTTnet.Tests.Formatter
             var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connectPacket, MqttProtocolVersion.V311);
 
             Assert.AreEqual(connectPacket.Username, deserialized.Username);
-            CollectionAssert.AreEqual(connectPacket.Password, deserialized.Password);
+
+            Assert.IsTrue(connectPacket.Password.Span.SequenceEqual(deserialized.Password.Span));
             Assert.AreEqual(connectPacket.ClientId, deserialized.ClientId);
-            CollectionAssert.AreEqual(null, deserialized.AuthenticationData); // Not supported in v3.1.1
+            Assert.AreEqual(true, deserialized.AuthenticationData.IsEmpty); // Not supported in v3.1.1
             Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1
             Assert.AreEqual(connectPacket.CleanSession, deserialized.CleanSession);
             Assert.AreEqual(0L, deserialized.ReceiveMaximum); // Not supported in v3.1.1
             Assert.AreEqual(connectPacket.WillFlag, deserialized.WillFlag);
             Assert.AreEqual(connectPacket.WillTopic, deserialized.WillTopic);
-            CollectionAssert.AreEqual(connectPacket.WillMessage, deserialized.WillMessage);
+            Assert.IsTrue(connectPacket.WillMessage.Span.SequenceEqual(deserialized.WillMessage.Span));
             Assert.AreEqual(connectPacket.WillRetain, deserialized.WillRetain);
             Assert.AreEqual(connectPacket.KeepAlivePeriod, deserialized.KeepAlivePeriod);
             // MaximumPacketSize not available in MQTTv3.
@@ -328,7 +329,7 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(publishPacket.Topic, deserialized.Topic);
             Assert.AreEqual(null, deserialized.ResponseTopic); // Not supported in v3.1.1.
             Assert.AreEqual(null, deserialized.ContentType); // Not supported in v3.1.1.
-            CollectionAssert.AreEqual(null, deserialized.CorrelationData); // Not supported in v3.1.1.
+            Assert.AreEqual(true, deserialized.CorrelationData.IsEmpty); // Not supported in v3.1.1.
             Assert.AreEqual(0U, deserialized.TopicAlias); // Not supported in v3.1.1.
             CollectionAssert.AreEqual(null, deserialized.SubscriptionIdentifiers); // Not supported in v3.1.1
             Assert.AreEqual(0U, deserialized.MessageExpiryInterval); // Not supported in v3.1.1

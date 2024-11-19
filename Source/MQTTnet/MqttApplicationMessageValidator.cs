@@ -31,7 +31,7 @@ namespace MQTTnet
                 Throw(nameof(applicationMessage.UserProperties));
             }
 
-            if (applicationMessage.CorrelationData?.Any() == true)
+            if (applicationMessage.CorrelationData.Length > 0)
             {
                 Throw(nameof(applicationMessage.CorrelationData));
             }

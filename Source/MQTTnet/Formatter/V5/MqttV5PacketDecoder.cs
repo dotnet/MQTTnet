@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -335,7 +336,7 @@ namespace MQTTnet.Formatter.V5
                 }
 
                 packet.WillTopic = _bufferReader.ReadString();
-                packet.WillMessage = _bufferReader.ReadBinaryData().ToArray();
+                packet.WillMessage = _bufferReader.ReadBinaryData().Join();
                 packet.WillUserProperties = willPropertiesReader.CollectedUserProperties;
             }
 
@@ -346,7 +347,7 @@ namespace MQTTnet.Formatter.V5
 
             if (passwordFlag)
             {
-                packet.Password = _bufferReader.ReadBinaryData().ToArray();
+                packet.Password = _bufferReader.ReadBinaryData().Join();
             }
 
             return packet;

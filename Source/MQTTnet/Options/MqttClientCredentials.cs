@@ -2,20 +2,22 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+
 namespace MQTTnet;
 
 public sealed class MqttClientCredentials : IMqttClientCredentialsProvider
 {
-    readonly byte[] _password;
+    readonly ReadOnlyMemory<byte> _password;
     readonly string _userName;
 
-    public MqttClientCredentials(string userName, byte[] password = null)
+    public MqttClientCredentials(string userName, ReadOnlyMemory<byte> password )
     {
         _userName = userName;
         _password = password;
     }
 
-    public byte[] GetPassword(MqttClientOptions clientOptions)
+    public ReadOnlyMemory<byte> GetPassword(MqttClientOptions clientOptions)
     {
         return _password;
     }

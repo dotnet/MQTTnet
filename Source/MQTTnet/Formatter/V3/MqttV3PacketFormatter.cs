@@ -4,6 +4,7 @@
 
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
@@ -209,7 +210,7 @@ namespace MQTTnet.Formatter.V3
                 packet.WillRetain = willRetain;
 
                 packet.WillTopic = _bufferReader.ReadString();
-                packet.WillMessage = _bufferReader.ReadBinaryData().ToArray();
+                packet.WillMessage = _bufferReader.ReadBinaryData().Join();
             }
 
             if (usernameFlag)
@@ -219,7 +220,7 @@ namespace MQTTnet.Formatter.V3
 
             if (passwordFlag)
             {
-                packet.Password = _bufferReader.ReadBinaryData().ToArray();
+                packet.Password = _bufferReader.ReadBinaryData().Join();
             }
 
             ValidateConnectPacket(packet);
@@ -438,12 +439,12 @@ namespace MQTTnet.Formatter.V3
                 }
             }
 
-            if (packet.Password != null && packet.Username == null)
+            if (packet.Password.Length > 0 && packet.Username == null)
             {
                 throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
             }
 
-            if (packet.Password != null)
+            if (packet.Password.Length > 0)
             {
                 connectFlags |= 0x40;
             }
@@ -460,7 +461,7 @@ namespace MQTTnet.Formatter.V3
             if (packet.WillFlag)
             {
                 bufferWriter.WriteString(packet.WillTopic);
-                bufferWriter.WriteBinary(packet.WillMessage);
+                bufferWriter.WriteBinary(packet.WillMessage.Span);
             }
 
             if (packet.Username != null)
@@ -468,9 +469,9 @@ namespace MQTTnet.Formatter.V3
                 bufferWriter.WriteString(packet.Username);
             }
 
-            if (packet.Password != null)
+            if (packet.Password.Length > 0)
             {
-                bufferWriter.WriteBinary(packet.Password);
+                bufferWriter.WriteBinary(packet.Password.Span);
             }
 
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);
@@ -500,12 +501,12 @@ namespace MQTTnet.Formatter.V3
                 }
             }
 
-            if (packet.Password != null && packet.Username == null)
+            if (packet.Password.Length > 0 && packet.Username == null)
             {
                 throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
             }
 
-            if (packet.Password != null)
+            if (packet.Password.Length > 0)
             {
                 connectFlags |= 0x40;
             }
@@ -522,7 +523,7 @@ namespace MQTTnet.Formatter.V3
             if (packet.WillFlag)
             {
                 bufferWriter.WriteString(packet.WillTopic);
-                bufferWriter.WriteBinary(packet.WillMessage);
+                bufferWriter.WriteBinary(packet.WillMessage.Span);
             }
 
             if (packet.Username != null)
@@ -530,9 +531,9 @@ namespace MQTTnet.Formatter.V3
                 bufferWriter.WriteString(packet.Username);
             }
 
-            if (packet.Password != null)
+            if (packet.Password.Length > 0)
             {
-                bufferWriter.WriteBinary(packet.Password);
+                bufferWriter.WriteBinary(packet.Password.Span);
             }
 
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);

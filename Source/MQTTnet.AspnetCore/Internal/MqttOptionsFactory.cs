@@ -3,31 +3,30 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Extensions.Options;
+using System;
 using System.Collections.Generic;
 
 namespace MQTTnet.AspNetCore
 {
-    abstract class MqttOptionsFactory<TOptionsBuilder, TOptions>
-        where TOptionsBuilder : class
-        where TOptions : class
+    class MqttOptionsFactory<TOptions> where TOptions : class
     {
+        private readonly Func<TOptions> _defaultOptionsFactory;
         private readonly IEnumerable<IConfigureOptions<TOptions>> _setups;
         private readonly IEnumerable<IPostConfigureOptions<TOptions>> _postConfigures;
-        protected TOptionsBuilder OptionsBuilder { get; }
 
         public MqttOptionsFactory(
-            IOptions<TOptionsBuilder> optionsBuilderOptions,
+            Func<TOptions> defaultOptionsFactory,
             IEnumerable<IConfigureOptions<TOptions>> setups,
             IEnumerable<IPostConfigureOptions<TOptions>> postConfigures)
         {
-            OptionsBuilder = optionsBuilderOptions.Value;
+            _defaultOptionsFactory = defaultOptionsFactory;
             _setups = setups;
             _postConfigures = postConfigures;
         }
 
         public TOptions Build()
         {
-            var options = CreateOptions();
+            var options = _defaultOptionsFactory();
             var name = Options.DefaultName;
 
             foreach (var setup in _setups)
@@ -47,7 +46,5 @@ namespace MQTTnet.AspNetCore
             }
             return options;
         }
-
-        protected abstract TOptions CreateOptions();
     }
 }

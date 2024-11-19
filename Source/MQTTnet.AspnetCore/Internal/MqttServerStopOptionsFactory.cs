@@ -8,19 +8,14 @@ using System.Collections.Generic;
 
 namespace MQTTnet.AspNetCore
 {
-    sealed class MqttServerStopOptionsFactory : MqttOptionsFactory<MqttServerStopOptionsBuilder, MqttServerStopOptions>
+    sealed class MqttServerStopOptionsFactory : MqttOptionsFactory<MqttServerStopOptions>
     {
         public MqttServerStopOptionsFactory(
             IOptions<MqttServerStopOptionsBuilder> optionsBuilderOptions,
             IEnumerable<IConfigureOptions<MqttServerStopOptions>> setups,
             IEnumerable<IPostConfigureOptions<MqttServerStopOptions>> postConfigures)
-            : base(optionsBuilderOptions, setups, postConfigures)
+            : base(optionsBuilderOptions.Value.Build, setups, postConfigures)
         {
-        }
-
-        protected override MqttServerStopOptions CreateOptions()
-        {
-            return OptionsBuilder.Build();
         }
     }
 }

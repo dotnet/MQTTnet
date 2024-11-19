@@ -4,6 +4,8 @@
 
 using System;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 
 namespace MQTTnet;
 
@@ -19,5 +21,21 @@ public static class MqttApplicationMessageExtensions
         }
 
         return Encoding.UTF8.GetString(applicationMessage.Payload);
+    }
+
+    public static TValue ConvertPayloadToJson<TValue>(this MqttApplicationMessage applicationMessage, JsonTypeInfo<TValue> jsonTypeInfo)
+    {
+        ArgumentNullException.ThrowIfNull(applicationMessage);
+
+        var jsonReader = new Utf8JsonReader(applicationMessage.Payload);
+        return JsonSerializer.Deserialize(ref jsonReader, jsonTypeInfo);
+    }
+
+    public static TValue ConvertPayloadToJson<TValue>(this MqttApplicationMessage applicationMessage, JsonSerializerOptions jsonSerializerOptions = null)
+    {
+        ArgumentNullException.ThrowIfNull(applicationMessage);
+
+        var jsonReader = new Utf8JsonReader(applicationMessage.Payload);
+        return JsonSerializer.Deserialize<TValue>(ref jsonReader, jsonSerializerOptions);
     }
 }

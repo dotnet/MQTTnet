@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using MQTTnet.Server;
@@ -59,6 +60,18 @@ namespace MQTTnet.AspNetCore
         public static IMqttServerBuilder ConfigureMqttServerStop(this IMqttServerBuilder builder, Action<MqttServerStopOptionsBuilder> builderConfigure, Action<MqttServerStopOptions> optionsConfigure)
         {
             builder.Services.Configure(builderConfigure).Configure(optionsConfigure);
+            return builder;
+        }
+
+        /// <summary>
+        /// Configure the socket of mqtt listener
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="configure"></param>
+        /// <returns></returns>
+        public static IMqttServerBuilder ConfigureMqttSocketTransport(this IMqttServerBuilder builder, Action<SocketTransportOptions> configure)
+        {
+            builder.Services.Configure(configure);
             return builder;
         }
 

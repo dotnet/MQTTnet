@@ -14,7 +14,7 @@ namespace MQTTnet;
 public class MqttClientFactory
 {
     readonly IMqttNetLogger _logger;
-    IMqttClientAdapterFactory _clientAdapterFactory;
+    readonly IMqttClientAdapterFactory _clientAdapterFactory;
 
     public IMqttNetLogger DefaultLogger => _logger;
 
@@ -121,10 +121,4 @@ public class MqttClientFactory
         return new MqttClientUnsubscribeOptionsBuilder();
     }
 
-    public MqttClientFactory UseClientAdapterFactory(IMqttClientAdapterFactory clientAdapterFactory)
-    {
-        ArgumentNullException.ThrowIfNull(clientAdapterFactory);
-        _clientAdapterFactory = clientAdapterFactory;
-        return this;
-    }
 }

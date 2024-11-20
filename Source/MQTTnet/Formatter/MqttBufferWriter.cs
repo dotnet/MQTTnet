@@ -107,7 +107,20 @@ namespace MQTTnet.Formatter
         {
             ArgumentNullException.ThrowIfNull(propertyWriter);
 
-            WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
+            Write(propertyWriter._buffer.AsSpan(0, propertyWriter.Length));
+        }
+
+        public void Write(ReadOnlySpan<byte> buffer)
+        {
+            if (buffer.IsEmpty)
+            {
+                return;
+            }
+
+            EnsureAdditionalCapacity(buffer.Length);
+
+            buffer.CopyTo(_buffer.AsSpan(_position));
+            IncreasePosition(buffer.Length);
         }
 
         public void WriteBinary(ReadOnlySpan<byte> value)
@@ -135,20 +148,6 @@ namespace MQTTnet.Formatter
             }
         }
 
-        public void WriteBinary(byte[] buffer, int offset, int count)
-        {
-            ArgumentNullException.ThrowIfNull(buffer);
-
-            if (count == 0)
-            {
-                return;
-            }
-
-            EnsureAdditionalCapacity(count);
-
-            MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
-            IncreasePosition(count);
-        }
 
         public void WriteByte(byte @byte)
         {

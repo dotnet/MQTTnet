@@ -4,7 +4,7 @@
 
 using Microsoft.AspNetCore.Connections;
 using System;
-using System.IO.Pipelines;
+using System.Buffers;
 using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
@@ -29,7 +29,7 @@ sealed class MqttConnectionMiddleware
         {
             var input = connection.Transport.Input;
             var readResult = await input.ReadAsync();
-            var isMqtt = IsMqttRequest(readResult);
+            var isMqtt = IsMqttRequest(readResult.Buffer);
             input.AdvanceTo(readResult.Buffer.Start);
 
             protocols = isMqtt ? MqttProtocols.Mqtt : MqttProtocols.WebSocket;
@@ -49,13 +49,16 @@ sealed class MqttConnectionMiddleware
         }
     }
 
-    private static bool IsMqttRequest(ReadResult readResult)
+    private static bool IsMqttRequest(ReadOnlySequence<byte> buffer)
     {
-        var span = readResult.Buffer.FirstSpan;
-        if (span.Length > 4)
+        if (!buffer.IsEmpty)
         {
-            var protocol = span[4..];
-            return protocol.StartsWith(_mqtt) || protocol.StartsWith(_mqisdp);
+            var span = buffer.FirstSpan;
+            if (span.Length > 4)
+            {
+                var protocol = span[4..];
+                return protocol.StartsWith(_mqtt) || protocol.StartsWith(_mqisdp);
+            }
         }
 
         return false;

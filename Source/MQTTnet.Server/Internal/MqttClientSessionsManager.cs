@@ -365,7 +365,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
             if (_eventContainer.ClientConnectedEvent.HasHandlers)
             {
-                var eventArgs = new ClientConnectedEventArgs(connectPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion, channelAdapter.Endpoint, connectedClient.Session.Items);
+                var eventArgs = new ClientConnectedEventArgs(connectPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion, channelAdapter.RemoteEndPoint, connectedClient.Session.Items);
 
                 await _eventContainer.ClientConnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
             }
@@ -403,7 +403,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     }
                 }
 
-                var endpoint = connectedClient.Endpoint;
+                var endpoint = connectedClient.RemoteEndPoint;
 
                 if (connectedClient.Id != null && !connectedClient.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
@@ -591,7 +591,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
                 if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientDisconnectedEventArgs(oldConnectedClient.Id, null, MqttClientDisconnectType.Takeover, oldConnectedClient.Endpoint, oldConnectedClient.Session.Items);
+                    var eventArgs = new ClientDisconnectedEventArgs(oldConnectedClient.Id, null, MqttClientDisconnectType.Takeover, oldConnectedClient.RemoteEndPoint, oldConnectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                 }
@@ -655,14 +655,14 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
         catch (OperationCanceledException)
         {
-            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.RemoteEndPoint);
         }
         catch (MqttCommunicationTimedOutException)
         {
-            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.RemoteEndPoint);
         }
 
-        _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.Endpoint);
+        _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.RemoteEndPoint);
         return null;
     }
 
@@ -671,39 +671,39 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         switch (connectedClient.ChannelAdapter.PacketFormatterAdapter.ProtocolVersion)
         {
             case MqttProtocolVersion.V500:
-            {
-                // MQTT 5.0 section 3.1.2.11.2
-                // The Client and Server MUST store the Session State after the Network Connection is closed if the Session Expiry Interval is greater than 0 [MQTT-3.1.2-23].
-                //
-                // A Client that only wants to process messages while connected will set the Clean Start to 1 and set the Session Expiry Interval to 0.
-                // It will not receive Application Messages published before it connected and has to subscribe afresh to any topics that it is interested
-                // in each time it connects.
-
-                var effectiveSessionExpiryInterval = connectedClient.DisconnectPacket?.SessionExpiryInterval ?? 0U;
-                if (effectiveSessionExpiryInterval == 0U)
                 {
-                    // From RFC: If the Session Expiry Interval is absent, the Session Expiry Interval in the CONNECT packet is used.
-                    effectiveSessionExpiryInterval = connectedClient.ConnectPacket.SessionExpiryInterval;
+                    // MQTT 5.0 section 3.1.2.11.2
+                    // The Client and Server MUST store the Session State after the Network Connection is closed if the Session Expiry Interval is greater than 0 [MQTT-3.1.2-23].
+                    //
+                    // A Client that only wants to process messages while connected will set the Clean Start to 1 and set the Session Expiry Interval to 0.
+                    // It will not receive Application Messages published before it connected and has to subscribe afresh to any topics that it is interested
+                    // in each time it connects.
+
+                    var effectiveSessionExpiryInterval = connectedClient.DisconnectPacket?.SessionExpiryInterval ?? 0U;
+                    if (effectiveSessionExpiryInterval == 0U)
+                    {
+                        // From RFC: If the Session Expiry Interval is absent, the Session Expiry Interval in the CONNECT packet is used.
+                        effectiveSessionExpiryInterval = connectedClient.ConnectPacket.SessionExpiryInterval;
+                    }
+
+                    return effectiveSessionExpiryInterval != 0U;
                 }
 
-                return effectiveSessionExpiryInterval != 0U;
-            }
-
             case MqttProtocolVersion.V311:
-            {
-                // MQTT 3.1.1 section 3.1.2.4: persist only if 'not CleanSession'
-                //
-                // If CleanSession is set to 1, the Client and Server MUST discard any previous Session and start a new one.
-                // This Session lasts as long as the Network Connection. State data associated with this Session MUST NOT be
-                // reused in any subsequent Session [MQTT-3.1.2-6].
+                {
+                    // MQTT 3.1.1 section 3.1.2.4: persist only if 'not CleanSession'
+                    //
+                    // If CleanSession is set to 1, the Client and Server MUST discard any previous Session and start a new one.
+                    // This Session lasts as long as the Network Connection. State data associated with this Session MUST NOT be
+                    // reused in any subsequent Session [MQTT-3.1.2-6].
 
-                return !connectedClient.ConnectPacket.CleanSession;
-            }
+                    return !connectedClient.ConnectPacket.CleanSession;
+                }
 
             case MqttProtocolVersion.V310:
-            {
-                return true;
-            }
+                {
+                    return true;
+                }
 
             default:
                 throw new NotSupportedException();

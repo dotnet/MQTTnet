@@ -40,10 +40,11 @@ public class MqttTcpChannel_Tests
                 },
                 ct.Token);
 
+            var remoteEndPoint = new DnsEndPoint("localhost", 50001);
             using var clientSocket = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
-            await clientSocket.ConnectAsync(new DnsEndPoint("localhost", 50001), CancellationToken.None);
+            await clientSocket.ConnectAsync(remoteEndPoint, CancellationToken.None);
 
-            var tcpChannel = new MqttTcpChannel(clientSocket.GetStream(), "test", null);
+            var tcpChannel = new MqttTcpChannel(clientSocket.GetStream(), remoteEndPoint, null);
 
             await Task.Delay(100, ct.Token);
 

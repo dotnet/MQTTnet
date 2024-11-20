@@ -10,6 +10,7 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server.Internal.Formatter;
+using System.Net;
 using MqttDisconnectPacketFactory = MQTTnet.Server.Internal.Formatter.MqttDisconnectPacketFactory;
 using MqttPubAckPacketFactory = MQTTnet.Server.Internal.Formatter.MqttPubAckPacketFactory;
 using MqttPubCompPacketFactory = MQTTnet.Server.Internal.Formatter.MqttPubCompPacketFactory;
@@ -45,7 +46,7 @@ public sealed class MqttConnectedClient : IDisposable
         ConnectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
         ChannelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
-        Endpoint = channelAdapter.Endpoint;
+        RemoteEndPoint = channelAdapter.RemoteEndPoint;
         Session = session ?? throw new ArgumentNullException(nameof(session));
 
         ArgumentNullException.ThrowIfNull(logger);
@@ -59,7 +60,7 @@ public sealed class MqttConnectedClient : IDisposable
 
     public MqttDisconnectPacket DisconnectPacket { get; private set; }
 
-    public string Endpoint { get; }
+    public EndPoint RemoteEndPoint { get; }
 
     public string Id => ConnectPacket.ClientId;
 
@@ -227,26 +228,26 @@ public sealed class MqttConnectedClient : IDisposable
         switch (publishPacket.QualityOfServiceLevel)
         {
             case MqttQualityOfServiceLevel.AtMostOnce:
-            {
-                // Do nothing since QoS 0 has no ACK at all!
-                break;
-            }
+                {
+                    // Do nothing since QoS 0 has no ACK at all!
+                    break;
+                }
             case MqttQualityOfServiceLevel.AtLeastOnce:
-            {
-                var pubAckPacket = MqttPubAckPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
-                Session.EnqueueControlPacket(new MqttPacketBusItem(pubAckPacket));
-                break;
-            }
+                {
+                    var pubAckPacket = MqttPubAckPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
+                    Session.EnqueueControlPacket(new MqttPacketBusItem(pubAckPacket));
+                    break;
+                }
             case MqttQualityOfServiceLevel.ExactlyOnce:
-            {
-                var pubRecPacket = MqttPubRecPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
-                Session.EnqueueControlPacket(new MqttPacketBusItem(pubRecPacket));
-                break;
-            }
+                {
+                    var pubRecPacket = MqttPubRecPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
+                    Session.EnqueueControlPacket(new MqttPacketBusItem(pubRecPacket));
+                    break;
+                }
             default:
-            {
-                throw new MqttCommunicationException("Received a not supported QoS level");
-            }
+                {
+                    throw new MqttCommunicationException("Received a not supported QoS level");
+                }
         }
     }
 
@@ -338,7 +339,7 @@ public sealed class MqttConnectedClient : IDisposable
             return packet;
         }
 
-        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, packet, Session.Items);
+        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, RemoteEndPoint, packet, Session.Items);
         await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
 
         if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
@@ -384,7 +385,7 @@ public sealed class MqttConnectedClient : IDisposable
 
                 if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
                 {
-                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, currentPacket, Session.Items);
+                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, RemoteEndPoint, currentPacket, Session.Items);
                     await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                     currentPacket = interceptingPacketEventArgs.Packet;
                     processPacket = interceptingPacketEventArgs.ProcessPacket;

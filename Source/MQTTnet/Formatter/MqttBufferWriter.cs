@@ -2,12 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Exceptions;
+using MQTTnet.Protocol;
 using System;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter
 {
@@ -120,32 +120,19 @@ namespace MQTTnet.Formatter
             EnsureAdditionalCapacity(buffer.Length);
 
             buffer.CopyTo(_buffer.AsSpan(_position));
+
             IncreasePosition(buffer.Length);
         }
 
         public void WriteBinary(ReadOnlySpan<byte> value)
         {
-            if (value.IsEmpty)
-            {
-                EnsureAdditionalCapacity(2);
+            var valueLength = value.Length;
+            EnsureAdditionalCapacity(valueLength + 2);
 
-                _buffer[_position] = 0;
-                _buffer[_position + 1] = 0;
+            BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), (ushort)valueLength);
+            value.CopyTo(_buffer.AsSpan(_position + 2));
 
-                IncreasePosition(2);
-            }
-            else
-            {
-                var valueLength = value.Length;
-
-                EnsureAdditionalCapacity(valueLength + 2);
-
-                _buffer[_position] = (byte)(valueLength >> 8);
-                _buffer[_position + 1] = (byte)valueLength;
-
-                value[..valueLength].CopyTo(_buffer.AsSpan(_position + 2));
-                IncreasePosition(valueLength + 2);
-            }
+            IncreasePosition(valueLength + 2);
         }
 
 
@@ -163,8 +150,7 @@ namespace MQTTnet.Formatter
             {
                 EnsureAdditionalCapacity(2);
 
-                _buffer[_position] = 0;
-                _buffer[_position + 1] = 0;
+                _buffer.AsSpan(_position, 2).Fill(default);
 
                 IncreasePosition(2);
             }
@@ -187,8 +173,7 @@ namespace MQTTnet.Formatter
                     throw new MqttProtocolViolationException($"The maximum string length is 65535. The current string has a length of {writtenBytes}.");
                 }
 
-                _buffer[_position] = (byte)(writtenBytes >> 8);
-                _buffer[_position + 1] = (byte)writtenBytes;
+                BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), (ushort)writtenBytes);
 
                 IncreasePosition(writtenBytes + 2);
             }
@@ -198,22 +183,13 @@ namespace MQTTnet.Formatter
         {
             EnsureAdditionalCapacity(2);
 
-            _buffer[_position] = (byte)(value >> 8);
-            IncreasePosition(1);
-            _buffer[_position] = (byte)value;
-            IncreasePosition(1);
+            BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), value);
+
+            IncreasePosition(2);
         }
 
         public void WriteVariableByteInteger(uint value)
         {
-            if (value == 0)
-            {
-                _buffer[_position] = 0;
-                IncreasePosition(1);
-
-                return;
-            }
-
             if (value <= 127)
             {
                 _buffer[_position] = (byte)value;

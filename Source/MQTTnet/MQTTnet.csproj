@@ -35,7 +35,7 @@
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <PackageIcon>nuget.png</PackageIcon>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <!--<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>-->
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>

@@ -220,7 +220,7 @@ namespace MQTTnet.Formatter.V3
 
             if (passwordFlag)
             {
-                packet.Password = _bufferReader.ReadBinaryData().Join();
+                packet.Password = _bufferReader.ReadBinaryData().ToArray();
             }
 
             ValidateConnectPacket(packet);
@@ -439,12 +439,12 @@ namespace MQTTnet.Formatter.V3
                 }
             }
 
-            if (packet.Password.Length > 0 && packet.Username == null)
+            if (packet.Password != null && packet.Username == null)
             {
                 throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
             }
 
-            if (packet.Password.Length > 0)
+            if (packet.Password != null)
             {
                 connectFlags |= 0x40;
             }
@@ -469,9 +469,9 @@ namespace MQTTnet.Formatter.V3
                 bufferWriter.WriteString(packet.Username);
             }
 
-            if (packet.Password.Length > 0)
+            if (packet.Password != null)
             {
-                bufferWriter.WriteBinary(packet.Password.Span);
+                bufferWriter.WriteBinary(packet.Password);
             }
 
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);
@@ -501,12 +501,12 @@ namespace MQTTnet.Formatter.V3
                 }
             }
 
-            if (packet.Password.Length > 0 && packet.Username == null)
+            if (packet.Password != null && packet.Username == null)
             {
                 throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
             }
 
-            if (packet.Password.Length > 0)
+            if (packet.Password != null)
             {
                 connectFlags |= 0x40;
             }
@@ -533,7 +533,7 @@ namespace MQTTnet.Formatter.V3
 
             if (packet.Password.Length > 0)
             {
-                bufferWriter.WriteBinary(packet.Password.Span);
+                bufferWriter.WriteBinary(packet.Password);
             }
 
             return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);

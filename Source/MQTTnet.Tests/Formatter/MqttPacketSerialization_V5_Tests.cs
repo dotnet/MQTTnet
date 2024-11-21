@@ -4,6 +4,7 @@
 
 using System;
 using System.Buffers;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -132,7 +133,7 @@ public sealed class MqttPacketSerialization_V5_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connectPacket, MqttProtocolVersion.V500);
 
         Assert.AreEqual(connectPacket.Username, deserialized.Username);
-        Assert.IsTrue(connectPacket.Password.Span.SequenceEqual(deserialized.Password.Span));
+        Assert.IsTrue(connectPacket.Password.SequenceEqual(deserialized.Password));
         Assert.AreEqual(connectPacket.ClientId, deserialized.ClientId);
         Assert.IsTrue(connectPacket.AuthenticationData.Span.SequenceEqual(deserialized.AuthenticationData.Span));
         Assert.AreEqual(connectPacket.AuthenticationMethod, deserialized.AuthenticationMethod);

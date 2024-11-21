@@ -147,12 +147,12 @@ public sealed class MqttV5PacketEncoder
             }
         }
 
-        if (packet.Password.Length > 0 && packet.Username == null)
+        if (packet.Password != null && packet.Username == null)
         {
             throw new MqttProtocolViolationException("If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].");
         }
 
-        if (packet.Password.Length > 0)
+        if (packet.Password != null)
         {
             connectFlags |= 0x40;
         }
@@ -202,9 +202,9 @@ public sealed class MqttV5PacketEncoder
             _bufferWriter.WriteString(packet.Username);
         }
 
-        if (packet.Password.Length > 0)
+        if (packet.Password != null)
         {
-            _bufferWriter.WriteBinary(packet.Password.Span);
+            _bufferWriter.WriteBinary(packet.Password);
         }
 
         return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);

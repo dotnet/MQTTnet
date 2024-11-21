@@ -176,12 +176,12 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithCredentials(string username, string password)
     {
-        return string.IsNullOrEmpty(password)
-            ? WithCredentials(username, ReadOnlyMemory<byte>.Empty)
+        return password == null
+            ? WithCredentials(username, default(byte[]))
             : WithCredentials(username, Encoding.UTF8.GetBytes(password));
     }
 
-    public MqttClientOptionsBuilder WithCredentials(string username, ReadOnlyMemory<byte> password = default)
+    public MqttClientOptionsBuilder WithCredentials(string username, byte[] password = default)
     {
         return WithCredentials(new MqttClientCredentials(username, password));
     }

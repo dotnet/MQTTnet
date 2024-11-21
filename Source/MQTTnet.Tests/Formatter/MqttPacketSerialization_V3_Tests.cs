@@ -176,7 +176,7 @@ namespace MQTTnet.Tests.Formatter
 
             Assert.AreEqual(connectPacket.Username, deserialized.Username);
 
-            Assert.IsTrue(connectPacket.Password.Span.SequenceEqual(deserialized.Password.Span));
+            Assert.IsTrue(connectPacket.Password.SequenceEqual(deserialized.Password));
             Assert.AreEqual(connectPacket.ClientId, deserialized.ClientId);
             Assert.AreEqual(true, deserialized.AuthenticationData.IsEmpty); // Not supported in v3.1.1
             Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1

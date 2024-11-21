@@ -8,16 +8,16 @@ namespace MQTTnet;
 
 public sealed class MqttClientCredentials : IMqttClientCredentialsProvider
 {
-    readonly ReadOnlyMemory<byte> _password;
+    readonly byte[] _password;
     readonly string _userName;
 
-    public MqttClientCredentials(string userName, ReadOnlyMemory<byte> password )
+    public MqttClientCredentials(string userName, byte[] password )
     {
         _userName = userName;
         _password = password;
     }
 
-    public ReadOnlyMemory<byte> GetPassword(MqttClientOptions clientOptions)
+    public byte[] GetPassword(MqttClientOptions clientOptions)
     {
         return _password;
     }

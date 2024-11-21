@@ -27,7 +27,7 @@ namespace MQTTnet.Packets
 
         public uint MaximumPacketSize { get; set; }
 
-        public ReadOnlyMemory<byte> Password { get; set; }
+        public byte[] Password { get; set; }
 
         public ushort ReceiveMaximum { get; set; }
 
@@ -71,7 +71,7 @@ namespace MQTTnet.Packets
         {
             var passwordText = string.Empty;
 
-            if (Password.Length > 0)
+            if (Password != null)
             {
                 passwordText = "****";
             }

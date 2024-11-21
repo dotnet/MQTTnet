@@ -347,7 +347,7 @@ namespace MQTTnet.Formatter.V5
 
             if (passwordFlag)
             {
-                packet.Password = _bufferReader.ReadBinaryData().Join();
+                packet.Password = _bufferReader.ReadBinaryData().ToArray();
             }
 
             return packet;

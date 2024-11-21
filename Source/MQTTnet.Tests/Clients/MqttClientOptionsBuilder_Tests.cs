@@ -20,7 +20,7 @@ namespace MQTTnet.Tests.Clients
                 .Build();
 
             Assert.AreEqual("user", options.Credentials.GetUserName(null));
-            Assert.IsTrue(Encoding.UTF8.GetBytes("password").AsSpan().SequenceEqual(options.Credentials.GetPassword(null).Span));
+            Assert.IsTrue(Encoding.UTF8.GetBytes("password").AsSpan().SequenceEqual(options.Credentials.GetPassword(null)));
         }
     }
 }

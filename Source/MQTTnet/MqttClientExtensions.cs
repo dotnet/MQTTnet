@@ -46,7 +46,8 @@ public static class MqttClientExtensions
         ArgumentNullException.ThrowIfNull(mqttClient);
         ArgumentNullException.ThrowIfNull(topic);
 
-        var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topic)
+        var applicationMessage = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
             .WithPayload(payload)
             .WithRetainFlag(retain)
             .WithQualityOfServiceLevel(qualityOfServiceLevel)
@@ -66,17 +67,42 @@ public static class MqttClientExtensions
         return mqttClient.PublishSequenceAsync(topic, new ReadOnlySequence<byte>(payload), qualityOfServiceLevel, retain, cancellationToken);
     }
 
-    public static Task<MqttClientPublishResult> PublishStringAsync(
+    public static async Task<MqttClientPublishResult> PublishStringAsync(
         this IMqttClient mqttClient,
         string topic,
-        string payload = null,
+        string payload = default,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        var payloadBuffer = payload == null ? ReadOnlyMemory<byte>.Empty : Encoding.UTF8.GetBytes(payload);
-        return mqttClient.PublishBinaryAsync(topic, payloadBuffer, qualityOfServiceLevel, retain, cancellationToken);
+        var builder = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
+            .WithRetainFlag(retain)
+            .WithQualityOfServiceLevel(qualityOfServiceLevel);
+
+        byte[] buffer = null;
+        if (!string.IsNullOrEmpty(payload))
+        {
+            var byteCount = Encoding.UTF8.GetByteCount(payload);
+            buffer = ArrayPool<byte>.Shared.Rent(byteCount);
+            Encoding.UTF8.GetBytes(payload, buffer);
+            builder.WithPayload(buffer.AsMemory(0, byteCount));
+        }
+
+        try
+        {
+            var applicationMessage = builder.Build();
+            return await mqttClient.PublishAsync(applicationMessage, cancellationToken);
+        }
+        finally
+        {
+            if (buffer != null)
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+        }
     }
+
 
     public static Task ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken = default)
     {

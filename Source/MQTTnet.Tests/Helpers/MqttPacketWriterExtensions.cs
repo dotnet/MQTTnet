@@ -15,7 +15,7 @@ namespace MQTTnet.Tests.Helpers
             writer.WriteByte(MqttBufferWriter.BuildFixedHeader(header));
             writer.WriteVariableByteInteger((uint)body.Length);
             writer.Write(body);
-            return writer.GetBuffer();
+            return writer.GetWrittenMemory().ToArray();
         }
     }
 }

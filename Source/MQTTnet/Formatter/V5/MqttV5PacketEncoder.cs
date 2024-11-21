@@ -56,8 +56,7 @@ public sealed class MqttV5PacketEncoder
         _bufferWriter.WriteByte(fixedHeader);
         _bufferWriter.WriteVariableByteInteger(remainingLength);
 
-        var buffer = _bufferWriter.GetBuffer();
-        var firstSegment = buffer.AsMemory(headerOffset, _bufferWriter.Length - headerOffset);
+        var firstSegment = _bufferWriter.GetWrittenMemory()[headerOffset..];
 
         return publishPacket == null
             ? new MqttPacketBuffer(firstSegment)

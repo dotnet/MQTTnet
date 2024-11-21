@@ -20,10 +20,10 @@ namespace MQTTnet.Tests
             {
                 writer.WriteVariableByteInteger(value);
 
-                var buffer = writer.GetBuffer();
+                var buffer = writer.GetWrittenMemory();
 
                 var reader = new MqttBufferReader();
-                reader.SetBuffer(buffer.AsMemory(0, writer.Length));
+                reader.SetBuffer(buffer);
                 var checkValue = reader.ReadVariableByteInteger();
 
                 Assert.AreEqual(value, checkValue);
@@ -41,10 +41,10 @@ namespace MQTTnet.Tests
             {
                 writer.WriteTwoByteInteger(value);
 
-                var buffer = writer.GetBuffer();
+                var buffer = writer.GetWrittenMemory();
 
                 var reader = new MqttBufferReader();
-                reader.SetBuffer(buffer.AsMemory(0, writer.Length));
+                reader.SetBuffer(buffer);
                 var checkValue = reader.ReadTwoByteInteger();
 
                 Assert.AreEqual(value, checkValue);

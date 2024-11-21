@@ -133,8 +133,8 @@ namespace MQTTnet.Tests.Formatter
                                     writer.WriteVariableByteInteger(elementNumberValue);
                                     elementSize = writer.Length;
                                     elementBytes = new byte[elementSize];
-                                    var buffer = writer.GetBuffer();
-                                    Array.Copy(buffer, elementBytes, elementSize);
+                                    writer.GetWrittenSpan().CopyTo(elementBytes);
+
                                     alreadyBigEndian = true; // nothing to swap
                                 }
                                 break;
@@ -146,8 +146,7 @@ namespace MQTTnet.Tests.Formatter
                                     writer.WriteString(elementStringValue);
                                     elementSize = writer.Length;
                                     elementBytes = new byte[elementSize];
-                                    var buffer = writer.GetBuffer();
-                                    Array.Copy(buffer, elementBytes, elementSize);
+                                    writer.GetWrittenSpan().CopyTo(elementBytes);
                                     alreadyBigEndian = true; // nothing to swap
                                 }
                                 break;

@@ -27,13 +27,14 @@ namespace MQTTnet.Formatter
         byte[] _buffer;
         int _position;
 
+        public int Length { get; private set; }
+
         public MqttBufferWriter(int bufferSize, int maxBufferSize)
         {
             _buffer = new byte[bufferSize];
             _maxBufferSize = maxBufferSize;
         }
 
-        public int Length { get; private set; }
 
         public static byte BuildFixedHeader(MqttControlPacketType packetType, byte flags = 0)
         {
@@ -60,9 +61,15 @@ namespace MQTTnet.Formatter
             _buffer = new byte[_maxBufferSize];
         }
 
-        public byte[] GetBuffer()
+
+        public ReadOnlySpan<byte> GetWrittenSpan()
         {
-            return _buffer;
+            return _buffer.AsSpan(0, Length);
+        }
+
+        public ReadOnlyMemory<byte> GetWrittenMemory()
+        {
+            return _buffer.AsMemory(0, Length);
         }
 
         public static int GetVariableByteIntegerSize(uint value)
@@ -107,7 +114,7 @@ namespace MQTTnet.Formatter
         {
             ArgumentNullException.ThrowIfNull(propertyWriter);
 
-            Write(propertyWriter._buffer.AsSpan(0, propertyWriter.Length));
+            Write(propertyWriter.GetWrittenSpan());
         }
 
         public void Write(ReadOnlySpan<byte> buffer)
@@ -117,42 +124,43 @@ namespace MQTTnet.Formatter
                 return;
             }
 
-            EnsureAdditionalCapacity(buffer.Length);
+            var size = buffer.Length;
+            var span = GetSpan(size);
 
-            buffer.CopyTo(_buffer.AsSpan(_position));
-
-            IncreasePosition(buffer.Length);
+            buffer.CopyTo(span);
+            Advance(size);
         }
 
         public void WriteBinary(ReadOnlySpan<byte> value)
         {
-            var valueLength = value.Length;
-            EnsureAdditionalCapacity(valueLength + 2);
+            var size = value.Length + 2;
+            var span = GetSpan(size);
 
-            BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), (ushort)valueLength);
-            value.CopyTo(_buffer.AsSpan(_position + 2));
+            BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)value.Length);
+            value.CopyTo(span[2..]);
 
-            IncreasePosition(valueLength + 2);
+            Advance(size);
         }
 
 
         public void WriteByte(byte @byte)
         {
-            EnsureAdditionalCapacity(1);
+            const int size = sizeof(byte);
+            var span = GetSpan(size);
 
-            _buffer[_position] = @byte;
-            IncreasePosition(1);
+            span[0] = @byte;
+            Advance(size);
         }
 
         public void WriteString(string value)
         {
             if (string.IsNullOrEmpty(value))
             {
-                EnsureAdditionalCapacity(2);
+                const int size = 2;
+                var span = GetSpan(size);
 
-                _buffer.AsSpan(_position, 2).Fill(default);
-
-                IncreasePosition(2);
+                span.Fill(default);
+                Advance(size);
             }
             else
             {
@@ -161,10 +169,9 @@ namespace MQTTnet.Formatter
                 // So the buffer should always have much more capacity left so that a correct value
                 // here is only waste of CPU cycles.
                 var byteCount = value.Length * 4;
+                var span = GetSpan(byteCount + 2);
 
-                EnsureAdditionalCapacity(byteCount + 2);
-
-                var writtenBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _position + 2);
+                var writtenBytes = Encoding.UTF8.GetBytes(value, span[2..]);
 
                 // From RFC: 1.5.4 UTF-8 Encoded String
                 // Unless stated otherwise all UTF-8 encoded strings can have any length in the range 0 to 65,535 bytes.
@@ -173,27 +180,30 @@ namespace MQTTnet.Formatter
                     throw new MqttProtocolViolationException($"The maximum string length is 65535. The current string has a length of {writtenBytes}.");
                 }
 
-                BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), (ushort)writtenBytes);
+                BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)writtenBytes);
 
-                IncreasePosition(writtenBytes + 2);
+                Advance(writtenBytes + 2);
             }
         }
 
         public void WriteTwoByteInteger(ushort value)
         {
-            EnsureAdditionalCapacity(2);
+            const int size = sizeof(ushort);
+            var span = GetSpan(size);
 
-            BinaryPrimitives.WriteUInt16BigEndian(_buffer.AsSpan(_position), value);
+            BinaryPrimitives.WriteUInt16BigEndian(span, value);
 
-            IncreasePosition(2);
+            Advance(size);
         }
 
         public void WriteVariableByteInteger(uint value)
         {
+            EnsureCapacity(sizeof(uint));
+
             if (value <= 127)
             {
                 _buffer[_position] = (byte)value;
-                IncreasePosition(1);
+                Advance(1);
 
                 return;
             }
@@ -218,21 +228,19 @@ namespace MQTTnet.Formatter
                 size++;
             } while (x > 0);
 
-            IncreasePosition(size);
+            Advance(size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void EnsureAdditionalCapacity(int additionalCapacity)
+        Span<byte> GetSpan(int size)
         {
-            var bufferLength = _buffer.Length;
-
-            var freeSpace = bufferLength - _position;
-            if (freeSpace >= additionalCapacity)
+            var freeSpace = _buffer.Length - _position;
+            if (freeSpace < size)
             {
-                return;
+                EnsureCapacity(_buffer.Length + size - freeSpace);
             }
 
-            EnsureCapacity(bufferLength + additionalCapacity - freeSpace);
+            return _buffer.AsSpan(_position, size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -255,9 +263,9 @@ namespace MQTTnet.Formatter
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void IncreasePosition(int length)
+        void Advance(int count)
         {
-            _position += length;
+            _position += count;
 
             if (_position > Length)
             {

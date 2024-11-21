@@ -531,7 +531,7 @@ namespace MQTTnet.Formatter.V3
                 bufferWriter.WriteString(packet.Username);
             }
 
-            if (packet.Password.Length > 0)
+            if (packet.Password != null)
             {
                 bufferWriter.WriteBinary(packet.Password);
             }

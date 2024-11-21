@@ -29,7 +29,7 @@ namespace MQTTnet.Benchmarks
         [Benchmark]
         public ValueTask SerializeToString_Payload_SendAsync()
         {
-            var payload = JsonSerializer.Serialize(model);
+            string payload = JsonSerializer.Serialize(model);
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("t")
                 .WithPayload(payload)
@@ -42,7 +42,7 @@ namespace MQTTnet.Benchmarks
         [Benchmark]
         public ValueTask SerializeToUtf8Bytes_Payload_SendAsync()
         {
-            var payload = JsonSerializer.SerializeToUtf8Bytes(model);
+            byte[] payload = JsonSerializer.SerializeToUtf8Bytes(model);
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("t")
                 .WithPayload(payload)
@@ -53,9 +53,11 @@ namespace MQTTnet.Benchmarks
         }
 
         [Benchmark(Baseline = true)]
-        public async ValueTask SerializeToPipe_Payload_SendAsync()
+        public async ValueTask MqttPayloadOwnerFactory_Payload_SendAsync()
         {
-            await using var payloadOwner = await MqttPayloadOwnerFactory.JsonSerializeAsync(model);
+            await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(async writer =>
+               await JsonSerializer.SerializeAsync(writer.AsStream(leaveOpen: true), model));
+
             var message = new MqttApplicationMessageBuilder()
                 .WithTopic("t")
                 .WithPayload(payloadOwner.Payload)

@@ -6,8 +6,6 @@ using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.IO.Pipelines;
-using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,103 +13,88 @@ namespace MQTTnet.Internal
 {
     public static class MqttPayloadOwnerFactory
     {
-        public static MqttPayloadOwner Rent(int payloadSize, out Memory<byte> payloadMemory)
+        /// <summary>
+        /// Create owner for a single segment payload
+        /// </summary>
+        /// <param name="payloadSize"></param>
+        /// <param name="payloadMemory"></param>
+        /// <returns></returns>
+        public static MqttPayloadOwner CreateSingleSegment(int payloadSize, out Memory<byte> payloadMemory)
         {
             ArgumentOutOfRangeException.ThrowIfNegativeOrZero(payloadSize);
-            return PoolPayloadOwner.FromRent(payloadSize, out payloadMemory);
+            return SingleSegmentPayloadOwner.Create(payloadSize, out payloadMemory);
         }
 
-        public static ValueTask<MqttPayloadOwner> JsonSerializeAsync<TValue>(
-            TValue value,
-            JsonSerializerOptions jsonSerializerOptions = default,
-            CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Create owner for a multiple segments payload
+        /// </summary>
+        /// <param name="payloadFactory"></param>
+        /// <returns></returns>
+        public static ValueTask<MqttPayloadOwner> CreateMultipleSegmentAsync(Func<PipeWriter, ValueTask> payloadFactory)
         {
-            return JsonPayloadOwner.FromSerializeAsync(value, jsonSerializerOptions, cancellationToken);
+            ArgumentNullException.ThrowIfNull(payloadFactory);
+            return MultipleSegmentPayloadOwner.CreateAsync(payloadFactory);
         }
 
-        public static ValueTask<MqttPayloadOwner> JsonSerializeAsync<TValue>(
-           TValue value,
-           JsonTypeInfo<TValue> jsonTypeInfo,
-           CancellationToken cancellationToken = default)
-        {
-            return JsonPayloadOwner.FormSerializeAsync(value, jsonTypeInfo, cancellationToken);
-        }
-
-
-        private sealed class PoolPayloadOwner : MqttPayloadOwner
+        private sealed class SingleSegmentPayloadOwner : MqttPayloadOwner
         {
             private readonly byte[] _buffer;
             public override ReadOnlySequence<byte> Payload { get; }
 
-            private PoolPayloadOwner(byte[] buffer, ReadOnlyMemory<byte> payloadMemory)
+            private SingleSegmentPayloadOwner(byte[] buffer, ReadOnlyMemory<byte> payloadMemory)
             {
                 _buffer = buffer;
                 Payload = new ReadOnlySequence<byte>(payloadMemory);
             }
 
-            public override ValueTask DisposeAsync()
+            public static MqttPayloadOwner Create(int payloadSize, out Memory<byte> payloadMemory)
+            {
+                var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
+                payloadMemory = buffer.AsMemory(0, payloadSize);
+                return new SingleSegmentPayloadOwner(buffer, payloadMemory);
+            }
+
+            protected override ValueTask DisposeAsync(bool disposing)
             {
                 ArrayPool<byte>.Shared.Return(_buffer);
                 return ValueTask.CompletedTask;
             }
-
-            public static MqttPayloadOwner FromRent(int payloadSize, out Memory<byte> payloadMemory)
-            {
-                var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
-                payloadMemory = buffer.AsMemory(0, payloadSize);
-                return new PoolPayloadOwner(buffer, payloadMemory);
-            }
         }
 
-        private sealed class JsonPayloadOwner : MqttPayloadOwner
+        private sealed class MultipleSegmentPayloadOwner : MqttPayloadOwner
         {
             private readonly Pipe _pipe;
             private static readonly ConcurrentQueue<Pipe> _pipeQueue = new();
             public override ReadOnlySequence<byte> Payload { get; }
 
-            private JsonPayloadOwner(Pipe pipe, ReadOnlySequence<byte> payload)
+            private MultipleSegmentPayloadOwner(Pipe pipe, ReadOnlySequence<byte> payload)
             {
                 _pipe = pipe;
                 Payload = payload;
             }
 
-            public override ValueTask DisposeAsync()
+            public static async ValueTask<MqttPayloadOwner> CreateAsync(Func<PipeWriter, ValueTask> payloadFactory)
             {
-                return ReturnPipeAsync(_pipe);
-            }
+                if (!_pipeQueue.TryDequeue(out var pipe))
+                {
+                    pipe = new Pipe();
+                }
 
-            public static async ValueTask<MqttPayloadOwner> FromSerializeAsync<TValue>(
-                TValue value,
-                JsonSerializerOptions jsonSerializerOptions = default,
-                CancellationToken cancellationToken = default)
-            {
-                var pipe = RentPipe();
-
-                var stream = pipe.Writer.AsStream(leaveOpen: true);
-                await JsonSerializer.SerializeAsync(stream, value, jsonSerializerOptions, cancellationToken);
+                await payloadFactory.Invoke(pipe.Writer);
                 await pipe.Writer.CompleteAsync();
 
-                var payload = await ReadAsync(pipe.Reader);
-                return new JsonPayloadOwner(pipe, payload);
+                var payload = await ReadPayloadAsync(pipe.Reader);
+                return new MultipleSegmentPayloadOwner(pipe, payload);
             }
 
-            public static async ValueTask<MqttPayloadOwner> FormSerializeAsync<TValue>(
-                TValue value,
-                JsonTypeInfo<TValue> jsonTypeInfo,
-                CancellationToken cancellationToken = default)
+            protected override async ValueTask DisposeAsync(bool disposing)
             {
-                var pipe = RentPipe();
-
-                var stream = pipe.Writer.AsStream(leaveOpen: true);
-                await JsonSerializer.SerializeAsync(stream, value, jsonTypeInfo, cancellationToken);
-                await pipe.Writer.CompleteAsync();
-
-                var payload = await ReadAsync(pipe.Reader);
-                return new JsonPayloadOwner(pipe, payload);
+                await _pipe.Reader.CompleteAsync();
+                _pipe.Reset();
+                _pipeQueue.Enqueue(_pipe);
             }
 
-
-            private static async ValueTask<ReadOnlySequence<byte>> ReadAsync(
+            private static async ValueTask<ReadOnlySequence<byte>> ReadPayloadAsync(
                 PipeReader pipeReader,
                 CancellationToken cancellationToken = default)
             {
@@ -123,22 +106,6 @@ namespace MQTTnet.Internal
                 }
 
                 return readResult.Buffer;
-            }
-
-            private static Pipe RentPipe()
-            {
-                if (!_pipeQueue.TryDequeue(out var pipe))
-                {
-                    pipe = new Pipe();
-                }
-                return pipe;
-            }
-
-            private static async ValueTask ReturnPipeAsync(Pipe pipe)
-            {
-                await pipe.Reader.CompleteAsync();
-                pipe.Reset();
-                _pipeQueue.Enqueue(pipe);
             }
         }
     }

@@ -10,18 +10,33 @@ namespace MQTTnet.Internal
 {
     public abstract class MqttPayloadOwner : IAsyncDisposable
     {
+        private bool _disposed = false;
         public static MqttPayloadOwner Empty { get; } = new EmptyPayloadOwner();
 
         public abstract ReadOnlySequence<byte> Payload { get; }
 
-        public abstract ValueTask DisposeAsync();
+        public ValueTask DisposeAsync()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                return DisposeAsync(true);
+            }
+            return ValueTask.CompletedTask;
+        }
+
+        protected virtual ValueTask DisposeAsync(bool disposing)
+        {
+            return ValueTask.CompletedTask;
+        }
+
 
         private sealed class EmptyPayloadOwner : MqttPayloadOwner
         {
             public override ReadOnlySequence<byte> Payload => ReadOnlySequence<byte>.Empty;
-            public override ValueTask DisposeAsync()
+            protected override ValueTask DisposeAsync(bool disposing)
             {
-                return default;
+                return ValueTask.CompletedTask;
             }
         }
     }

@@ -96,6 +96,12 @@ namespace MQTTnet
             return WithPayload(new ReadOnlySequence<byte>(payload));
         }
 
+        /// <summary>
+        /// This method causes memory allocation when transcoding the string payload.
+        /// </summary>
+        /// <remarks>Use the method IMqttClient.PublishStringAsync() instead in client side.</remarks>
+        /// <param name="payload"></param>
+        /// <returns></returns>
         public MqttApplicationMessageBuilder WithPayload(string payload)
         {
             return string.IsNullOrEmpty(payload) ? this : WithPayload(Encoding.UTF8.GetBytes(payload));

@@ -797,6 +797,31 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
+        public async Task Send_Json_Body()
+        {
+            using var testEnvironment = CreateTestEnvironment();
+            string receivedBody = null;
+
+            await testEnvironment.StartServer();
+
+            var client1 = await testEnvironment.ConnectClient();
+            client1.ApplicationMessageReceivedAsync += e =>
+            {
+                receivedBody = e.ApplicationMessage.ConvertPayloadToString();
+                return CompletedTask.Instance;
+            };
+
+            await client1.SubscribeAsync("string");
+
+            var client2 = await testEnvironment.ConnectClient();
+            await client2.PublishJsonAsync("string", true);
+
+            await Task.Delay(TimeSpan.FromSeconds(5));
+
+            Assert.AreEqual("true", receivedBody);
+        }
+
+        [TestMethod]
         public async Task Set_Subscription_At_Server()
         {
             using (var testEnvironment = CreateTestEnvironment())

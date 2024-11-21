@@ -2,12 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -80,27 +83,57 @@ public static class MqttClientExtensions
             .WithRetainFlag(retain)
             .WithQualityOfServiceLevel(qualityOfServiceLevel);
 
-        byte[] buffer = null;
+        var payloadOwner = MqttPayloadOwner.Empty;
         if (!string.IsNullOrEmpty(payload))
         {
             var byteCount = Encoding.UTF8.GetByteCount(payload);
-            buffer = ArrayPool<byte>.Shared.Rent(byteCount);
-            Encoding.UTF8.GetBytes(payload, buffer);
-            builder.WithPayload(buffer.AsMemory(0, byteCount));
+            payloadOwner = MqttPayloadOwnerFactory.Rent(byteCount, out var payloadMemory);
+            Encoding.UTF8.GetBytes(payload, payloadMemory.Span);
         }
 
-        try
+        await using (payloadOwner)
         {
-            var applicationMessage = builder.Build();
+            var applicationMessage = builder.WithPayload(payloadOwner.Payload).Build();
             return await mqttClient.PublishAsync(applicationMessage, cancellationToken);
         }
-        finally
-        {
-            if (buffer != null)
-            {
-                ArrayPool<byte>.Shared.Return(buffer);
-            }
-        }
+    }
+
+    public static async Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
+        this IMqttClient mqttClient,
+        string topic,
+        TValue payload,
+        JsonSerializerOptions jsonSerializerOptions = default,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        var builder = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
+            .WithRetainFlag(retain)
+            .WithQualityOfServiceLevel(qualityOfServiceLevel);
+
+        await using var payloadOwner = await MqttPayloadOwnerFactory.JsonSerializeAsync(payload, jsonSerializerOptions, cancellationToken);
+        var applicationMessage = builder.WithPayload(payloadOwner.Payload).Build();
+        return await mqttClient.PublishAsync(applicationMessage, cancellationToken);
+    }
+
+    public static async Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
+        this IMqttClient mqttClient,
+        string topic,
+        TValue payload,
+        JsonTypeInfo<TValue> jsonTypeInfo,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        var builder = new MqttApplicationMessageBuilder()
+            .WithTopic(topic)
+            .WithRetainFlag(retain)
+            .WithQualityOfServiceLevel(qualityOfServiceLevel);
+
+        await using var payloadOwner = await MqttPayloadOwnerFactory.JsonSerializeAsync(payload, jsonTypeInfo, cancellationToken);
+        var applicationMessage = builder.WithPayload(payloadOwner.Payload).Build();
+        return await mqttClient.PublishAsync(applicationMessage, cancellationToken);
     }
 
 

@@ -2,7 +2,7 @@
 
     <Target Name="ImportReleaseNotes" BeforeTargets="GenerateNuspec">
         <ReadLinesFromFile File="..\workflows\ReleaseNotes.md">
-            <Output TaskParameter="Lines" ItemName="ReleaseNotes"/>
+            <Output TaskParameter="Lines" ItemName="ReleaseNotes" />
         </ReadLinesFromFile>
         <PropertyGroup>
             <PackageReleaseNotes>@(ReleaseNotes, '%0a')</PackageReleaseNotes>
@@ -62,7 +62,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+        <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     </ItemGroup>
 
 </Project>

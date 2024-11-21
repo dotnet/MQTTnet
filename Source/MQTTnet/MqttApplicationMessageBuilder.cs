@@ -107,7 +107,7 @@ namespace MQTTnet
         }
 
         public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
-        {
+        { 
             if (payload == null || length == 0)
             {
                 return this;

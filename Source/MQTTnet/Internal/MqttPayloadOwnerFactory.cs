@@ -29,11 +29,12 @@ namespace MQTTnet.Internal
         /// Create owner for a multiple segments payload
         /// </summary>
         /// <param name="payloadFactory"></param>
+        /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public static ValueTask<MqttPayloadOwner> CreateMultipleSegmentAsync(Func<PipeWriter, ValueTask> payloadFactory)
+        public static ValueTask<MqttPayloadOwner> CreateMultipleSegmentAsync(Func<PipeWriter, ValueTask> payloadFactory, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(payloadFactory);
-            return MultipleSegmentPayloadOwner.CreateAsync(payloadFactory);
+            return MultipleSegmentPayloadOwner.CreateAsync(payloadFactory, cancellationToken);
         }
 
         private sealed class SingleSegmentPayloadOwner : MqttPayloadOwner
@@ -73,7 +74,7 @@ namespace MQTTnet.Internal
                 Payload = payload;
             }
 
-            public static async ValueTask<MqttPayloadOwner> CreateAsync(Func<PipeWriter, ValueTask> payloadFactory)
+            public static async ValueTask<MqttPayloadOwner> CreateAsync(Func<PipeWriter, ValueTask> payloadFactory, CancellationToken cancellationToken)
             {
                 if (!_pipeQueue.TryDequeue(out var pipe))
                 {
@@ -83,7 +84,7 @@ namespace MQTTnet.Internal
                 await payloadFactory.Invoke(pipe.Writer);
                 await pipe.Writer.CompleteAsync();
 
-                var payload = await ReadPayloadAsync(pipe.Reader);
+                var payload = await ReadPayloadAsync(pipe.Reader, cancellationToken);
                 return new MultipleSegmentPayloadOwner(pipe, payload);
             }
 
@@ -96,7 +97,7 @@ namespace MQTTnet.Internal
 
             private static async ValueTask<ReadOnlySequence<byte>> ReadPayloadAsync(
                 PipeReader pipeReader,
-                CancellationToken cancellationToken = default)
+                CancellationToken cancellationToken)
             {
                 var readResult = await pipeReader.ReadAsync(cancellationToken);
                 while (!readResult.IsCompleted)

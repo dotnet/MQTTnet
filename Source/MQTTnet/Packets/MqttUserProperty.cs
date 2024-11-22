@@ -47,4 +47,9 @@ public sealed class MqttUserProperty
     {
         return $"{Name} = {Value}";
     }
+
+    public MqttUserProperty Clone()
+    {
+        return new MqttUserProperty(Name, Value);
+    }
 }

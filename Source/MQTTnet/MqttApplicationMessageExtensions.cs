@@ -15,25 +15,17 @@ public static class MqttApplicationMessageExtensions
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
-        if (applicationMessage.Payload.Length == 0)
-        {
-            return null;
-        }
-
-        return Encoding.UTF8.GetString(applicationMessage.Payload);
+        return applicationMessage.Payload.IsEmpty
+            ? null
+            : Encoding.UTF8.GetString(applicationMessage.Payload);
     }
 
     public static TValue ConvertPayloadToJson<TValue>(this MqttApplicationMessage applicationMessage, JsonTypeInfo<TValue> jsonTypeInfo)
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
+        ArgumentNullException.ThrowIfNull(jsonTypeInfo);
 
-        var jsonOptions = jsonTypeInfo.Options;
-        var readerOptions = new JsonReaderOptions
-        {
-            MaxDepth = jsonOptions.MaxDepth,
-            AllowTrailingCommas = jsonOptions.AllowTrailingCommas,
-            CommentHandling = jsonOptions.ReadCommentHandling
-        };
+        var readerOptions = CreateJsonReaderOptions(jsonTypeInfo.Options);
         var jsonReader = new Utf8JsonReader(applicationMessage.Payload, readerOptions);
         return JsonSerializer.Deserialize(ref jsonReader, jsonTypeInfo);
     }
@@ -42,13 +34,19 @@ public static class MqttApplicationMessageExtensions
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
-        var readerOptions = new JsonReaderOptions
+        var readerOptions = CreateJsonReaderOptions(jsonSerializerOptions);
+        var jsonReader = new Utf8JsonReader(applicationMessage.Payload, readerOptions);
+        return JsonSerializer.Deserialize<TValue>(ref jsonReader, jsonSerializerOptions);
+    }
+
+    private static JsonReaderOptions CreateJsonReaderOptions(JsonSerializerOptions jsonSerializerOptions)
+    {
+        jsonSerializerOptions ??= JsonSerializerOptions.Default;
+        return new JsonReaderOptions
         {
             MaxDepth = jsonSerializerOptions.MaxDepth,
             AllowTrailingCommas = jsonSerializerOptions.AllowTrailingCommas,
             CommentHandling = jsonSerializerOptions.ReadCommentHandling
         };
-        var jsonReader = new Utf8JsonReader(applicationMessage.Payload, readerOptions);
-        return JsonSerializer.Deserialize<TValue>(ref jsonReader, jsonSerializerOptions);
     }
 }

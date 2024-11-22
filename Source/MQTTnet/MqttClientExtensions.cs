@@ -8,6 +8,7 @@ using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO.Pipelines;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -60,6 +61,20 @@ public static class MqttClientExtensions
         return mqttClient.PublishAsync(applicationMessage, cancellationToken);
     }
 
+    public static async Task<MqttClientPublishResult> PublishSequenceAsync(
+        this IMqttClient mqttClient,
+        string topic,
+        Func<PipeWriter, ValueTask> payloadFactory,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(payloadFactory);
+
+        await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(payloadFactory);
+        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
+    }
+
     public static Task<MqttClientPublishResult> PublishBinaryAsync(
         this IMqttClient mqttClient,
         string topic,
@@ -71,6 +86,20 @@ public static class MqttClientExtensions
         return mqttClient.PublishSequenceAsync(topic, new ReadOnlySequence<byte>(payload), qualityOfServiceLevel, retain, cancellationToken);
     }
 
+    public static async Task<MqttClientPublishResult> PublishBinaryAsync(
+       this IMqttClient mqttClient,
+       string topic,
+       int payloadSize,
+       Action<Memory<byte>> payloadFactory,
+       MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+       bool retain = false,
+       CancellationToken cancellationToken = default)
+    {
+        await using var payloadOwner = MqttPayloadOwnerFactory.CreateSingleSegment(payloadSize, out var payloadMemory);
+        payloadFactory?.Invoke(payloadMemory);
+        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
+    }
+
     public static async Task<MqttClientPublishResult> PublishStringAsync(
         this IMqttClient mqttClient,
         string topic,
@@ -79,19 +108,14 @@ public static class MqttClientExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        var payloadOwner = MqttPayloadOwner.Empty;
-        if (!string.IsNullOrEmpty(payload))
-        {
-            payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(async writer =>
-            {
-                Encoding.UTF8.GetBytes(payload, writer);
-                await writer.FlushAsync();
-            });
-        }
+        return string.IsNullOrEmpty(payload)
+            ? await mqttClient.PublishSequenceAsync(topic, ReadOnlySequence<byte>.Empty, qualityOfServiceLevel, retain, cancellationToken)
+            : await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
-        await using (payloadOwner)
+        async ValueTask WritePayloadAsync(PipeWriter writer)
         {
-            return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
+            Encoding.UTF8.GetBytes(payload, writer);
+            await writer.FlushAsync();
         }
     }
 
@@ -104,10 +128,13 @@ public static class MqttClientExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(
-            async writer => await JsonSerializer.SerializeAsync(writer.AsStream(leaveOpen: true), payload, jsonSerializerOptions));
+        return await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
-        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            var stream = writer.AsStream(leaveOpen: true);
+            await JsonSerializer.SerializeAsync(stream, payload, jsonSerializerOptions);
+        }
     }
 
     public static async Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
@@ -119,10 +146,14 @@ public static class MqttClientExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(
-            async writer => await JsonSerializer.SerializeAsync(writer.AsStream(leaveOpen: true), payload, jsonTypeInfo));
+        ArgumentNullException.ThrowIfNull(jsonTypeInfo);
+        return await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
-        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            var stream = writer.AsStream(leaveOpen: true);
+            await JsonSerializer.SerializeAsync(stream, payload, jsonTypeInfo);
+        }
     }
 
 

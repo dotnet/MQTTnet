@@ -27,7 +27,14 @@ public static class MqttApplicationMessageExtensions
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
-        var jsonReader = new Utf8JsonReader(applicationMessage.Payload);
+        var jsonOptions = jsonTypeInfo.Options;
+        var readerOptions = new JsonReaderOptions
+        {
+            MaxDepth = jsonOptions.MaxDepth,
+            AllowTrailingCommas = jsonOptions.AllowTrailingCommas,
+            CommentHandling = jsonOptions.ReadCommentHandling
+        };
+        var jsonReader = new Utf8JsonReader(applicationMessage.Payload, readerOptions);
         return JsonSerializer.Deserialize(ref jsonReader, jsonTypeInfo);
     }
 
@@ -35,7 +42,13 @@ public static class MqttApplicationMessageExtensions
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
-        var jsonReader = new Utf8JsonReader(applicationMessage.Payload);
+        var readerOptions = new JsonReaderOptions
+        {
+            MaxDepth = jsonSerializerOptions.MaxDepth,
+            AllowTrailingCommas = jsonSerializerOptions.AllowTrailingCommas,
+            CommentHandling = jsonSerializerOptions.ReadCommentHandling
+        };
+        var jsonReader = new Utf8JsonReader(applicationMessage.Payload, readerOptions);
         return JsonSerializer.Deserialize<TValue>(ref jsonReader, jsonSerializerOptions);
     }
 }

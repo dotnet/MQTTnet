@@ -98,8 +98,10 @@ namespace MQTTnet
 
         /// <summary>
         /// This method causes memory allocation when transcoding the string payload.
+        /// <para>* Use the method IMqttClient.PublishStringAsync() instead in client side.</para>
+        /// <para>* Use the method MqttServer.InjectStringAsync() instead in server side.</para>
         /// </summary>
-        /// <remarks>Use the method IMqttClient.PublishStringAsync() instead in client side.</remarks>
+        /// <remarks></remarks>
         /// <param name="payload"></param>
         /// <returns></returns>
         public MqttApplicationMessageBuilder WithPayload(string payload)
@@ -107,11 +109,26 @@ namespace MQTTnet
             return string.IsNullOrEmpty(payload) ? this : WithPayload(Encoding.UTF8.GetBytes(payload));
         }
 
+        /// <summary>
+        /// This method causes memory allocation when transcoding the stream payload.
+        /// <para>* Use the method IMqttClient.PublishStreamAsync() instead in client side.</para>
+        /// <para>* Use the method MqttServer.InjectStreamAsync() instead in server side.</para>
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <returns></returns>
         public MqttApplicationMessageBuilder WithPayload(Stream payload)
         {
             return payload == null ? this : WithPayload(payload, payload.Length - payload.Position);
         }
 
+        /// <summary>
+        /// This method causes memory allocation when transcoding the stream payload.
+        /// <para>* Use the method IMqttClient.PublishStreamAsync() instead in client side.</para>
+        /// <para>* Use the method MqttServer.InjectStreamAsync() instead in server side.</para>
+        /// </summary>
+        /// <param name="payload"></param>
+        /// <param name="length"></param>
+        /// <returns></returns>
         public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
         { 
             if (payload == null || length == 0)

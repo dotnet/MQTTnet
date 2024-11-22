@@ -8,6 +8,7 @@ using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.IO.Pipelines;
 using System.Text;
 using System.Text.Json;
@@ -153,6 +154,23 @@ public static class MqttClientExtensions
         {
             var stream = writer.AsStream(leaveOpen: true);
             await JsonSerializer.SerializeAsync(stream, payload, jsonTypeInfo, cancellationToken);
+        }
+    }
+
+    public static async Task<MqttClientPublishResult> PublishStreamAsync(
+        this IMqttClient mqttClient,
+        string topic,
+        Stream payload,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        return await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            await payload.CopyToAsync(writer, cancellationToken);
         }
     }
 

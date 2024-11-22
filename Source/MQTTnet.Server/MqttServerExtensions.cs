@@ -173,13 +173,30 @@ public static class MqttServerExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(jsonTypeInfo);
-
         await server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
             var stream = writer.AsStream(leaveOpen: true);
             await JsonSerializer.SerializeAsync(stream, payload, jsonTypeInfo, cancellationToken);
+        }
+    }
+
+    public static async Task InjectStreamAsync(
+        this MqttServer server,
+        string clientId,
+        string topic,
+        Stream payload,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        await server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            await payload.CopyToAsync(writer, cancellationToken);
         }
     }
 

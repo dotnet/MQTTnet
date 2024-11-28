@@ -366,7 +366,7 @@ namespace MQTTnet.Tests.Server
 
                 client.ConnectedAsync += async e =>
                 {
-                    await client.PublishStringAsync("Connected");
+                    await client.PublishStringAsync("Connected", default);
                 };
 
                 client.ApplicationMessageReceivedAsync += e =>
@@ -381,7 +381,7 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                await client.PublishStringAsync("Hello");
+                await client.PublishStringAsync("Hello", default);
 
                 await Task.Delay(500);
 
@@ -624,7 +624,7 @@ namespace MQTTnet.Tests.Server
                 await c2.SubscribeAsync("topic");
 
                 // r
-                await c2.PublishStringAsync("topic");
+                await c2.PublishStringAsync("topic", default);
 
                 await LongTestDelay();
                 flow = string.Join(string.Empty, events);
@@ -720,7 +720,7 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                c1.PublishStringAsync("topic").Wait();
+                c1.PublishStringAsync("topic", default).Wait();
 
                 await Task.Delay(500);
 
@@ -742,7 +742,7 @@ namespace MQTTnet.Tests.Server
                 flow = string.Join(string.Empty, events);
                 Assert.AreEqual("cr", flow);
 
-                c1.PublishStringAsync("topic").Wait();
+                c1.PublishStringAsync("topic", default).Wait();
 
                 await Task.Delay(500);
 
@@ -849,11 +849,11 @@ namespace MQTTnet.Tests.Server
 
                 await Task.Delay(500);
 
-                await client.PublishStringAsync("Hello");
+                await client.PublishStringAsync("Hello", default);
                 await Task.Delay(100);
                 Assert.AreEqual(0, receivedMessages.Count);
 
-                await client.PublishStringAsync("topic1");
+                await client.PublishStringAsync("topic1", default);
                 await Task.Delay(100);
                 Assert.AreEqual(1, receivedMessages.Count);
             }

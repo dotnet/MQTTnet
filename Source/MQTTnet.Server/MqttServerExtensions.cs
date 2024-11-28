@@ -62,15 +62,14 @@ public static class MqttServerExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        ArgumentNullException.ThrowIfNull(clientId);
         ArgumentNullException.ThrowIfNull(topic);
-
-        var applicationMessage = new MqttApplicationMessageBuilder()
-            .WithTopic(topic)
-            .WithPayload(payload)
-            .WithRetainFlag(retain)
-            .WithQualityOfServiceLevel(qualityOfServiceLevel)
-            .Build();
+        var applicationMessage = new MqttApplicationMessage
+        {
+            Topic = topic,
+            Payload = payload,
+            Retain = retain,
+            QualityOfServiceLevel = qualityOfServiceLevel
+        };
 
         return server.InjectApplicationMessage(clientId, applicationMessage, customSessionItems: null, cancellationToken);
     }

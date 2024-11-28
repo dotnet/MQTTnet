@@ -52,12 +52,13 @@ public static class MqttClientExtensions
         ArgumentNullException.ThrowIfNull(mqttClient);
         ArgumentNullException.ThrowIfNull(topic);
 
-        var applicationMessage = new MqttApplicationMessageBuilder()
-            .WithTopic(topic)
-            .WithPayload(payload)
-            .WithRetainFlag(retain)
-            .WithQualityOfServiceLevel(qualityOfServiceLevel)
-            .Build();
+        var applicationMessage = new MqttApplicationMessage
+        {
+            Topic = topic,
+            Payload = payload,
+            Retain = retain,
+            QualityOfServiceLevel = qualityOfServiceLevel
+        };
 
         return mqttClient.PublishAsync(applicationMessage, cancellationToken);
     }
@@ -79,7 +80,7 @@ public static class MqttClientExtensions
     public static Task<MqttClientPublishResult> PublishBinaryAsync(
         this IMqttClient mqttClient,
         string topic,
-        ReadOnlyMemory<byte> payload = default,
+        ReadOnlyMemory<byte> payload,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)
@@ -104,7 +105,7 @@ public static class MqttClientExtensions
     public static async Task<MqttClientPublishResult> PublishStringAsync(
         this IMqttClient mqttClient,
         string topic,
-        string payload = default,
+        string payload,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)

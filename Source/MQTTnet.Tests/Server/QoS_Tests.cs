@@ -32,7 +32,7 @@ public sealed class QoS_Tests : BaseTestClass
             await client1.SubscribeAsync("A");
 
             var client2 = await testEnvironment.ConnectClient();
-            await client2.PublishStringAsync("A");
+            await client2.PublishStringAsync("A", null);
 
             await LongTestDelay();
 
@@ -59,7 +59,7 @@ public sealed class QoS_Tests : BaseTestClass
             await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.AtLeastOnce);
 
             var client2 = await testEnvironment.ConnectClient();
-            await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
+            await client2.PublishStringAsync("A",null, qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
 
             await LongTestDelay();
 
@@ -94,7 +94,7 @@ public sealed class QoS_Tests : BaseTestClass
             await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.ExactlyOnce);
 
             var client2 = await testEnvironment.ConnectClient();
-            await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.ExactlyOnce);
+            await client2.PublishStringAsync("A",null, qualityOfServiceLevel: MqttQualityOfServiceLevel.ExactlyOnce);
 
             await LongTestDelay();
 

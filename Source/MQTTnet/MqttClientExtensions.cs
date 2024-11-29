@@ -97,8 +97,7 @@ public static class MqttClientExtensions
        bool retain = false,
        CancellationToken cancellationToken = default)
     {
-        await using var payloadOwner = MqttPayloadOwnerFactory.CreateSingleSegment(payloadSize, out var payloadMemory);
-        payloadFactory?.Invoke(payloadMemory);
+        await using var payloadOwner = MqttPayloadOwnerFactory.CreateSingleSegment(payloadSize, payloadFactory);
         return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
     }
 

@@ -19,11 +19,16 @@ namespace MQTTnet.Tests.Internal
         public async Task CreateSingleSegmentTest()
         {
             var size = 10;
-            await using var owner = MqttPayloadOwnerFactory.CreateSingleSegment(size, out var payloadMemory);
-            Random.Shared.NextBytes(payloadMemory.Span);
+            var buffer = new byte[size];
+            Random.Shared.NextBytes(buffer);
+
+            await using var owner = MqttPayloadOwnerFactory.CreateSingleSegment(size, payload =>
+            {
+                buffer.AsSpan().CopyTo(payload.Span);
+            });
 
             Assert.AreEqual(size, owner.Payload.Length);
-            Assert.IsTrue(payloadMemory.Span.SequenceEqual(owner.Payload.ToArray()));
+            Assert.IsTrue(buffer.AsSpan().SequenceEqual(owner.Payload.ToArray()));
         }
 
         [TestMethod]

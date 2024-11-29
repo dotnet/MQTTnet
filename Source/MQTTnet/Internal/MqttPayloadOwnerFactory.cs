@@ -17,12 +17,12 @@ namespace MQTTnet.Internal
         /// Create owner for a single segment payload
         /// </summary>
         /// <param name="payloadSize"></param>
-        /// <param name="payloadMemory"></param>
+        /// <param name="payloadFactory"></param>
         /// <returns></returns>
-        public static MqttPayloadOwner CreateSingleSegment(int payloadSize, out Memory<byte> payloadMemory)
+        public static MqttPayloadOwner CreateSingleSegment(int payloadSize, Action<Memory<byte>> payloadFactory)
         {
-            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(payloadSize);
-            return SingleSegmentPayloadOwner.Create(payloadSize, out payloadMemory);
+            ArgumentNullException.ThrowIfNull(payloadFactory);
+            return SingleSegmentPayloadOwner.Create(payloadSize, payloadFactory);
         }
 
         /// <summary>
@@ -42,22 +42,38 @@ namespace MQTTnet.Internal
             private readonly byte[] _buffer;
             public override ReadOnlySequence<byte> Payload { get; }
 
-            private SingleSegmentPayloadOwner(byte[] buffer, ReadOnlyMemory<byte> payloadMemory)
+            private SingleSegmentPayloadOwner(byte[] buffer, ReadOnlyMemory<byte> payload)
             {
                 _buffer = buffer;
-                Payload = new ReadOnlySequence<byte>(payloadMemory);
+                Payload = new ReadOnlySequence<byte>(payload);
             }
 
-            public static MqttPayloadOwner Create(int payloadSize, out Memory<byte> payloadMemory)
+            public static MqttPayloadOwner Create(int payloadSize, Action<Memory<byte>> payloadFactory)
             {
-                var buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
-                payloadMemory = buffer.AsMemory(0, payloadSize);
-                return new SingleSegmentPayloadOwner(buffer, payloadMemory);
+                byte[] buffer;
+                Memory<byte> payload;
+
+                if (payloadSize <= 0)
+                {
+                    buffer = Array.Empty<byte>();
+                    payload = Memory<byte>.Empty;
+                }
+                else
+                {
+                    buffer = ArrayPool<byte>.Shared.Rent(payloadSize);
+                    payload = buffer.AsMemory(0, payloadSize);
+                }
+
+                payloadFactory.Invoke(payload);
+                return new SingleSegmentPayloadOwner(buffer, payload);
             }
 
             protected override ValueTask DisposeAsync(bool disposing)
             {
-                ArrayPool<byte>.Shared.Return(_buffer);
+                if (_buffer.Length > 0)
+                {
+                    ArrayPool<byte>.Shared.Return(_buffer);
+                }
                 return ValueTask.CompletedTask;
             }
         }

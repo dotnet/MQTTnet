@@ -300,7 +300,7 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS0, subscribeResult.Items.First().ResultCode);
 
                 var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishStringAsync("x");
+                await client2.PublishStringAsync("x",null);
 
                 await Task.Delay(1000);
 

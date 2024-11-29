@@ -18,41 +18,56 @@ namespace MQTTnet.Extensions.Rpc
 {
     public static class MqttRpcClientExtensions
     {
+        [Obsolete("Use the method ExecuteTimeOutAsync instead.")]
         public static async Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
         {
-            var response = await MqttTimeOutAsync(timeout, cancellationToken => client.ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, cancellationToken));
+            var response = await client.ExecuteTimeOutAsync(timeout, methodName, payload, qualityOfServiceLevel, parameters);
             return response.ToArray();
         }
 
-        public static Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, ReadOnlyMemory<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
+        [Obsolete("Use the method ExecuteTimeOutAsync instead.")]
+        public static async Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, ReadOnlyMemory<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
+        {
+            var response = await client.ExecuteTimeOutAsync(timeout, methodName, payload, qualityOfServiceLevel, parameters);
+            return response.ToArray();
+        }
+
+        public static Task<ReadOnlySequence<byte>> ExecuteTimeOutAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
+        {
+            return MqttTimeOutAsync(timeout, cancellationToken => client.ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, cancellationToken));
+        }
+        public static Task<ReadOnlySequence<byte>> ExecuteTimeOutAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, Stream payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
         {
             return MqttTimeOutAsync(timeout, cancellationToken => client.ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, cancellationToken));
         }
 
-        public static async Task<byte[]> ExecuteAsync(this IMqttRpcClient client, string methodName, ReadOnlyMemory<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
+        public static Task<ReadOnlySequence<byte>> ExecuteTimeOutAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, ReadOnlyMemory<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
         {
-            var response = await client.ExecuteAsync(methodName, new ReadOnlySequence<byte>(payload), qualityOfServiceLevel, parameters, cancellationToken);
-            return response.ToArray();
+            return MqttTimeOutAsync(timeout, cancellationToken => client.ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, cancellationToken));
+        }
+
+        public static Task<ReadOnlySequence<byte>> ExecuteTimeOutAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, ReadOnlySequence<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
+        {
+            return MqttTimeOutAsync(timeout, cancellationToken => client.ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, cancellationToken));
         }
 
         private static async Task<T> MqttTimeOutAsync<T>(TimeSpan timeout, Func<CancellationToken, Task<T>> executor)
         {
             using var timeoutTokenSource = new CancellationTokenSource(timeout);
-
             try
             {
                 return await executor(timeoutTokenSource.Token);
             }
-            catch (OperationCanceledException exception)
+            catch (OperationCanceledException exception) when (timeoutTokenSource.IsCancellationRequested)
             {
-                if (timeoutTokenSource.IsCancellationRequested)
-                {
-                    throw new MqttCommunicationTimedOutException(exception);
-                }
-                throw;
+                throw new MqttCommunicationTimedOutException(exception);
             }
         }
 
+        public static Task<ReadOnlySequence<byte>> ExecuteAsync(this IMqttRpcClient client, string methodName, ReadOnlyMemory<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
+        {
+            return client.ExecuteAsync(methodName, new ReadOnlySequence<byte>(payload), qualityOfServiceLevel, parameters, cancellationToken);
+        }
 
         public static Task<ReadOnlySequence<byte>> ExecuteAsync(this IMqttRpcClient client, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
         {

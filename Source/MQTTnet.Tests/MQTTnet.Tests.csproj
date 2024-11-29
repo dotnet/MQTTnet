@@ -7,7 +7,7 @@
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <!--<TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>

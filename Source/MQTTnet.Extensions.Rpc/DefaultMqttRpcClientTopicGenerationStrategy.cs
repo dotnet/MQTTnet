@@ -12,7 +12,7 @@ namespace MQTTnet.Extensions.Rpc
         {
             ArgumentNullException.ThrowIfNull(context);
 
-            if (context.MethodName.Contains("/") || context.MethodName.Contains("+") || context.MethodName.Contains("#"))
+            if (context.MethodName.Contains('/') || context.MethodName.Contains('+') || context.MethodName.Contains('#'))
             {
                 throw new ArgumentException("The method name cannot contain /, + or #.");
             }

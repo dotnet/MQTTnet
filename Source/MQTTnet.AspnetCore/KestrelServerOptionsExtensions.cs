@@ -17,7 +17,7 @@ namespace MQTTnet.AspNetCore
     public static class KestrelServerOptionsExtensions
     {
         /// <summary>
-        /// Listen all endponts in MqttServerOptions
+        /// Listen all endponts in <see cref="MqttServerOptions"/>
         /// </summary>
         /// <param name="kestrel"></param>
         /// <param name="protocols"></param>
@@ -29,7 +29,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Listen all endponts in MqttServerOptions
+        /// Listen all endponts in <see cref="MqttServerOptions"/>
         /// </summary>
         /// <param name="kestrel"></param>
         /// <param name="protocols"></param>
@@ -42,7 +42,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Listen all endponts in MqttServerOptions
+        /// Listen all endponts in <see cref="MqttServerOptions"/>
         /// </summary>
         /// <param name="kestrel"></param>
         /// <param name="protocols"></param>

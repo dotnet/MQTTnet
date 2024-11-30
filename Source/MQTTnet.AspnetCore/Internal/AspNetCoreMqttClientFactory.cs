@@ -4,31 +4,15 @@
 
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
-using MQTTnet.LowLevelClient;
 
 namespace MQTTnet.AspNetCore
 {
-    sealed class AspNetCoreMqttClientFactory : IMqttClientFactory
+    sealed class AspNetCoreMqttClientFactory : MqttClientFactory, IMqttClientFactory
     {
-        private readonly IMqttClientAdapterFactory _mqttClientAdapterFactory;
-        private readonly IMqttNetLogger _logger;
-
         public AspNetCoreMqttClientFactory(
-            IMqttClientAdapterFactory mqttClientAdapterFactory,
-            IMqttNetLogger logger)
+            IMqttNetLogger logger,
+            IMqttClientAdapterFactory clientAdapterFactory) : base(logger, clientAdapterFactory)
         {
-            _mqttClientAdapterFactory = mqttClientAdapterFactory;
-            _logger = logger;
-        }
-
-        public IMqttClient CreateMqttClient()
-        {
-            return new MqttClient(_mqttClientAdapterFactory, _logger);
-        }
-
-        public ILowLevelMqttClient CreateLowLevelMqttClient()
-        {
-            return new LowLevelMqttClient(_mqttClientAdapterFactory, _logger);
         }
     }
 }

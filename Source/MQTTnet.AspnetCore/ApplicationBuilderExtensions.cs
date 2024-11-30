@@ -13,9 +13,9 @@ namespace MQTTnet.AspNetCore;
 public static class ApplicationBuilderExtensions
 {
     /// <summary>
-    /// Get and use MqttServer
+    /// Get and use <see cref="MqttServer"/>
     /// </summary>
-    /// <remarks>Also, you can inject MqttServer into your service</remarks>
+    /// <remarks>Also, you can inject <see cref="MqttServer"/> into your service</remarks>
     /// <param name="app"></param>
     /// <param name="configure"></param>
     /// <returns></returns>

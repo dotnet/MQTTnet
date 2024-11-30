@@ -14,7 +14,7 @@ namespace MQTTnet.AspNetCore;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Register MqttServer as a singleton service
+    /// Register <see cref="MqttServer"/> as a singleton service
     /// </summary>
     /// <param name="services"></param>
     /// <param name="configure"></param>
@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Register MqttServer as a singleton service
+    /// Register <see cref="MqttServer"/> as a singleton service
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
@@ -50,14 +50,16 @@ public static class ServiceCollectionExtensions
     }
 
     /// <summary>
-    /// Register IMqttClientFactory as a singleton service
+    /// Register <see cref="IMqttClientFactory"/> and <see cref="MqttClientFactory"/> as singleton service
     /// </summary>
     /// <param name="services"></param>
     /// <returns></returns>
     public static IMqttClientBuilder AddMqttClient(this IServiceCollection services)
     {
         services.TryAddSingleton<IMqttClientAdapterFactory, AspNetCoreMqttClientAdapterFactory>();
-        services.TryAddSingleton<IMqttClientFactory, AspNetCoreMqttClientFactory>();
+        services.TryAddSingleton<AspNetCoreMqttClientFactory>();
+        services.TryAddSingleton<MqttClientFactory>(s => s.GetRequiredService<AspNetCoreMqttClientFactory>());
+        services.TryAddSingleton<IMqttClientFactory>(s => s.GetRequiredService<AspNetCoreMqttClientFactory>());
         return services.AddMqtt();
     }
 

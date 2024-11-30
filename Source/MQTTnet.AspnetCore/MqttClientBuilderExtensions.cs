@@ -14,7 +14,7 @@ namespace MQTTnet.AspNetCore
     public static class MqttClientBuilderExtensions
     {
         /// <summary>
-        /// Replace the implementation of IMqttClientAdapterFactory to MQTTnet.Implementations.MqttClientAdapterFactory
+        /// Replace the implementation of <see cref="IMqttClientAdapterFactory"/> to <see cref="MqttClientAdapterFactory"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
@@ -24,7 +24,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Replace the implementation of IMqttClientAdapterFactory to AspNetCoreMqttClientAdapterFactory
+        /// Replace the implementation of <see cref="IMqttClientAdapterFactory"/> to <see cref="AspNetCoreMqttClientAdapterFactory"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
@@ -34,7 +34,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Replace the implementation of IMqttClientAdapterFactory to TMqttClientAdapterFactory
+        /// Replace the implementation of <see cref="IMqttClientAdapterFactory"/> to TMqttClientAdapterFactory
         /// </summary>
         /// <typeparam name="TMqttClientAdapterFactory"></typeparam>
         /// <param name="builder"></param>

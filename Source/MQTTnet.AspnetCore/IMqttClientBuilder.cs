@@ -5,7 +5,7 @@
 namespace MQTTnet.AspNetCore
 {
     /// <summary>
-    /// Builder of IMqttClientFactory
+    /// Builder of <see cref="IMqttClientFactory"/>
     /// </summary>
     public interface IMqttClientBuilder: IMqttBuilder
     { 

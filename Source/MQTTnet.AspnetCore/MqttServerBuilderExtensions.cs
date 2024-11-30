@@ -14,7 +14,7 @@ namespace MQTTnet.AspNetCore
     public static class MqttServerBuilderExtensions
     {
         /// <summary>
-        /// Configure MqttServerOptionsBuilder
+        /// Configure <see cref="MqttServerOptionsBuilder"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="builderConfigure"></param>
@@ -26,7 +26,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Configure MqttServerOptionsBuilder and MqttServerOptions
+        /// Configure <see cref="MqttServerOptionsBuilder"/> and <see cref="MqttServerOptions"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="builderConfigure"></param>
@@ -39,7 +39,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Configure MqttServerStopOptionsBuilder
+        /// Configure <see cref="MqttServerStopOptionsBuilder"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="builderConfigure"></param>
@@ -51,7 +51,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Configure MqttServerStopOptionsBuilder and MqttServerStopOptions
+        /// Configure <see cref="MqttServerStopOptionsBuilder"/> and <see cref="MqttServerStopOptions"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="builderConfigure"></param>
@@ -76,7 +76,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Add an IMqttServerAdapter to MqttServer
+        /// Add an <see cref="IMqttServerAdapter"/> to <see cref="MqttServer"/>
         /// </summary>
         /// <typeparam name="TMqttServerAdapter"></typeparam>
         /// <param name="builder"></param>

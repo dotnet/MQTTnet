@@ -13,7 +13,7 @@ namespace MQTTnet.AspNetCore
     public static class MqttBuilderExtensions
     {
         /// <summary>
-        /// Use AspNetCoreMqttNetLogger as IMqttNetLogger
+        /// Use <see cref="AspNetCoreMqttNetLogger"/> as <see cref="IMqttNetLogger"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="configure"></param>
@@ -25,7 +25,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Use AspNetCoreMqttNetLogger as IMqttNetLogger
+        /// Use <see cref="AspNetCoreMqttNetLogger"/> as <see cref="IMqttNetLogger"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>
@@ -35,7 +35,7 @@ namespace MQTTnet.AspNetCore
         }
 
         /// <summary>
-        /// Use MqttNetNullLogger as IMqttNetLogger
+        /// Use <see cref="MqttNetNullLogger"/> as <see cref="IMqttNetLogger"/>
         /// </summary>
         /// <param name="builder"></param>
         /// <returns></returns>

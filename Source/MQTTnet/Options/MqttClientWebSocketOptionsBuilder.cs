@@ -66,6 +66,12 @@ public sealed class MqttClientWebSocketOptionsBuilder
 
     public MqttClientWebSocketOptionsBuilder WithUri(string uri)
     {
+        var webSocketUri = new Uri(uri, UriKind.Absolute);
+        if (webSocketUri.Scheme != Uri.UriSchemeWs && webSocketUri.Scheme != Uri.UriSchemeWss)
+        {
+            throw new ArgumentException("The scheme of the WebSocket Uri must be ws or wss.");
+        }
+
         _webSocketOptions.Uri = uri;
         return this;
     }

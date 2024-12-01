@@ -6,6 +6,7 @@ using System.Collections;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Server.Exceptions;
 
 namespace MQTTnet.Server.Internal;
 
@@ -109,10 +110,11 @@ public sealed class MqttSession : IDisposable
 
     public EnqueueDataPacketResult EnqueueDataPacket(MqttPacketBusItem packetBusItem)
     {
-        if (_packetBus.ItemsCount(MqttPacketBusPartition.Data) >= _serverOptions.MaxPendingMessagesPerClient)
+        if (PendingDataPacketsCount >= _serverOptions.MaxPendingMessagesPerClient)
         {
             if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
             {
+                packetBusItem.Fail(new MqttPendingMessagesOverflowException(Id, _serverOptions.PendingMessagesOverflowStrategy));
                 return EnqueueDataPacketResult.Dropped;
             }
 
@@ -121,10 +123,14 @@ public sealed class MqttSession : IDisposable
                 // Only drop from the data partition. Dropping from control partition might break the connection
                 // because the client does not receive PINGREQ packets etc. any longer.
                 var firstItem = _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
-                if (firstItem != null && _eventContainer.QueuedApplicationMessageOverwrittenEvent.HasHandlers)
+                if (firstItem != null)
                 {
-                    var eventArgs = new QueueMessageOverwrittenEventArgs(Id, firstItem.Packet);
-                    _eventContainer.QueuedApplicationMessageOverwrittenEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    firstItem.Fail(new MqttPendingMessagesOverflowException(Id, _serverOptions.PendingMessagesOverflowStrategy));
+                    if (_eventContainer.QueuedApplicationMessageOverwrittenEvent.HasHandlers)
+                    {
+                        var eventArgs = new QueueMessageOverwrittenEventArgs(Id, firstItem.Packet);
+                        _eventContainer.QueuedApplicationMessageOverwrittenEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    }
                 }
             }
         }

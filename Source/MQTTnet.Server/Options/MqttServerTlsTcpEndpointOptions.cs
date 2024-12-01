@@ -22,7 +22,11 @@ namespace MQTTnet.Server
 
         public bool CheckCertificateRevocation { get; set; }
 
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12;
+        /// <summary>
+        /// The default value is SslProtocols.None, which allows the operating system to choose the best protocol to use, and to block protocols that are not secure.
+        /// </summary>
+        /// <seealso href="https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.sslprotocols">SslProtocols</seealso>       
+        public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
 
         public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
     }

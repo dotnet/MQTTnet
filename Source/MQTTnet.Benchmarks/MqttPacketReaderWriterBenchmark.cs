@@ -10,7 +10,7 @@ using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class MqttPacketReaderWriterBenchmark : BaseBenchmark
     {

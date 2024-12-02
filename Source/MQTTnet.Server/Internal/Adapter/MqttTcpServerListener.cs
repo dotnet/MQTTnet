@@ -167,11 +167,11 @@ namespace MQTTnet.Server.Internal.Adapter
         async Task TryHandleClientConnectionAsync(CrossPlatformSocket clientSocket)
         {
             Stream stream = null;
-            string remoteEndPoint = null;
+            EndPoint remoteEndPoint = null;
 
             try
             {
-                remoteEndPoint = clientSocket.RemoteEndPoint.ToString();
+                remoteEndPoint = clientSocket.RemoteEndPoint;
 
                 _logger.Verbose("TCP client '{0}' accepted (Local endpoint={1})", remoteEndPoint, _localEndPoint);
 

@@ -7,6 +7,7 @@ using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using System;
+using System.Net;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -41,7 +42,7 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
 
     public X509Certificate2? ClientCertificate => GetChannel().ClientCertificate;
 
-    public string? Endpoint => GetChannel().Endpoint;
+    public EndPoint? RemoteEndPoint => GetChannel().RemoteEndPoint;
 
     public bool IsSecureConnection => GetChannel().IsSecureConnection;
 

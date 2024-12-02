@@ -36,11 +36,7 @@ class MqttChannel : IDisposable
 
     public X509Certificate2? ClientCertificate { get; }
 
-            // mqtt over websocket
-            var httpFeature = _connection.Features.Get<IHttpContextFeature>();
-            return httpFeature?.HttpContext?.Connection.ClientCertificate;
-        }
-    }
+    public EndPoint? RemoteEndPoint { get; private set; }
 
     public bool IsSecureConnection { get; }
 
@@ -49,14 +45,13 @@ class MqttChannel : IDisposable
         MqttPacketFormatterAdapter packetFormatterAdapter,
         ConnectionContext connection,
         MqttPacketInspector? packetInspector = null)
-    public EndPoint RemoteEndPoint
     {
         PacketFormatterAdapter = packetFormatterAdapter;
         _packetInspector = packetInspector;
 
         var httpContextFeature = connection.Features.Get<IHttpContextFeature>();
         var tlsConnectionFeature = connection.Features.Get<ITlsConnectionFeature>();
-        Endpoint = GetRemoteEndPoint(httpContextFeature, connection.RemoteEndPoint);
+        RemoteEndPoint = GetRemoteEndPoint(httpContextFeature, connection.RemoteEndPoint);
         IsSecureConnection = IsTlsConnection(httpContextFeature, tlsConnectionFeature);
         ClientCertificate = GetClientCertificate(httpContextFeature, tlsConnectionFeature);
         _serverModeWebSocket = IsServerModeWebSocket(httpContextFeature);
@@ -71,18 +66,19 @@ class MqttChannel : IDisposable
     }
 
 
-    private static string? GetRemoteEndPoint(IHttpContextFeature? _httpContextFeature, EndPoint? remoteEndPoint)
+    private static EndPoint? GetRemoteEndPoint(IHttpContextFeature? _httpContextFeature, EndPoint? remoteEndPoint)
     {
         if (_httpContextFeature != null && _httpContextFeature.HttpContext != null)
         {
             var httpConnection = _httpContextFeature.HttpContext.Connection;
             var remoteAddress = httpConnection.RemoteIpAddress;
-            return remoteAddress == null ? null : $"{remoteAddress}:{httpConnection.RemotePort}";
+            if (remoteAddress != null)
+            {
+                return new IPEndPoint(remoteAddress, httpConnection.RemotePort);
+            }
         }
 
-        return remoteEndPoint is DnsEndPoint dnsEndPoint
-            ? $"{dnsEndPoint.Host}:{dnsEndPoint.Port}"
-            : remoteEndPoint?.ToString();
+        return null;
     }
 
     private static bool IsTlsConnection(IHttpContextFeature? _httpContextFeature, ITlsConnectionFeature? tlsConnectionFeature)

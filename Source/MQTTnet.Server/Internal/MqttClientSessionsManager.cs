@@ -19,22 +19,18 @@ namespace MQTTnet.Server.Internal;
 public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification, IDisposable
 {
     readonly Dictionary<string, MqttConnectedClient> _clients = new(4096);
-
     readonly AsyncLock _createConnectionSyncRoot = new();
-
     readonly MqttServerEventContainer _eventContainer;
     readonly MqttNetSourceLogger _logger;
     readonly MqttServerOptions _options;
-
     readonly MqttRetainedMessagesManager _retainedMessagesManager;
     readonly IMqttNetLogger _rootLogger;
-
     readonly ReaderWriterLockSlim _sessionsManagementLock = new();
 
     // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
     // See the MqttSubscription object for a detailed explanation.
     readonly MqttSessionsStorage _sessionsStorage = new();
-    readonly HashSet<MqttSession> _subscriberSessions = new();
+    readonly HashSet<MqttSession> _subscriberSessions = [];
 
     public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, MqttServerEventContainer eventContainer, IMqttNetLogger logger)
     {
@@ -365,7 +361,11 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
             if (_eventContainer.ClientConnectedEvent.HasHandlers)
             {
-                var eventArgs = new ClientConnectedEventArgs(connectPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion, channelAdapter.Endpoint, connectedClient.Session.Items);
+                var eventArgs = new ClientConnectedEventArgs(
+                    connectPacket,
+                    channelAdapter.PacketFormatterAdapter.ProtocolVersion,
+                    channelAdapter.RemoteEndPoint,
+                    connectedClient.Session.Items);
 
                 await _eventContainer.ClientConnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
             }
@@ -403,7 +403,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     }
                 }
 
-                var endpoint = connectedClient.Endpoint;
+                var endpoint = connectedClient.RemoteEndPoint;
 
                 if (connectedClient.Id != null && !connectedClient.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
@@ -591,7 +591,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
                 if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientDisconnectedEventArgs(oldConnectedClient.Id, null, MqttClientDisconnectType.Takeover, oldConnectedClient.Endpoint, oldConnectedClient.Session.Items);
+                    var eventArgs = new ClientDisconnectedEventArgs(
+                        oldConnectedClient.Id,
+                        null,
+                        MqttClientDisconnectType.Takeover,
+                        oldConnectedClient.RemoteEndPoint,
+                        oldConnectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                 }
@@ -655,14 +660,14 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
         catch (OperationCanceledException)
         {
-            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.RemoteEndPoint);
         }
         catch (MqttCommunicationTimedOutException)
         {
-            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.RemoteEndPoint);
         }
 
-        _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.Endpoint);
+        _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.RemoteEndPoint);
         return null;
     }
 

@@ -37,11 +37,11 @@ namespace MQTTnet.Implementations
             IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
         }
 
-        public MqttTcpChannel(Stream stream, string endpoint, X509Certificate2 clientCertificate) : this()
+        public MqttTcpChannel(Stream stream, EndPoint remoteEndPoint, X509Certificate2 clientCertificate) : this()
         {
             _stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
-            Endpoint = endpoint;
+            RemoteEndPoint = remoteEndPoint;
 
             IsSecureConnection = stream is SslStream;
             ClientCertificate = clientCertificate;
@@ -49,7 +49,7 @@ namespace MQTTnet.Implementations
 
         public X509Certificate2 ClientCertificate { get; }
 
-        public string Endpoint { get; private set; }
+        public EndPoint RemoteEndPoint { get; private set; }
 
         public bool IsSecureConnection { get; }
 
@@ -175,7 +175,7 @@ namespace MQTTnet.Implementations
                     _stream = networkStream;
                 }
 
-                Endpoint = socket.RemoteEndPoint?.ToString();
+                RemoteEndPoint = socket.RemoteEndPoint;
             }
             catch (Exception)
             {

@@ -4,6 +4,7 @@
 
 using System;
 using System.Buffers;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +14,7 @@ namespace MQTTnet.Channel;
 public interface IMqttChannel : IDisposable
 {
     X509Certificate2 ClientCertificate { get; }
-    string Endpoint { get; }
+    EndPoint RemoteEndPoint { get; }
 
     bool IsSecureConnection { get; }
 

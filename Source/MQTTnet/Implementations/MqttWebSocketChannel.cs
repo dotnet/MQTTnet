@@ -26,18 +26,18 @@ namespace MQTTnet.Implementations
             _options = options ?? throw new ArgumentNullException(nameof(options));
         }
 
-        public MqttWebSocketChannel(WebSocket webSocket, string endpoint, bool isSecureConnection, X509Certificate2 clientCertificate)
+        public MqttWebSocketChannel(WebSocket webSocket, EndPoint remoteEndPoint, bool isSecureConnection, X509Certificate2 clientCertificate)
         {
             _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
 
-            Endpoint = endpoint;
+            RemoteEndPoint = remoteEndPoint;
             IsSecureConnection = isSecureConnection;
             ClientCertificate = clientCertificate;
         }
 
         public X509Certificate2 ClientCertificate { get; }
 
-        public string Endpoint { get; }
+        public EndPoint RemoteEndPoint { get; }
 
         public bool IsSecureConnection { get; private set; }
 

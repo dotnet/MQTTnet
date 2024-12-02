@@ -36,7 +36,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsNotNull(eventArgs);
 
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Connected_Event)));
-                Assert.IsTrue(eventArgs.Endpoint.Contains("127.0.0.1"));
+                Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
                 Assert.AreEqual(MqttProtocolVersion.V311, eventArgs.ProtocolVersion);
                 Assert.AreEqual("TheUser", eventArgs.UserName);
             }
@@ -64,7 +64,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsNotNull(eventArgs);
 
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Disconnected_Event)));
-                Assert.IsTrue(eventArgs.Endpoint.Contains("127.0.0.1"));
+                Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
                 Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
             }
         }

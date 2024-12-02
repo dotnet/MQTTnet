@@ -115,6 +115,12 @@ namespace MQTTnet.Server
             return this;
         }
 
+        public MqttServerOptionsBuilder WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy value)
+        {
+            _options.PendingMessagesOverflowStrategy = value;
+            return this;
+        }
+
         public MqttServerOptionsBuilder WithoutDefaultEndpoint()
         {
             _options.DefaultEndpointOptions.IsEnabled = false;

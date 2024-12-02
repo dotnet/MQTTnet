@@ -32,12 +32,16 @@ namespace MQTTnet.Tests.Mockups
         {
         }
 
-        public TestEnvironment(TestContext testContext, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+        public TestEnvironment(
+            TestContext testContext, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, bool trackUnobservedTaskException = true)
         {
             _protocolVersion = protocolVersion;
             TestContext = testContext;
 
-            TaskScheduler.UnobservedTaskException += TrackUnobservedTaskException;
+            if (trackUnobservedTaskException)
+            {
+                TaskScheduler.UnobservedTaskException += TrackUnobservedTaskException;
+            }
 
             ServerLogger.LogMessagePublished += (s, e) =>
             {

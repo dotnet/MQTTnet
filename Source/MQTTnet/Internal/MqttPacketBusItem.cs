@@ -10,8 +10,8 @@ namespace MQTTnet.Internal
 {
     public sealed class MqttPacketBusItem
     {
-        readonly AsyncTaskCompletionSource<bool> _promise = new AsyncTaskCompletionSource<bool>();
-        
+        readonly AsyncTaskCompletionSource<MqttPacket> _promise = new AsyncTaskCompletionSource<MqttPacket>();
+
         public MqttPacketBusItem(MqttPacket packet)
         {
             Packet = packet ?? throw new ArgumentNullException(nameof(packet));
@@ -28,7 +28,7 @@ namespace MQTTnet.Internal
 
         public void Complete()
         {
-            _promise.TrySetResult(true);
+            _promise.TrySetResult(Packet);
             Completed?.Invoke(this, EventArgs.Empty);
         }
 
@@ -37,7 +37,7 @@ namespace MQTTnet.Internal
             _promise.TrySetException(exception);
         }
 
-        public Task WaitAsync()
+        public Task<MqttPacket> WaitAsync()
         {
             return _promise.Task;
         }

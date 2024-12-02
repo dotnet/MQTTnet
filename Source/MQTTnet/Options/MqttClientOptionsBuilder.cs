@@ -153,15 +153,11 @@ public sealed class MqttClientOptionsBuilder
 
             case "ws":
                 WithWebSocketServer(o => o.WithUri(uri.ToString()))
-                    .WithAddressFamily(AddressFamily.Unspecified)
-                    .WithProtocolType(ProtocolType.Tcp)
                     .WithTlsOptions(o => o.UseTls(false));
                 break;
 
             case "wss":
                 WithWebSocketServer(o => o.WithUri(uri.ToString()))
-                    .WithAddressFamily(AddressFamily.Unspecified)
-                    .WithProtocolType(ProtocolType.Tcp)
                     .WithTlsOptions(o => o.UseTls(true));
                 break;
 

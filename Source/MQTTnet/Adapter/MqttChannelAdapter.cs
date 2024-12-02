@@ -5,6 +5,7 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -51,7 +52,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
     public X509Certificate2 ClientCertificate => _channel.ClientCertificate;
 
-    public string Endpoint => _channel.Endpoint;
+    public EndPoint RemoteEndPoint => _channel.RemoteEndPoint;
 
     public bool IsSecureConnection => _channel.IsSecureConnection;
 

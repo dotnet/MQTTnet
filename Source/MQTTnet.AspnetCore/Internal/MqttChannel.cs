@@ -36,7 +36,11 @@ class MqttChannel : IDisposable
 
     public X509Certificate2? ClientCertificate { get; }
 
-    public string? Endpoint { get; }
+            // mqtt over websocket
+            var httpFeature = _connection.Features.Get<IHttpContextFeature>();
+            return httpFeature?.HttpContext?.Connection.ClientCertificate;
+        }
+    }
 
     public bool IsSecureConnection { get; }
 
@@ -45,6 +49,7 @@ class MqttChannel : IDisposable
         MqttPacketFormatterAdapter packetFormatterAdapter,
         ConnectionContext connection,
         MqttPacketInspector? packetInspector = null)
+    public EndPoint RemoteEndPoint
     {
         PacketFormatterAdapter = packetFormatterAdapter;
         _packetInspector = packetInspector;

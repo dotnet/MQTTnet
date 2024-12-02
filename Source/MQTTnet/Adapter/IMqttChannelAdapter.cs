@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +19,8 @@ public interface IMqttChannelAdapter : IDisposable
     long BytesSent { get; }
 
     X509Certificate2 ClientCertificate { get; }
-    string Endpoint { get; }
+
+    EndPoint RemoteEndPoint { get; }
 
     bool IsSecureConnection { get; }
 

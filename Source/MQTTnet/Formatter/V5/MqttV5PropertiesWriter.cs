@@ -31,7 +31,7 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.AssignedClientIdentifier, value);
         }
 
-        public void WriteAuthenticationData(byte[] value)
+        public void WriteAuthenticationData(ReadOnlySpan<byte> value)
         {
             Write(MqttPropertyId.AuthenticationData, value);
         }
@@ -46,7 +46,7 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.ContentType, value);
         }
 
-        public void WriteCorrelationData(byte[] value)
+        public void WriteCorrelationData(ReadOnlySpan<byte> value)
         {
             Write(MqttPropertyId.CorrelationData, value);
         }
@@ -88,7 +88,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             WriteAsFourByteInteger(MqttPropertyId.MessageExpiryInterval, value);
         }
 
@@ -324,7 +324,7 @@ namespace MQTTnet.Formatter.V5
             _bufferWriter.WriteString(value);
         }
 
-        void Write(MqttPropertyId id, byte[] value)
+        void Write(MqttPropertyId id, ReadOnlySpan<byte> value)
         {
             if (value == null)
             {

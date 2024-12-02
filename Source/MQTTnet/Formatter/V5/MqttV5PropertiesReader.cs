@@ -3,8 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using MQTTnet.Exceptions;
+using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -29,7 +31,7 @@ namespace MQTTnet.Formatter.V5
                 _length = 0;
             }
 
-            _targetOffset = body.Position + _length;
+            _targetOffset = (int)(body.Position + _length);
 
             CollectedUserProperties = null;
             CurrentPropertyId = MqttPropertyId.None;
@@ -81,9 +83,9 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadString();
         }
 
-        public byte[] ReadAuthenticationData()
+        public ReadOnlyMemory<byte> ReadAuthenticationData()
         {
-            return _body.ReadBinaryData();
+            return _body.ReadBinaryData().Join();
         }
 
         public string ReadAuthenticationMethod()
@@ -96,9 +98,9 @@ namespace MQTTnet.Formatter.V5
             return _body.ReadString();
         }
 
-        public byte[] ReadCorrelationData()
+        public ReadOnlyMemory<byte> ReadCorrelationData()
         {
-            return _body.ReadBinaryData();
+            return _body.ReadBinaryData().Join();
         }
 
         public uint ReadMaximumPacketSize()

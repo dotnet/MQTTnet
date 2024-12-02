@@ -686,7 +686,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
                 {
-                    await client1.PublishStringAsync($"reply/{eventArgs.ApplicationMessage.Topic}");
+                    await client1.PublishStringAsync($"reply/{eventArgs.ApplicationMessage.Topic}", default);
                 }
 
                 client1.ApplicationMessageReceivedAsync += Handler1;
@@ -710,9 +710,9 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
                 await Task.Delay(500);
 
-                await client2.PublishStringAsync("request/a");
-                await client2.PublishStringAsync("request/b");
-                await client2.PublishStringAsync("request/c");
+                await client2.PublishStringAsync("request/a",default);
+                await client2.PublishStringAsync("request/b", default);
+                await client2.PublishStringAsync("request/c", default);
 
                 await Task.Delay(500);
 
@@ -751,7 +751,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
                         // Use AtMostOnce here because with QoS 1 or even QoS 2 the process waits for
                         // the ACK etc. The problem is that the SpinUntil below only waits until the
                         // flag is set. It does not wait until the client has sent the ACK
-                        await client2.PublishStringAsync("reply");
+                        await client2.PublishStringAsync("reply", default);
                     }
                 };
 

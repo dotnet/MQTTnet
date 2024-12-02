@@ -32,7 +32,7 @@ public sealed class QoS_Tests : BaseTestClass
             await client1.SubscribeAsync("A");
 
             var client2 = await testEnvironment.ConnectClient();
-            await client2.PublishStringAsync("A");
+            await client2.PublishStringAsync("A", null);
 
             await LongTestDelay();
 
@@ -59,7 +59,7 @@ public sealed class QoS_Tests : BaseTestClass
             await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.AtLeastOnce);
 
             var client2 = await testEnvironment.ConnectClient();
-            await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
+            await client2.PublishStringAsync("A",null, qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
 
             await LongTestDelay();
 
@@ -94,7 +94,7 @@ public sealed class QoS_Tests : BaseTestClass
             await client1.SubscribeAsync("A", MqttQualityOfServiceLevel.ExactlyOnce);
 
             var client2 = await testEnvironment.ConnectClient();
-            await client2.PublishStringAsync("A", qualityOfServiceLevel: MqttQualityOfServiceLevel.ExactlyOnce);
+            await client2.PublishStringAsync("A",null, qualityOfServiceLevel: MqttQualityOfServiceLevel.ExactlyOnce);
 
             await LongTestDelay();
 
@@ -127,21 +127,17 @@ public sealed class QoS_Tests : BaseTestClass
             await LongTestDelay();
 
             // Now inject messages which are appended to the queue of the client.
-            await server.InjectApplicationMessage("T", "0", MqttQualityOfServiceLevel.AtLeastOnce);
-
-            await server.InjectApplicationMessage("T", "2", MqttQualityOfServiceLevel.AtLeastOnce);
-            await server.InjectApplicationMessage("T", "1", MqttQualityOfServiceLevel.AtLeastOnce);
-
-            await server.InjectApplicationMessage("T", "4", MqttQualityOfServiceLevel.AtLeastOnce);
-            await server.InjectApplicationMessage("T", "3", MqttQualityOfServiceLevel.AtLeastOnce);
-
-            await server.InjectApplicationMessage("T", "6", MqttQualityOfServiceLevel.AtLeastOnce);
-            await server.InjectApplicationMessage("T", "5", MqttQualityOfServiceLevel.AtLeastOnce);
-
-            await server.InjectApplicationMessage("T", "8", MqttQualityOfServiceLevel.AtLeastOnce);
-            await server.InjectApplicationMessage("T", "7", MqttQualityOfServiceLevel.AtLeastOnce);
-
-            await server.InjectApplicationMessage("T", "9", MqttQualityOfServiceLevel.AtLeastOnce);
+            var clientId = string.Empty;
+            await server.InjectStringAsync(clientId, "T", "0", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "2", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "1", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "4", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "3", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "6", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "5", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "8", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "7", MqttQualityOfServiceLevel.AtLeastOnce);
+            await server.InjectStringAsync(clientId, "T", "9", MqttQualityOfServiceLevel.AtLeastOnce);
 
             await LongTestDelay();
 

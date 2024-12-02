@@ -2,11 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Text;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Formatter;
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace MQTTnet.Benchmarks
 {
@@ -14,8 +15,7 @@ namespace MQTTnet.Benchmarks
     [MemoryDiagnoser]
     public class MqttBufferReaderBenchmark
     {
-        byte[] _buffer;
-        int _bufferLength;
+        ArraySegment<byte> _buffer;
 
         [GlobalSetup]
         public void GlobalSetup()
@@ -23,21 +23,22 @@ namespace MQTTnet.Benchmarks
             var writer = new MqttBufferWriter(1024, 1024);
             writer.WriteString("hgfjkdfkjlghfdjghdfljkdfhgdlkjfshgsldkfjghsdflkjghdsflkjhrstiuoghlkfjbhnfbutghjoiöjhklötnbhtroliöuhbjntluiobkjzbhtdrlskbhtruhjkfthgbkftgjhgfiklhotriuöhbjtrsioöbtrsötrhträhtrühjtriüoätrhjtsrölbktrbnhtrulöbionhströloubinströoliubhnsöotrunbtöroisntröointröioujhgötiohjgötorshjnbgtöorihbnjtröoihbjntröobntröoibntrjhötrohjbtröoihntröoibnrtoiöbtrjnboöitrhjtnriohötrhjtöroihjtroöihjtroösibntsroönbotöirsbntöoihjntröoihntroöbtrboöitrnhoöitrhjntröoishbnjtröosbhtröbntriohjtröoijtöoitbjöotibjnhöotirhbjntroöibhnjrtoöibnhtroöibnhtörsbnhtöoirbnhtöroibntoörhjnbträöbtrbträbtrbtirbätrsibohjntrsöiobthnjiohjsrtoib");
 
-            _buffer = writer.GetBuffer();
-            _bufferLength = writer.Length;
+            if (MemoryMarshal.TryGetArray(writer.GetWrittenMemory(), out var segment))
+            {
+                _buffer = segment;
+            }
         }
 
         [Benchmark]
         public void Use_Span()
         {
-            var span = _buffer.AsSpan(0, _bufferLength);
-            Encoding.UTF8.GetString(span);
+            Encoding.UTF8.GetString(_buffer.AsSpan());
         }
-        
+
         [Benchmark]
         public void Use_Encoding()
         {
-            Encoding.UTF8.GetString(_buffer, 0, _bufferLength);
+            Encoding.UTF8.GetString(_buffer.Array, _buffer.Offset, _buffer.Count);
         }
     }
 }

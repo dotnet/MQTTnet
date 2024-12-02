@@ -71,14 +71,14 @@ public sealed class MqttPacketInspector
         return InspectPacket(buffer, MqttPacketFlowDirection.Inbound);
     }
 
-    public void FillReceiveBuffer(byte[] buffer)
+    public void FillReceiveBuffer(ReadOnlySpan<byte> buffer)
     {
         if (!_asyncEvent.HasHandlers)
         {
             return;
         }
 
-        _receivedPacketBuffer?.Write(buffer, 0, buffer.Length);
+        _receivedPacketBuffer?.Write(buffer);
     }
 
     async Task InspectPacket(byte[] buffer, MqttPacketFlowDirection direction)

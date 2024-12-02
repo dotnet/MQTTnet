@@ -2,12 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Exceptions;
+using MQTTnet.Protocol;
 using System;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter
 {
@@ -27,13 +27,14 @@ namespace MQTTnet.Formatter
         byte[] _buffer;
         int _position;
 
+        public int Length { get; private set; }
+
         public MqttBufferWriter(int bufferSize, int maxBufferSize)
         {
             _buffer = new byte[bufferSize];
             _maxBufferSize = maxBufferSize;
         }
 
-        public int Length { get; private set; }
 
         public static byte BuildFixedHeader(MqttControlPacketType packetType, byte flags = 0)
         {
@@ -60,9 +61,15 @@ namespace MQTTnet.Formatter
             _buffer = new byte[_maxBufferSize];
         }
 
-        public byte[] GetBuffer()
+
+        public ReadOnlySpan<byte> GetWrittenSpan()
         {
-            return _buffer;
+            return _buffer.AsSpan(0, Length);
+        }
+
+        public ReadOnlyMemory<byte> GetWrittenMemory()
+        {
+            return _buffer.AsMemory(0, Length);
         }
 
         public static int GetVariableByteIntegerSize(uint value)
@@ -107,67 +114,53 @@ namespace MQTTnet.Formatter
         {
             ArgumentNullException.ThrowIfNull(propertyWriter);
 
-            WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
+            Write(propertyWriter.GetWrittenSpan());
         }
 
-        public void WriteBinary(byte[] value)
+        public void Write(ReadOnlySpan<byte> buffer)
         {
-            if (value == null || value.Length == 0)
-            {
-                EnsureAdditionalCapacity(2);
-
-                _buffer[_position] = 0;
-                _buffer[_position + 1] = 0;
-
-                IncreasePosition(2);
-            }
-            else
-            {
-                var valueLength = value.Length;
-
-                EnsureAdditionalCapacity(valueLength + 2);
-
-                _buffer[_position] = (byte)(valueLength >> 8);
-                _buffer[_position + 1] = (byte)valueLength;
-
-                MqttMemoryHelper.Copy(value, 0, _buffer, _position + 2, valueLength);
-                IncreasePosition(valueLength + 2);
-            }
-        }
-
-        public void WriteBinary(byte[] buffer, int offset, int count)
-        {
-            ArgumentNullException.ThrowIfNull(buffer);
-
-            if (count == 0)
+            if (buffer.IsEmpty)
             {
                 return;
             }
 
-            EnsureAdditionalCapacity(count);
+            var size = buffer.Length;
+            var span = GetSpan(size);
 
-            MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
-            IncreasePosition(count);
+            buffer.CopyTo(span);
+            Advance(size);
         }
+
+        public void WriteBinary(ReadOnlySpan<byte> value)
+        {
+            var size = value.Length + 2;
+            var span = GetSpan(size);
+
+            BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)value.Length);
+            value.CopyTo(span[2..]);
+
+            Advance(size);
+        }
+
 
         public void WriteByte(byte @byte)
         {
-            EnsureAdditionalCapacity(1);
+            const int size = sizeof(byte);
+            var span = GetSpan(size);
 
-            _buffer[_position] = @byte;
-            IncreasePosition(1);
+            span[0] = @byte;
+            Advance(size);
         }
 
         public void WriteString(string value)
         {
             if (string.IsNullOrEmpty(value))
             {
-                EnsureAdditionalCapacity(2);
+                const int size = 2;
+                var span = GetSpan(size);
 
-                _buffer[_position] = 0;
-                _buffer[_position + 1] = 0;
-
-                IncreasePosition(2);
+                span.Fill(default);
+                Advance(size);
             }
             else
             {
@@ -176,10 +169,9 @@ namespace MQTTnet.Formatter
                 // So the buffer should always have much more capacity left so that a correct value
                 // here is only waste of CPU cycles.
                 var byteCount = value.Length * 4;
+                var span = GetSpan(byteCount + 2);
 
-                EnsureAdditionalCapacity(byteCount + 2);
-
-                var writtenBytes = Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _position + 2);
+                var writtenBytes = Encoding.UTF8.GetBytes(value, span[2..]);
 
                 // From RFC: 1.5.4 UTF-8 Encoded String
                 // Unless stated otherwise all UTF-8 encoded strings can have any length in the range 0 to 65,535 bytes.
@@ -188,37 +180,30 @@ namespace MQTTnet.Formatter
                     throw new MqttProtocolViolationException($"The maximum string length is 65535. The current string has a length of {writtenBytes}.");
                 }
 
-                _buffer[_position] = (byte)(writtenBytes >> 8);
-                _buffer[_position + 1] = (byte)writtenBytes;
+                BinaryPrimitives.WriteUInt16BigEndian(span, (ushort)writtenBytes);
 
-                IncreasePosition(writtenBytes + 2);
+                Advance(writtenBytes + 2);
             }
         }
 
         public void WriteTwoByteInteger(ushort value)
         {
-            EnsureAdditionalCapacity(2);
+            const int size = sizeof(ushort);
+            var span = GetSpan(size);
 
-            _buffer[_position] = (byte)(value >> 8);
-            IncreasePosition(1);
-            _buffer[_position] = (byte)value;
-            IncreasePosition(1);
+            BinaryPrimitives.WriteUInt16BigEndian(span, value);
+
+            Advance(size);
         }
 
         public void WriteVariableByteInteger(uint value)
         {
-            if (value == 0)
-            {
-                _buffer[_position] = 0;
-                IncreasePosition(1);
-
-                return;
-            }
+            EnsureCapacity(sizeof(uint));
 
             if (value <= 127)
             {
                 _buffer[_position] = (byte)value;
-                IncreasePosition(1);
+                Advance(1);
 
                 return;
             }
@@ -243,21 +228,19 @@ namespace MQTTnet.Formatter
                 size++;
             } while (x > 0);
 
-            IncreasePosition(size);
+            Advance(size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void EnsureAdditionalCapacity(int additionalCapacity)
+        Span<byte> GetSpan(int size)
         {
-            var bufferLength = _buffer.Length;
-
-            var freeSpace = bufferLength - _position;
-            if (freeSpace >= additionalCapacity)
+            var freeSpace = _buffer.Length - _position;
+            if (freeSpace < size)
             {
-                return;
+                EnsureCapacity(_buffer.Length + size - freeSpace);
             }
 
-            EnsureCapacity(bufferLength + additionalCapacity - freeSpace);
+            return _buffer.AsSpan(_position, size);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -280,9 +263,9 @@ namespace MQTTnet.Formatter
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void IncreasePosition(int length)
+        void Advance(int count)
         {
-            _position += length;
+            _position += count;
 
             if (_position > Length)
             {

@@ -34,6 +34,7 @@ public static class ServiceCollectionExtensions
     {
         services.AddOptions();
         services.AddConnections();
+        services.TryAddSingleton<MqttBufferWriterPool>();
         services.TryAddSingleton<MqttConnectionHandler>();
         services.TryAddSingleton<MqttConnectionMiddleware>();
         services.TryAddSingleton<MqttServerOptionsFactory>();

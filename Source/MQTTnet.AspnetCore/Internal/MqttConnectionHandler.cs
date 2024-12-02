@@ -16,7 +16,7 @@ namespace MQTTnet.AspNetCore;
 sealed class MqttConnectionHandler : ConnectionHandler
 {
     readonly IMqttNetLogger _logger;
-    readonly MqttServerOptions _serverOptions;
+    readonly MqttBufferWriterPool _bufferWriterPool;
 
     public bool UseFlag { get; set; }
 
@@ -28,10 +28,10 @@ sealed class MqttConnectionHandler : ConnectionHandler
 
     public MqttConnectionHandler(
         IMqttNetLogger logger,
-        MqttServerOptions serverOptions)
+        MqttBufferWriterPool bufferWriterPool)
     {
         _logger = logger;
-        _serverOptions = serverOptions;
+        _bufferWriterPool = bufferWriterPool;
     }
 
     public override async Task OnConnectedAsync(ConnectionContext connection)
@@ -51,9 +51,17 @@ sealed class MqttConnectionHandler : ConnectionHandler
             transferFormatFeature.ActiveFormat = TransferFormat.Binary;
         }
 
-        var bufferWriter = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
-        var formatter = new MqttPacketFormatterAdapter(bufferWriter);
-        using var adapter = new MqttServerChannelAdapter(formatter, connection);
-        await clientHandler(adapter).ConfigureAwait(false);
+        var bufferWriter = _bufferWriterPool.Rent();
+
+        try
+        {
+            var formatter = new MqttPacketFormatterAdapter(bufferWriter);
+            using var adapter = new MqttServerChannelAdapter(formatter, connection);
+            await clientHandler(adapter).ConfigureAwait(false);
+        }
+        finally
+        {
+            _bufferWriterPool.Return(bufferWriter);
+        }
     }
 }

@@ -48,7 +48,7 @@ public sealed class MqttSessionStatus
     /// <returns>
     /// A task that represents the asynchronous operation. The result contains the delivered MQTT publish packet.
     /// </returns>
-    public async Task<MqttPublishPacket> DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+    public async Task<MqttPacketWithIdentifier> DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
@@ -57,7 +57,7 @@ public sealed class MqttSessionStatus
 
         var mqttPacket = await packetBusItem.WaitAsync();
 
-        return (MqttPublishPacket)mqttPacket;
+        return (MqttPacketWithIdentifier)mqttPacket;
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public sealed class MqttSessionStatus
     /// However, an existing message in the queue may be <b>dropped later</b> to make room for the newly enqueued message.
     /// Such dropped messages can be tracked by subscribing to <see cref="MqttServer.QueuedApplicationMessageOverwrittenAsync"/> event.
     /// </remarks>
-    public bool TryEnqueueApplicationMessage(MqttApplicationMessage applicationMessage, out MqttPublishPacket publishPacket)
+    public bool TryEnqueueApplicationMessage(MqttApplicationMessage applicationMessage, out MqttPacketWithIdentifier publishPacket)
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Server.Exceptions;
 
@@ -28,7 +29,10 @@ namespace MQTTnet.Tests.Server
             await receiver1.SubscribeAsync("#");
             await receiver2.SubscribeAsync("#");
 
-            var message = new MqttApplicationMessageBuilder().WithTopic("InjectedOne").Build();
+            var message = new MqttApplicationMessageBuilder()
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .WithTopic("InjectedOne").Build();
+
             var enqueued = clientStatus.TryEnqueueApplicationMessage(message, out var publishPacket);
 
             Assert.IsTrue(enqueued);
@@ -215,7 +219,10 @@ namespace MQTTnet.Tests.Server
             await receiver1.SubscribeAsync("#");
             await receiver2.SubscribeAsync("#");
 
-            var mqttApplicationMessage = new MqttApplicationMessageBuilder().WithTopic("InjectedOne").Build();
+            var mqttApplicationMessage = new MqttApplicationMessageBuilder()
+                .WithTopic("InjectedOne")
+                .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                .Build();
             var publishPacket = await clientStatus.DeliverApplicationMessageAsync(mqttApplicationMessage);
 
             await LongTestDelay();

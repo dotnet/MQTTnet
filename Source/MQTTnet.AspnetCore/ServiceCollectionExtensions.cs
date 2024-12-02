@@ -38,8 +38,8 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<MqttConnectionMiddleware>();
         services.TryAddSingleton<MqttServerOptionsFactory>();
         services.TryAddSingleton<MqttServerStopOptionsFactory>();
-        services.TryAddSingleton(s => s.GetRequiredService<MqttServerOptionsFactory>().Build());
-        services.TryAddSingleton(s => s.GetRequiredService<MqttServerStopOptionsFactory>().Build());
+        services.TryAddSingleton(s => s.GetRequiredService<MqttServerOptionsFactory>().CreateOptions());
+        services.TryAddSingleton(s => s.GetRequiredService<MqttServerStopOptionsFactory>().CreateOptions());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IMqttServerAdapter, AspNetCoreMqttServerAdapter>());
 
         services.TryAddSingleton<AspNetCoreMqttServer>();

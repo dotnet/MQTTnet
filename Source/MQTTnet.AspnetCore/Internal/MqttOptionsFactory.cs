@@ -24,7 +24,7 @@ namespace MQTTnet.AspNetCore
             _postConfigures = postConfigures;
         }
 
-        public TOptions Build()
+        public TOptions CreateOptions()
         {
             var options = _defaultOptionsFactory();
             var name = Options.DefaultName;

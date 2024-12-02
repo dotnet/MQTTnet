@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
@@ -14,11 +15,11 @@ namespace MQTTnet.Server
     {
         readonly MqttConnectPacket _connectPacket;
 
-        public ClientConnectedEventArgs(MqttConnectPacket connectPacket, MqttProtocolVersion protocolVersion, string endpoint, IDictionary sessionItems)
+        public ClientConnectedEventArgs(MqttConnectPacket connectPacket, MqttProtocolVersion protocolVersion, EndPoint remoteEndPoint, IDictionary sessionItems)
         {
             _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
             ProtocolVersion = protocolVersion;
-            Endpoint = endpoint;
+            RemoteEndPoint = remoteEndPoint;
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
         }
 
@@ -35,7 +36,10 @@ namespace MQTTnet.Server
         /// <summary>
         ///     Gets the endpoint of the connected client.
         /// </summary>
-        public string Endpoint { get; }
+        public EndPoint RemoteEndPoint { get; }
+
+        [Obsolete("Use RemoteEndPoint instead.")]
+        public string Endpoint => RemoteEndPoint?.ToString();
 
         /// <summary>
         ///     Gets the protocol version which is used by the connected client.

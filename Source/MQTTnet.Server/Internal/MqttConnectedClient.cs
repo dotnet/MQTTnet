@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Net;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
@@ -45,7 +46,7 @@ public sealed class MqttConnectedClient : IDisposable
         ConnectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
         ChannelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
-        Endpoint = channelAdapter.Endpoint;
+        RemoteEndPoint = channelAdapter.RemoteEndPoint;
         Session = session ?? throw new ArgumentNullException(nameof(session));
 
         ArgumentNullException.ThrowIfNull(logger);
@@ -59,13 +60,13 @@ public sealed class MqttConnectedClient : IDisposable
 
     public MqttDisconnectPacket DisconnectPacket { get; private set; }
 
-    public string Endpoint { get; }
-
     public string Id => ConnectPacket.ClientId;
 
     public bool IsRunning { get; private set; }
 
     public bool IsTakenOver { get; set; }
+
+    public EndPoint RemoteEndPoint { get; }
 
     public MqttSession Session { get; }
 
@@ -338,7 +339,7 @@ public sealed class MqttConnectedClient : IDisposable
             return packet;
         }
 
-        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, packet, Session.Items);
+        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, RemoteEndPoint, packet, Session.Items);
         await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
 
         if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
@@ -384,7 +385,7 @@ public sealed class MqttConnectedClient : IDisposable
 
                 if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
                 {
-                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, Endpoint, currentPacket, Session.Items);
+                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, RemoteEndPoint, currentPacket, Session.Items);
                     await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                     currentPacket = interceptingPacketEventArgs.Packet;
                     processPacket = interceptingPacketEventArgs.ProcessPacket;
@@ -560,10 +561,8 @@ public sealed class MqttConnectedClient : IDisposable
 
             var disconnectPacket = MqttDisconnectPacketFactory.Create(options);
 
-            using (var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout))
-            {
-                await SendPacketAsync(disconnectPacket, timeout.Token).ConfigureAwait(false);
-            }
+            using var timeout = new CancellationTokenSource(_serverOptions.DefaultCommunicationTimeout);
+            await SendPacketAsync(disconnectPacket, timeout.Token).ConfigureAwait(false);
         }
         catch (Exception exception)
         {

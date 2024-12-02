@@ -15,6 +15,7 @@ using MQTTnet.Formatter.V3;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Diagnostics.Logger;
 using System.Buffers;
+using System.Net;
 
 namespace MQTTnet.Benchmarks
 {
@@ -76,7 +77,7 @@ namespace MQTTnet.Benchmarks
                 _position = 0;
             }
 
-            public string Endpoint { get; } = string.Empty;
+            public EndPoint RemoteEndPoint { get; set; }
 
             public bool IsSecureConnection { get; } = false;
 

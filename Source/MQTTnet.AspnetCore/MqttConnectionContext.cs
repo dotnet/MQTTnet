@@ -61,21 +61,21 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         }
     }
 
-    public string Endpoint
+    public EndPoint RemoteEndPoint
     {
         get
         {
             // mqtt over tcp
             if (_connection.RemoteEndPoint != null)
             {
-                return _connection.RemoteEndPoint.ToString();
+                return _connection.RemoteEndPoint;
             }
 
             // mqtt over websocket
             var httpFeature = _connection.Features.Get<IHttpConnectionFeature>();
             if (httpFeature?.RemoteIpAddress != null)
             {
-                return new IPEndPoint(httpFeature.RemoteIpAddress, httpFeature.RemotePort).ToString();
+                return new IPEndPoint(httpFeature.RemoteIpAddress, httpFeature.RemotePort);
             }
 
             return null;

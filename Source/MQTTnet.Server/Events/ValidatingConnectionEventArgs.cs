@@ -93,11 +93,11 @@ namespace MQTTnet.Server
         /// </summary>
         public uint MaximumPacketSize => _connectPacket.MaximumPacketSize;
 
-        public string Password => Encoding.UTF8.GetString(RawPassword.Span);
+        public string Password => Encoding.UTF8.GetString(RawPassword.AsSpan());
 
         public MqttProtocolVersion ProtocolVersion => ChannelAdapter.PacketFormatterAdapter.ProtocolVersion;
 
-        public ReadOnlyMemory<byte> RawPassword => _connectPacket.Password;
+        public byte[] RawPassword => _connectPacket.Password;
 
         /// <summary>
         ///     Gets or sets the reason code. When a MQTTv3 client connects the enum value must be one which is

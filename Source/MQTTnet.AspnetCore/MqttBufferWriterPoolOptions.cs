@@ -11,8 +11,13 @@ namespace MQTTnet.AspNetCore
         public bool Enable { get; set; } = true;
 
         /// <summary>
-        /// When the lifecycle of the channel associated with MqttBufferWriter is less than this value, MqttBufferWriter is pooled.
+        /// When the life time of the MqttBufferWriter is less than this value, MqttBufferWriter is pooled.
         /// </summary>
-        public TimeSpan MaxLifeTime { get; set; } = TimeSpan.FromMinutes(1d);
+        public TimeSpan PoolingItemMaxLifeTime { get; set; } = TimeSpan.FromMinutes(1d);
+
+        /// <summary>
+        /// Whether to pool MqttBufferWriter with BufferSize greater than the default buffer size.
+        /// </summary>
+        public bool PoolingLargeBufferSizeItem { get; set; } = true;
     }
 }

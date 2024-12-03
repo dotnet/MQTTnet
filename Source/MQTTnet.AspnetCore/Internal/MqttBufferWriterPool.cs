@@ -14,7 +14,7 @@ namespace MQTTnet.AspNetCore
     {
         private readonly MqttServerOptions _serverOptions;
         private readonly IOptionsMonitor<MqttBufferWriterPoolOptions> _poolOptions;
-        private readonly ConcurrentQueue<ResettableMqttBufferWriter> _bufferWriterQueue = new();
+        private readonly ConcurrentQueue<ChannelMqttBufferWriter> _bufferWriterQueue = new();
 
         public MqttBufferWriterPool(
             MqttServerOptions serverOptions,
@@ -24,7 +24,7 @@ namespace MQTTnet.AspNetCore
             _poolOptions = poolOptions;
         }
 
-        public ResettableMqttBufferWriter Rent()
+        public ChannelMqttBufferWriter Rent()
         {
             if (_bufferWriterQueue.TryDequeue(out var bufferWriter))
             {
@@ -33,26 +33,49 @@ namespace MQTTnet.AspNetCore
             else
             {
                 var writer = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
-                bufferWriter = new ResettableMqttBufferWriter(writer);
+                bufferWriter = new ChannelMqttBufferWriter(writer);
             }
             return bufferWriter;
         }
 
-        public void Return(ResettableMqttBufferWriter bufferWriter)
+        public void Return(ChannelMqttBufferWriter bufferWriter)
         {
-            var options = _poolOptions.CurrentValue;
-            if (options.Enable && bufferWriter.LifeTime < options.MaxLifeTime)
+            if (CanReturn(bufferWriter))
             {
                 _bufferWriterQueue.Enqueue(bufferWriter);
             }
         }
 
+        private bool CanReturn(ChannelMqttBufferWriter bufferWriter)
+        {
+            var options = _poolOptions.CurrentValue;
+            if (!options.Enable)
+            {
+                return false;
+            }
 
-        public sealed class ResettableMqttBufferWriter(MqttBufferWriter bufferWriter)
+            if (bufferWriter.LifeTime < options.PoolingItemMaxLifeTime)
+            {
+                return true;
+            }
+
+            if (options.PoolingLargeBufferSizeItem &&
+                bufferWriter.BufferSize > _serverOptions.WriterBufferSize)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+
+
+        public sealed class ChannelMqttBufferWriter(MqttBufferWriter bufferWriter)
         {
             private long _tickCount = Environment.TickCount64;
             private readonly MqttBufferWriter _bufferWriter = bufferWriter;
 
+            public int BufferSize => _bufferWriter.GetBuffer().Length;
             public TimeSpan LifeTime => TimeSpan.FromMilliseconds(Environment.TickCount64 - _tickCount);
 
             public void Reset()
@@ -60,9 +83,9 @@ namespace MQTTnet.AspNetCore
                 _tickCount = Environment.TickCount64;
             }
 
-            public static implicit operator MqttBufferWriter(ResettableMqttBufferWriter resettableMqttBufferWriter)
+            public static implicit operator MqttBufferWriter(ChannelMqttBufferWriter channelMqttBufferWriter)
             {
-                return resettableMqttBufferWriter._bufferWriter;
+                return channelMqttBufferWriter._bufferWriter;
             }
         }
     }

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
@@ -26,7 +25,7 @@ namespace MQTTnet
         ///     published message.
         ///     Hint: MQTT 5 feature only.
         /// </summary>
-        public byte[] CorrelationData { get; set; }
+        public ReadOnlyMemory<byte> CorrelationData { get; set; }
 
         /// <summary>
         ///     If the DUP flag is set to 0, it indicates that this is the first occasion that the Client or Server has attempted
@@ -53,7 +52,7 @@ namespace MQTTnet
         /// <summary>
         ///     Set an ArraySegment as Payload.
         /// </summary>
-        public ArraySegment<byte> PayloadSegment
+        public ReadOnlyMemory<byte> PayloadSegment
         {
             set { Payload = new ReadOnlySequence<byte>(value); }
         }
@@ -64,7 +63,7 @@ namespace MQTTnet
         ///     It can be used in combination with a RecyclableMemoryStream to publish
         ///     large buffered messages without allocating large chunks of memory.
         /// </summary>
-        public ReadOnlySequence<byte> Payload { get; set; } = EmptyBuffer.ReadOnlySequence;
+        public ReadOnlySequence<byte> Payload { get; set; }
 
         /// <summary>
         ///     Gets or sets the payload format indicator.

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using MQTTnet.Protocol;
 
@@ -9,7 +10,7 @@ namespace MQTTnet.Packets
 {
     public sealed class MqttConnectPacket : MqttPacket
     {
-        public byte[] AuthenticationData { get; set; }
+        public ReadOnlyMemory<byte> AuthenticationData { get; set; }
 
         public string AuthenticationMethod { get; set; }
 
@@ -20,10 +21,10 @@ namespace MQTTnet.Packets
 
         public string ClientId { get; set; }
 
-        public byte[] WillCorrelationData { get; set; }
+        public ReadOnlyMemory<byte> WillCorrelationData { get; set; }
 
         public ushort KeepAlivePeriod { get; set; }
-        
+
         public uint MaximumPacketSize { get; set; }
 
         public byte[] Password { get; set; }
@@ -50,7 +51,7 @@ namespace MQTTnet.Packets
 
         public bool WillFlag { get; set; }
 
-        public byte[] WillMessage { get; set; }
+        public ReadOnlyMemory<byte> WillMessage { get; set; }
 
         public uint WillMessageExpiryInterval { get; set; }
 
@@ -65,7 +66,7 @@ namespace MQTTnet.Packets
         public List<MqttUserProperty> WillUserProperties { get; set; }
 
         public bool TryPrivate { get; set; }
-        
+
         public override string ToString()
         {
             var passwordText = string.Empty;

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -282,7 +283,7 @@ namespace MQTTnet.Tests.Server
 
                 server.InterceptingPublishAsync += e =>
                 {
-                    e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(e.SessionItems["default_payload"] as string ?? string.Empty));
+                    e.ApplicationMessage.Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(e.SessionItems["default_payload"] as string ?? string.Empty));
                     return CompletedTask.Instance;
                 };
 
@@ -300,7 +301,7 @@ namespace MQTTnet.Tests.Server
                 Assert.AreEqual(MqttClientSubscribeResultCode.GrantedQoS0, subscribeResult.Items.First().ResultCode);
 
                 var client2 = await testEnvironment.ConnectClient();
-                await client2.PublishStringAsync("x");
+                await client2.PublishStringAsync("x",null);
 
                 await Task.Delay(1000);
 

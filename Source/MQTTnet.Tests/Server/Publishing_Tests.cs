@@ -27,7 +27,7 @@ namespace MQTTnet.Tests.Server
                 server.InterceptingPublishAsync += ev => server.DisconnectClientAsync(ev.ClientId, MqttDisconnectReasonCode.NormalDisconnection);
 
                 var client = await testEnvironment.ConnectClient();
-                await client.PublishStringAsync("test", qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
+                await client.PublishStringAsync("test",null, qualityOfServiceLevel: MqttQualityOfServiceLevel.AtLeastOnce);
             }
         }
 

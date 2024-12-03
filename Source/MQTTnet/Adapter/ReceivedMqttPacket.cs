@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 
 namespace MQTTnet.Adapter;
 
@@ -10,7 +11,7 @@ public readonly struct ReceivedMqttPacket
 {
     public static readonly ReceivedMqttPacket Empty = new();
 
-    public ReceivedMqttPacket(byte fixedHeader, ArraySegment<byte> body, int totalLength)
+    public ReceivedMqttPacket(byte fixedHeader, ReadOnlySequence<byte> body, int totalLength)
     {
         FixedHeader = fixedHeader;
         Body = body;
@@ -19,7 +20,7 @@ public readonly struct ReceivedMqttPacket
 
     public byte FixedHeader { get; }
 
-    public ArraySegment<byte> Body { get; }
+    public ReadOnlySequence<byte> Body { get; }
 
     public int TotalLength { get; }
 }

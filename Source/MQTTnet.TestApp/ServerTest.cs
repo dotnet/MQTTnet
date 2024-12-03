@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -102,7 +103,7 @@ namespace MQTTnet.TestApp
                     {
                         // Replace the payload with the timestamp. But also extending a JSON
                         // based payload with the timestamp is a suitable use case.
-                        e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes(DateTime.Now.ToString("O")));
+                        e.ApplicationMessage.Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes(DateTime.Now.ToString("O")));
                     }
 
                     if (e.ApplicationMessage.Topic == "not_allowed_topic")

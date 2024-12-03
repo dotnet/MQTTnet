@@ -101,7 +101,7 @@ public static class MqttClientExtensions
         return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
     }
 
-    public static async Task<MqttClientPublishResult> PublishStringAsync(
+    public static Task<MqttClientPublishResult> PublishStringAsync(
         this IMqttClient mqttClient,
         string topic,
         string payload,
@@ -110,8 +110,8 @@ public static class MqttClientExtensions
         CancellationToken cancellationToken = default)
     {
         return string.IsNullOrEmpty(payload)
-            ? await mqttClient.PublishSequenceAsync(topic, ReadOnlySequence<byte>.Empty, qualityOfServiceLevel, retain, cancellationToken)
-            : await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+            ? mqttClient.PublishSequenceAsync(topic, ReadOnlySequence<byte>.Empty, qualityOfServiceLevel, retain, cancellationToken)
+            : mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
@@ -120,7 +120,7 @@ public static class MqttClientExtensions
         }
     }
 
-    public static async Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
+    public static Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
         this IMqttClient mqttClient,
         string topic,
         TValue payload,
@@ -129,7 +129,7 @@ public static class MqttClientExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        return await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+        return mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
@@ -138,7 +138,7 @@ public static class MqttClientExtensions
         }
     }
 
-    public static async Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
+    public static Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
         this IMqttClient mqttClient,
         string topic,
         TValue payload,
@@ -148,7 +148,7 @@ public static class MqttClientExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(jsonTypeInfo);
-        return await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+        return mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
@@ -157,7 +157,7 @@ public static class MqttClientExtensions
         }
     }
 
-    public static async Task<MqttClientPublishResult> PublishStreamAsync(
+    public static Task<MqttClientPublishResult> PublishStreamAsync(
         this IMqttClient mqttClient,
         string topic,
         Stream payload,
@@ -166,7 +166,7 @@ public static class MqttClientExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(payload);
-        return await mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+        return mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {

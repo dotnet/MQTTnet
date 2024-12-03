@@ -115,7 +115,7 @@ public static class MqttServerExtensions
         await server.InjectSequenceAsync(clientId, topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
     }
 
-    public static async Task InjectStringAsync(
+    public static Task InjectStringAsync(
        this MqttServer server,
        string clientId,
        string topic,
@@ -124,14 +124,9 @@ public static class MqttServerExtensions
        bool retain = false,
        CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrEmpty(payload))
-        {
-            await server.InjectSequenceAsync(clientId, topic, ReadOnlySequence<byte>.Empty, qualityOfServiceLevel, retain, cancellationToken);
-        }
-        else
-        {
-            await server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
-        }
+        return string.IsNullOrEmpty(payload)
+            ? server.InjectSequenceAsync(clientId, topic, ReadOnlySequence<byte>.Empty, qualityOfServiceLevel, retain, cancellationToken)
+            : server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
@@ -140,7 +135,7 @@ public static class MqttServerExtensions
         }
     }
 
-    public static async Task InjectJsonAsync<TValue>(
+    public static Task InjectJsonAsync<TValue>(
         this MqttServer server,
         string clientId,
         string topic,
@@ -150,7 +145,7 @@ public static class MqttServerExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        await server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+        return server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
@@ -160,7 +155,7 @@ public static class MqttServerExtensions
     }
 
 
-    public static async Task InjectJsonAsync<TValue>(
+    public static Task InjectJsonAsync<TValue>(
         this MqttServer server,
         string clientId,
         string topic,
@@ -171,7 +166,7 @@ public static class MqttServerExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(jsonTypeInfo);
-        await server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+        return server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
@@ -180,7 +175,7 @@ public static class MqttServerExtensions
         }
     }
 
-    public static async Task InjectStreamAsync(
+    public static Task InjectStreamAsync(
         this MqttServer server,
         string clientId,
         string topic,
@@ -190,7 +185,7 @@ public static class MqttServerExtensions
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(payload);
-        await server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+        return server.InjectSequenceAsync(clientId, topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {

@@ -5,7 +5,7 @@ using System;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [RPlotExporter, RankColumn]
     [MemoryDiagnoser]
     public class MemoryCopyBenchmark

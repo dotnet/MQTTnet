@@ -33,14 +33,14 @@ namespace MQTTnet.Tests.Server
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .WithTopic("InjectedOne").Build();
 
-            var enqueued = clientStatus.TryEnqueueApplicationMessage(message, out var publishPacket);
+            var enqueued = clientStatus.TryEnqueueApplicationMessage(message, out var injectResult);
 
             Assert.IsTrue(enqueued);
 
             await LongTestDelay();
 
             Assert.AreEqual(1, messageReceivedHandler1.ReceivedEventArgs.Count);
-            Assert.AreEqual(publishPacket.PacketIdentifier, messageReceivedHandler1.ReceivedEventArgs[0].PacketIdentifier);
+            Assert.AreEqual(injectResult.PacketIdentifier, messageReceivedHandler1.ReceivedEventArgs[0].PacketIdentifier);
             Assert.AreEqual("InjectedOne", messageReceivedHandler1.ReceivedEventArgs[0].ApplicationMessage.Topic);
 
             // The second receiver should NOT receive the message.
@@ -223,12 +223,12 @@ namespace MQTTnet.Tests.Server
                 .WithTopic("InjectedOne")
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .Build();
-            var publishPacket = await clientStatus.DeliverApplicationMessageAsync(mqttApplicationMessage);
+            var injectResult = await clientStatus.DeliverApplicationMessageAsync(mqttApplicationMessage);
 
             await LongTestDelay();
 
             Assert.AreEqual(1, messageReceivedHandler1.ReceivedEventArgs.Count);
-            Assert.AreEqual(publishPacket.PacketIdentifier, messageReceivedHandler1.ReceivedEventArgs[0].PacketIdentifier);
+            Assert.AreEqual(injectResult.PacketIdentifier, messageReceivedHandler1.ReceivedEventArgs[0].PacketIdentifier);
             Assert.AreEqual("InjectedOne", messageReceivedHandler1.ReceivedEventArgs[0].ApplicationMessage.Topic);
 
             // The second receiver should NOT receive the message.

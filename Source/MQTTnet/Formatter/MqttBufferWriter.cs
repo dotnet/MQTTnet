@@ -29,6 +29,8 @@ namespace MQTTnet.Formatter
 
         public int Length { get; private set; }
 
+        public int BufferSize => _buffer.Length;
+
         public MqttBufferWriter(int bufferSize, int maxBufferSize)
         {
             _buffer = new byte[bufferSize];

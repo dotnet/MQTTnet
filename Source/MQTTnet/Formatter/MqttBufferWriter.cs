@@ -29,6 +29,8 @@ namespace MQTTnet.Formatter
 
         public int Length { get; private set; }
 
+        public int BufferSize => _buffer.Length;
+
         public MqttBufferWriter(int bufferSize, int maxBufferSize)
         {
             _buffer = new byte[bufferSize];
@@ -70,11 +72,6 @@ namespace MQTTnet.Formatter
         public ReadOnlyMemory<byte> GetWrittenMemory()
         {
             return _buffer.AsMemory(0, Length);
-        }
-
-        public ArraySegment<byte> GetWrittenArraySegment()
-        {
-            return new ArraySegment<byte>(_buffer, 0, Length);
         }
 
         public static int GetVariableByteIntegerSize(uint value)

@@ -72,6 +72,11 @@ namespace MQTTnet.Formatter
             return _buffer.AsMemory(0, Length);
         }
 
+        public ArraySegment<byte> GetWrittenArraySegment()
+        {
+            return new ArraySegment<byte>(_buffer, 0, Length);
+        }
+
         public static int GetVariableByteIntegerSize(uint value)
         {
             // From RFC: Table 2.4 Size of Remaining Length field

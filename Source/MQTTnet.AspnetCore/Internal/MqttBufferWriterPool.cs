@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Extensions.Options;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
 using System;
@@ -9,55 +10,59 @@ using System.Collections.Concurrent;
 
 namespace MQTTnet.AspNetCore
 {
-    sealed class MqttBufferWriterPool(MqttServerOptions serverOptions)
+    sealed class MqttBufferWriterPool
     {
-        private readonly MqttServerOptions _serverOptions = serverOptions;
-        private readonly ConcurrentQueue<RecyclableMqttBufferWriter> _queue = new();
+        private readonly MqttServerOptions _serverOptions;
+        private readonly IOptionsMonitor<MqttBufferWriterPoolOptions> _poolOptions;
+        private readonly ConcurrentQueue<ResettableMqttBufferWriter> _bufferWriterQueue = new();
 
-        public RecyclableMqttBufferWriter Rent()
+        public MqttBufferWriterPool(
+            MqttServerOptions serverOptions,
+            IOptionsMonitor<MqttBufferWriterPoolOptions> poolOptions)
         {
-            if (_queue.TryDequeue(out var bufferWriter))
+            _serverOptions = serverOptions;
+            _poolOptions = poolOptions;
+        }
+
+        public ResettableMqttBufferWriter Rent()
+        {
+            if (_bufferWriterQueue.TryDequeue(out var bufferWriter))
             {
                 bufferWriter.Reset();
             }
             else
             {
                 var writer = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
-                bufferWriter = new RecyclableMqttBufferWriter(writer);
+                bufferWriter = new ResettableMqttBufferWriter(writer);
             }
             return bufferWriter;
         }
 
-        public void Return(RecyclableMqttBufferWriter bufferWriter)
+        public void Return(ResettableMqttBufferWriter bufferWriter)
         {
-            if (bufferWriter.CanRecycle)
+            var options = _poolOptions.CurrentValue;
+            if (options.Enable && bufferWriter.LifeTime < options.MaxLifeTime)
             {
-                _queue.Enqueue(bufferWriter);
+                _bufferWriterQueue.Enqueue(bufferWriter);
             }
         }
 
 
-        public sealed class RecyclableMqttBufferWriter(MqttBufferWriter bufferWriter)
+        public sealed class ResettableMqttBufferWriter(MqttBufferWriter bufferWriter)
         {
             private long _tickCount = Environment.TickCount64;
             private readonly MqttBufferWriter _bufferWriter = bufferWriter;
-            private static readonly TimeSpan _maxLifeTime = TimeSpan.FromMinutes(1d);
 
-            /// <summary>
-            /// We only recycle the MqttBufferWriter created by channels that are frequently offline.
-            /// This ensures that the MqttBufferWriter cache hit rate is high and does not cause the problem of too many MqttBufferWriters being pooled when the number of channels is reduced.
-            /// </summary>
-            /// <returns></returns>
-            public bool CanRecycle => TimeSpan.FromMilliseconds(Environment.TickCount64 - _tickCount) < _maxLifeTime;
+            public TimeSpan LifeTime => TimeSpan.FromMilliseconds(Environment.TickCount64 - _tickCount);
 
             public void Reset()
             {
                 _tickCount = Environment.TickCount64;
             }
 
-            public static implicit operator MqttBufferWriter(RecyclableMqttBufferWriter bufferWriterItem)
+            public static implicit operator MqttBufferWriter(ResettableMqttBufferWriter resettableMqttBufferWriter)
             {
-                return bufferWriterItem._bufferWriter;
+                return resettableMqttBufferWriter._bufferWriter;
             }
         }
     }

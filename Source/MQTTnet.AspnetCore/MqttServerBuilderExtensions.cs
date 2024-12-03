@@ -5,6 +5,7 @@
 using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using MQTTnet.Formatter;
 using MQTTnet.Server;
 using System;
 using System.Diagnostics.CodeAnalysis;
@@ -60,6 +61,18 @@ namespace MQTTnet.AspNetCore
         public static IMqttServerBuilder ConfigureMqttServerStop(this IMqttServerBuilder builder, Action<MqttServerStopOptionsBuilder> builderConfigure, Action<MqttServerStopOptions> optionsConfigure)
         {
             builder.Services.Configure(builderConfigure).Configure(optionsConfigure);
+            return builder;
+        }
+
+        /// <summary>
+        /// Configure the <see cref="MqttBufferWriter"/> pool of <see cref="MqttServer"/>
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="configure"></param>
+        /// <returns></returns>
+        public static IMqttServerBuilder ConfigureMqttBufferWriterPool(this IMqttServerBuilder builder, Action<MqttBufferWriterPoolOptions> configure)
+        {
+            builder.Services.Configure(configure);
             return builder;
         }
 

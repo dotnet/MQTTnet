@@ -2,19 +2,12 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <EnableNETAnalyzers>false</EnableNETAnalyzers>
-        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NuGetAuditMode>all</NuGetAuditMode>
-        <NuGetAudit>true</NuGetAudit>
-        <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>

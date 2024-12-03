@@ -1,17 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
         <IsPackable>false</IsPackable>
-        <EnableNETAnalyzers>false</EnableNETAnalyzers>
-        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NuGetAuditMode>all</NuGetAuditMode>
-        <NuGetAudit>true</NuGetAudit>
-        <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     </PropertyGroup>
 
     <ItemGroup>

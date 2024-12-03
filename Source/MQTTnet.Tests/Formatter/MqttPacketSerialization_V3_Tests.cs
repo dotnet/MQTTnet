@@ -300,7 +300,7 @@ namespace MQTTnet.Tests.Formatter
                 PacketIdentifier = 123,
                 Dup = true,
                 Retain = true,
-                PayloadSegment = Encoding.ASCII.GetBytes("Payload"),
+                Payload = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("Payload")),
                 QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce,
                 Topic = "Topic",
                 ResponseTopic = "/Response",

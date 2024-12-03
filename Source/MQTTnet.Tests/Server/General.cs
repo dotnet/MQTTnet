@@ -304,7 +304,7 @@ namespace MQTTnet.Tests.Server
                 var server = await testEnvironment.StartServer();
                 server.InterceptingPublishAsync += e =>
                 {
-                    e.ApplicationMessage.PayloadSegment = new ArraySegment<byte>(Encoding.ASCII.GetBytes("extended"));
+                    e.ApplicationMessage.Payload = new ReadOnlySequence<byte>(Encoding.ASCII.GetBytes("extended"));
                     return CompletedTask.Instance;
                 };
 
@@ -426,7 +426,7 @@ namespace MQTTnet.Tests.Server
                             new MqttApplicationMessage
                             {
                                 Topic = "/test/1",
-                                PayloadSegment = new ArraySegment<byte>(Encoding.UTF8.GetBytes("true")),
+                                Payload = new ReadOnlySequence<byte>(Encoding.UTF8.GetBytes("true")),
                                 QualityOfServiceLevel = MqttQualityOfServiceLevel.ExactlyOnce
                             })
                         {

@@ -4,6 +4,7 @@
 
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
+using System.Buffers;
 
 namespace MQTTnet.Server.Internal.Formatter;
 
@@ -16,12 +17,12 @@ public static class MqttPublishPacketFactory
         if (!connectPacket.WillFlag)
         {
             throw new MqttProtocolViolationException("The CONNECT packet contains no will message (WillFlag).");
-        } 
-         
+        }
+
         var packet = new MqttPublishPacket
         {
             Topic = connectPacket.WillTopic,
-            PayloadSegment = connectPacket.WillMessage,
+            Payload = new ReadOnlySequence<byte>(connectPacket.WillMessage),
             QualityOfServiceLevel = connectPacket.WillQoS,
             Retain = connectPacket.WillRetain,
             ContentType = connectPacket.WillContentType,

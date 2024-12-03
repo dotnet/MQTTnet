@@ -4,7 +4,6 @@
 
 using System.Collections;
 using MQTTnet.Internal;
-using MQTTnet.Packets;
 using MQTTnet.Server.Internal;
 using MQTTnet.Server.Internal.Formatter;
 
@@ -53,17 +52,18 @@ public sealed class MqttSessionStatus
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
-        var packetBusItem = new MqttPacketBusItem(MqttPublishPacketFactory.Create(applicationMessage));
+        var publishPacket = MqttPublishPacketFactory.Create(applicationMessage);
+        var packetBusItem = new MqttPacketBusItem(publishPacket);
         _session.EnqueueDataPacket(packetBusItem);
 
-        var mqttPacket = await packetBusItem.WaitAsync();
+        await packetBusItem.WaitAsync().ConfigureAwait(false);
 
-        var result = new InjectMqttApplicationMessageResult()
+        var injectResult = new InjectMqttApplicationMessageResult()
         {
-            PacketIdentifier = ((MqttPacketWithIdentifier)mqttPacket).PacketIdentifier
+            PacketIdentifier = publishPacket.PacketIdentifier
         };
 
-        return result;
+        return injectResult;
     }
 
     /// <summary>

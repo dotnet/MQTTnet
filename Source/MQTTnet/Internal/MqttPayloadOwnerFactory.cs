@@ -97,16 +97,16 @@ namespace MQTTnet.Internal
                     pipe = new Pipe();
                 }
 
-                await payloadFactory.Invoke(pipe.Writer);
-                await pipe.Writer.CompleteAsync();
+                await payloadFactory.Invoke(pipe.Writer).ConfigureAwait(false);
+                await pipe.Writer.CompleteAsync().ConfigureAwait(false);
 
-                var payload = await ReadPayloadAsync(pipe.Reader, cancellationToken);
+                var payload = await ReadPayloadAsync(pipe.Reader, cancellationToken).ConfigureAwait(false);
                 return new MultipleSegmentPayloadOwner(pipe, payload);
             }
 
             protected override async ValueTask DisposeAsync(bool disposing)
             {
-                await _pipe.Reader.CompleteAsync();
+                await _pipe.Reader.CompleteAsync().ConfigureAwait(false);
                 _pipe.Reset();
                 _pipeQueue.Enqueue(_pipe);
             }
@@ -115,11 +115,11 @@ namespace MQTTnet.Internal
                 PipeReader pipeReader,
                 CancellationToken cancellationToken)
             {
-                var readResult = await pipeReader.ReadAsync(cancellationToken);
+                var readResult = await pipeReader.ReadAsync(cancellationToken).ConfigureAwait(false);
                 while (!readResult.IsCompleted)
                 {
                     pipeReader.AdvanceTo(readResult.Buffer.Start, readResult.Buffer.Start);
-                    readResult = await pipeReader.ReadAsync(cancellationToken);
+                    readResult = await pipeReader.ReadAsync(cancellationToken).ConfigureAwait(false);
                 }
 
                 return readResult.Buffer;

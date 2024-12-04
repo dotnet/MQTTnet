@@ -73,8 +73,8 @@ public static class MqttClientExtensions
     {
         ArgumentNullException.ThrowIfNull(payloadFactory);
 
-        await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(payloadFactory, cancellationToken);
-        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
+        await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(payloadFactory, cancellationToken).ConfigureAwait(false);
+        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken).ConfigureAwait(false);
     }
 
     public static Task<MqttClientPublishResult> PublishBinaryAsync(
@@ -98,7 +98,7 @@ public static class MqttClientExtensions
        CancellationToken cancellationToken = default)
     {
         await using var payloadOwner = MqttPayloadOwnerFactory.CreateSingleSegment(payloadSize, payloadFactory);
-        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken);
+        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken).ConfigureAwait(false);
     }
 
     public static Task<MqttClientPublishResult> PublishStringAsync(
@@ -116,7 +116,7 @@ public static class MqttClientExtensions
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
             Encoding.UTF8.GetBytes(payload, writer);
-            await writer.FlushAsync(cancellationToken);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -134,7 +134,7 @@ public static class MqttClientExtensions
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
             var stream = writer.AsStream(leaveOpen: true);
-            await JsonSerializer.SerializeAsync(stream, payload, jsonSerializerOptions, cancellationToken);
+            await JsonSerializer.SerializeAsync(stream, payload, jsonSerializerOptions, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -153,7 +153,7 @@ public static class MqttClientExtensions
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
             var stream = writer.AsStream(leaveOpen: true);
-            await JsonSerializer.SerializeAsync(stream, payload, jsonTypeInfo, cancellationToken);
+            await JsonSerializer.SerializeAsync(stream, payload, jsonTypeInfo, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -170,7 +170,7 @@ public static class MqttClientExtensions
 
         async ValueTask WritePayloadAsync(PipeWriter writer)
         {
-            await payload.CopyToAsync(writer, cancellationToken);
+            await payload.CopyToAsync(writer, cancellationToken).ConfigureAwait(false);
         }
     }
 

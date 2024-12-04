@@ -21,14 +21,14 @@ namespace MQTTnet.Extensions.Rpc
         [Obsolete("Use the method ExecuteTimeOutAsync instead.")]
         public static async Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
         {
-            var response = await client.ExecuteTimeOutAsync(timeout, methodName, payload, qualityOfServiceLevel, parameters);
+            var response = await client.ExecuteTimeOutAsync(timeout, methodName, payload, qualityOfServiceLevel, parameters).ConfigureAwait(false);
             return response.ToArray();
         }
 
         [Obsolete("Use the method ExecuteTimeOutAsync instead.")]
         public static async Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, ReadOnlyMemory<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
         {
-            var response = await client.ExecuteTimeOutAsync(timeout, methodName, payload, qualityOfServiceLevel, parameters);
+            var response = await client.ExecuteTimeOutAsync(timeout, methodName, payload, qualityOfServiceLevel, parameters).ConfigureAwait(false);
             return response.ToArray();
         }
 
@@ -56,7 +56,7 @@ namespace MQTTnet.Extensions.Rpc
             using var timeoutTokenSource = new CancellationTokenSource(timeout);
             try
             {
-                return await executor(timeoutTokenSource.Token);
+                return await executor(timeoutTokenSource.Token).ConfigureAwait(false);
             }
             catch (OperationCanceledException exception) when (timeoutTokenSource.IsCancellationRequested)
             {
@@ -78,7 +78,7 @@ namespace MQTTnet.Extensions.Rpc
             async ValueTask WritePayloadAsync(PipeWriter writer)
             {
                 Encoding.UTF8.GetBytes(payload, writer);
-                await writer.FlushAsync(cancellationToken);
+                await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -89,16 +89,15 @@ namespace MQTTnet.Extensions.Rpc
 
             async ValueTask WritePayloadAsync(PipeWriter writer)
             {
-                await payload.CopyToAsync(writer, cancellationToken);
-                await writer.FlushAsync(cancellationToken);
+                await payload.CopyToAsync(writer, cancellationToken).ConfigureAwait(false);
             }
         }
 
         public static async Task<ReadOnlySequence<byte>> ExecuteAsync(this IMqttRpcClient client, string methodName, Func<PipeWriter, ValueTask> payloadFactory, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(client);
-            await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(payloadFactory, cancellationToken);
-            return await client.ExecuteAsync(methodName, payloadOwner.Payload, qualityOfServiceLevel, parameters, cancellationToken);
+            await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(payloadFactory, cancellationToken).ConfigureAwait(false);
+            return await client.ExecuteAsync(methodName, payloadOwner.Payload, qualityOfServiceLevel, parameters, cancellationToken).ConfigureAwait(false);
         }
     }
 }

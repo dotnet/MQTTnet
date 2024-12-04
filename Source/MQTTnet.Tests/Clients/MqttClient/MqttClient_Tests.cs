@@ -27,7 +27,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
     [TestClass]
     public sealed class MqttClient_Tests : BaseTestClass
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
         [DataRow(MqttQualityOfServiceLevel.AtMostOnce)]
         [DataRow(MqttQualityOfServiceLevel.AtLeastOnce)]

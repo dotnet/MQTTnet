@@ -20,7 +20,7 @@ namespace MQTTnet.Tests.Server
     [TestClass]
     public sealed class Subscribe_Tests : BaseTestClass
     {
-        [DataTestMethod]
+        [TestMethod]
         [DataRow("A", "A", true)]
         [DataRow("A", "B", false)]
         [DataRow("A", "#", true)]

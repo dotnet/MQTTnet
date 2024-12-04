@@ -49,7 +49,7 @@ namespace MQTTnet.AspNetCore
 
         public override async ValueTask DisposeAsync()
         {
-            await _stream.DisposeAsync();
+            await _stream.DisposeAsync().ConfigureAwait(false);
             _connectionCloseSource.Cancel();
             _connectionCloseSource.Dispose();
         }

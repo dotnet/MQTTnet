@@ -37,11 +37,11 @@ sealed class MqttConnectionMiddleware
 
         if (protocols == MqttProtocols.Mqtt)
         {
-            await _connectionHandler.OnConnectedAsync(connection);
+            await _connectionHandler.OnConnectedAsync(connection).ConfigureAwait(false);
         }
         else if (protocols == MqttProtocols.WebSocket)
         {
-            await next(connection);
+            await next(connection).ConfigureAwait(false);
         }
         else
         {

@@ -51,16 +51,16 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
     {
         _connection = _channelOptions switch
         {
-            MqttClientTcpOptions tcpOptions => await ClientConnectionContext.CreateAsync(tcpOptions, cancellationToken),
-            MqttClientWebSocketOptions webSocketOptions => await ClientConnectionContext.CreateAsync(webSocketOptions, cancellationToken),
+            MqttClientTcpOptions tcpOptions => await ClientConnectionContext.CreateAsync(tcpOptions, cancellationToken).ConfigureAwait(false),
+            MqttClientWebSocketOptions webSocketOptions => await ClientConnectionContext.CreateAsync(webSocketOptions, cancellationToken).ConfigureAwait(false),
             _ => throw new NotSupportedException(),
         };
         _channel = new MqttChannel(_packetFormatterAdapter, _connection, _packetInspector);
     }
 
-    public async Task DisconnectAsync(CancellationToken cancellationToken)
+    public Task DisconnectAsync(CancellationToken cancellationToken)
     {
-        await GetChannel().DisconnectAsync();
+        return GetChannel().DisconnectAsync();
     }
 
     public async ValueTask DisposeAsync()
@@ -74,19 +74,19 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
 
         if (_channel != null)
         {
-            await _channel.DisconnectAsync();
+            await _channel.DisconnectAsync().ConfigureAwait(false);
             _channel.Dispose();
         }
 
         if (_connection != null)
         {
-            await _connection.DisposeAsync();
+            await _connection.DisposeAsync().ConfigureAwait(false);
         }
     }
 
     public void Dispose()
     {
-        DisposeAsync().GetAwaiter().GetResult();
+        DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
     public Task<MqttPacket?> ReceivePacketAsync(CancellationToken cancellationToken)

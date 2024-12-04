@@ -133,7 +133,7 @@ namespace MQTTnet.AspNetCore
             }
             catch (Exception)
             {
-                await sslStream.DisposeAsync();
+                await sslStream.DisposeAsync().ConfigureAwait(false);
                 throw;
             }
 

@@ -35,8 +35,8 @@ namespace MQTTnet.AspNetCore
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await _applicationStartedTask.WaitAsync(stoppingToken);
-            await _aspNetCoreMqttServer.StartAsync(stoppingToken);
+            await _applicationStartedTask.WaitAsync(stoppingToken).ConfigureAwait(false);
+            await _aspNetCoreMqttServer.StartAsync(stoppingToken).ConfigureAwait(false) ;
         }
 
         public override Task StopAsync(CancellationToken cancellationToken)

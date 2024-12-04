@@ -98,8 +98,8 @@ class MqttChannel : IDisposable
 
     public async Task DisconnectAsync()
     {
-        await _input.CompleteAsync();
-        await _output.CompleteAsync();
+        await _input.CompleteAsync().ConfigureAwait(false);
+        await _output.CompleteAsync().ConfigureAwait(false);
     }
 
     public virtual void Dispose()

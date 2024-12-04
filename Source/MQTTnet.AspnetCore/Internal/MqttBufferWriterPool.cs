@@ -44,29 +44,25 @@ namespace MQTTnet.AspNetCore
             return bufferWriter;
         }
 
-        public void Return(ChannelMqttBufferWriter bufferWriter)
+        public bool Return(ChannelMqttBufferWriter bufferWriter)
         {
             if (CanReturn(bufferWriter))
             {
                 _bufferWriterQueue.Enqueue(bufferWriter);
+                return true;
             }
+            return false;
         }
 
         private bool CanReturn(ChannelMqttBufferWriter bufferWriter)
         {
             var options = _poolOptions.CurrentValue;
-            if (!options.Enable)
-            {
-                return false;
-            }
-
-            if (bufferWriter.LifeTime < options.PoolingItemMaxLifeTime)
+            if (bufferWriter.Lifetime < options.MaxLifetime)
             {
                 return true;
             }
 
-            if (options.PoolingLargeBufferSizeItem &&
-                bufferWriter.BufferSize > _serverOptions.WriterBufferSize)
+            if (options.LargeBufferSizeEnabled && bufferWriter.BufferSize > _serverOptions.WriterBufferSize)
             {
                 return true;
             }
@@ -92,7 +88,7 @@ namespace MQTTnet.AspNetCore
             private readonly MqttBufferWriter _bufferWriter = bufferWriter;
 
             public int BufferSize => _bufferWriter.GetBuffer().Length;
-            public TimeSpan LifeTime => TimeSpan.FromMilliseconds(Environment.TickCount64 - _tickCount);
+            public TimeSpan Lifetime => TimeSpan.FromMilliseconds(Environment.TickCount64 - _tickCount);
 
             public void Reset()
             {

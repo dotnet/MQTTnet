@@ -17,7 +17,7 @@ namespace MQTTnet.Tests.ASP
             var services = new ServiceCollection();
             services.AddMqttServer().ConfigureMqttBufferWriterPool(p =>
             {
-                p.PoolingItemMaxLifeTime = TimeSpan.FromSeconds(1d);
+                p.MaxLifetime = TimeSpan.FromSeconds(1d);
             });
 
             var s = services.BuildServiceProvider();
@@ -27,7 +27,7 @@ namespace MQTTnet.Tests.ASP
             var bufferWriter = pool.Rent();
             Assert.AreEqual(0, pool.Count);
 
-            pool.Return(bufferWriter);
+            Assert.IsTrue(pool.Return(bufferWriter));
             Assert.AreEqual(1, pool.Count);
 
             bufferWriter = pool.Rent();
@@ -35,14 +35,14 @@ namespace MQTTnet.Tests.ASP
 
             await Task.Delay(TimeSpan.FromSeconds(2d));
 
-            pool.Return(bufferWriter);
+            Assert.IsFalse(pool.Return(bufferWriter));
             Assert.AreEqual(0, pool.Count);
 
             MqttBufferWriter writer = bufferWriter;
             writer.Seek(options.WriterBufferSize + 1);
             Assert.IsTrue(bufferWriter.BufferSize > options.WriterBufferSize);
 
-            pool.Return(bufferWriter);
+            Assert.IsTrue(pool.Return(bufferWriter));
             Assert.AreEqual(1, pool.Count);
         }
     }

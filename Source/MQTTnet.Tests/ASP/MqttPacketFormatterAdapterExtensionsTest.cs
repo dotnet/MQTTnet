@@ -11,7 +11,7 @@ using MQTTnet.Packets;
 namespace MQTTnet.Tests.ASP;
 
 [TestClass]
-public sealed class ReaderExtensionsTest
+public sealed class MqttPacketFormatterAdapterExtensionsTest
 {
     [TestMethod]
     public void TestTryDeserialize()

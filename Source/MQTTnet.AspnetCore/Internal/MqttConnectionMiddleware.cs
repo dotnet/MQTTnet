@@ -49,7 +49,7 @@ sealed class MqttConnectionMiddleware
         }
     }
 
-    private static bool IsMqttRequest(ReadOnlySequence<byte> buffer)
+    public static bool IsMqttRequest(ReadOnlySequence<byte> buffer)
     {
         if (!buffer.IsEmpty)
         {

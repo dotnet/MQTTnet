@@ -26,7 +26,7 @@ class MqttChannel : IDisposable
     readonly PipeReader _input;
     readonly PipeWriter _output;
     readonly MqttPacketInspector? _packetInspector;
-    readonly bool _serverModeWebSocket;
+    readonly bool _allowPacketFragmentation;
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
@@ -44,7 +44,8 @@ class MqttChannel : IDisposable
     public MqttChannel(
         MqttPacketFormatterAdapter packetFormatterAdapter,
         ConnectionContext connection,
-        MqttPacketInspector? packetInspector = null)
+        MqttPacketInspector? packetInspector = null,
+        bool? allowPacketFragmentation = null)
     {
         PacketFormatterAdapter = packetFormatterAdapter;
         _packetInspector = packetInspector;
@@ -54,15 +55,22 @@ class MqttChannel : IDisposable
         RemoteEndPoint = GetRemoteEndPoint(httpContextFeature, connection.RemoteEndPoint);
         IsSecureConnection = IsTlsConnection(httpContextFeature, tlsConnectionFeature);
         ClientCertificate = GetClientCertificate(httpContextFeature, tlsConnectionFeature);
-        _serverModeWebSocket = IsServerModeWebSocket(httpContextFeature);
 
         _input = connection.Transport.Input;
         _output = connection.Transport.Output;
+
+        _allowPacketFragmentation = allowPacketFragmentation == null
+            ? AllowPacketFragmentation(httpContextFeature)
+            : allowPacketFragmentation.Value;
     }
 
-    private static bool IsServerModeWebSocket(IHttpContextFeature? _httpContextFeature)
+    private static bool AllowPacketFragmentation(IHttpContextFeature? _httpContextFeature)
     {
-        return _httpContextFeature != null && _httpContextFeature.HttpContext != null && _httpContextFeature.HttpContext.WebSockets.IsWebSocketRequest;
+        var serverModeWebSocket = _httpContextFeature != null &&
+            _httpContextFeature.HttpContext != null &&
+            _httpContextFeature.HttpContext.WebSockets.IsWebSocketRequest;
+
+        return !serverModeWebSocket;
     }
 
 
@@ -197,19 +205,19 @@ class MqttChannel : IDisposable
                     // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
                     await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
                 }
-                else if (_serverModeWebSocket) // server channel, and client is MQTT over WebSocket
+                else if (_allowPacketFragmentation)
+                {
+                    await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
+                    foreach (var memory in buffer.Payload)
+                    {
+                        await _output.WriteAsync(memory, cancellationToken).ConfigureAwait(false);
+                    }
+                }
+                else
                 {
                     // Make sure the MQTT packet is in a WebSocket frame to be compatible with JavaScript WebSocket
                     WritePacketBuffer(_output, buffer);
                     await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
-                    foreach (var block in buffer.Payload)
-                    {
-                        await _output.WriteAsync(block, cancellationToken).ConfigureAwait(false);
-                    }
                 }
 
                 BytesSent += buffer.Length;

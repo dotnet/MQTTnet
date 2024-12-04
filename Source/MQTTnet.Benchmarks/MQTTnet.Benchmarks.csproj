@@ -6,7 +6,6 @@
         <IsPackable>false</IsPackable>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <NoWarn>$(NoWarn);CS8892</NoWarn>
-        <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     </PropertyGroup>
 

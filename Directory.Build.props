@@ -13,19 +13,26 @@
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
 
         <NeutralLanguage>en-US</NeutralLanguage>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
 
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
 
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <PackageProjectUrl>https://github.com/dotnet/MQTTnet</PackageProjectUrl>
         <RepositoryUrl>https://github.com/dotnet/MQTTnet.git</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
 
+        <!--https://developercommunity.visualstudio.com/t/Code-Rules-that-were-Informational-are-n/10789409#TPIN-N10795393-->
+        <AnalysisLevel>latest</AnalysisLevel>
+        <AnalysisMode>recommended</AnalysisMode>
+        <AnalysisModeStyle>default</AnalysisModeStyle>
+    </PropertyGroup>
+
+    <!--https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#continuousintegrationbuild-->
+    <PropertyGroup Condition="'$(TF_BUILD)' == 'true' OR '$(GITHUB_ACTIONS)' == 'true'">
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 

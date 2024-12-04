@@ -5,7 +5,6 @@
         <DebugType>Full</DebugType>
         <IsPackable>false</IsPackable>
         <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <ContinuousIntegrationBuild>false</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <ItemGroup>

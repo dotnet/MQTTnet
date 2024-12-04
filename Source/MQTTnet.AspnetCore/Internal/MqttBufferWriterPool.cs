@@ -6,15 +6,21 @@ using Microsoft.Extensions.Options;
 using MQTTnet.Formatter;
 using MQTTnet.Server;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace MQTTnet.AspNetCore
 {
-    sealed class MqttBufferWriterPool
+    [DebuggerDisplay("Count = {Count}")]
+    sealed class MqttBufferWriterPool : IReadOnlyCollection<MqttBufferWriterPool.ChannelMqttBufferWriter>
     {
         private readonly MqttServerOptions _serverOptions;
         private readonly IOptionsMonitor<MqttBufferWriterPoolOptions> _poolOptions;
         private readonly ConcurrentQueue<ChannelMqttBufferWriter> _bufferWriterQueue = new();
+
+        public int Count => _bufferWriterQueue.Count;
 
         public MqttBufferWriterPool(
             MqttServerOptions serverOptions,
@@ -68,8 +74,18 @@ namespace MQTTnet.AspNetCore
             return false;
         }
 
+        public IEnumerator<ChannelMqttBufferWriter> GetEnumerator()
+        {
+            return _bufferWriterQueue.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return _bufferWriterQueue.GetEnumerator();
+        }
 
 
+        [DebuggerDisplay("BufferSize = {BufferSize}, LifeTime = {LifeTime}")]
         public sealed class ChannelMqttBufferWriter(MqttBufferWriter bufferWriter)
         {
             private long _tickCount = Environment.TickCount64;

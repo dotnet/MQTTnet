@@ -86,7 +86,7 @@ class MqttChannel : IDisposable
             }
         }
 
-        return null;
+        return remoteEndPoint;
     }
 
     private static bool IsTlsConnection(IHttpContextFeature? _httpContextFeature, ITlsConnectionFeature? tlsConnectionFeature)

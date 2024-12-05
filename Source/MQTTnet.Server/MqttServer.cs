@@ -352,7 +352,7 @@ public class MqttServer : Disposable
         ThrowIfDisposed();
         ThrowIfNotStarted();
 
-        return _retainedMessagesManager?.UpdateMessage(string.Empty, retainedMessage);
+        return _retainedMessagesManager?.UpdateMessage(string.Empty, retainedMessage, new Lazy<MqttApplicationMessage>(retainedMessage));
     }
 
     protected override void Dispose(bool disposing)

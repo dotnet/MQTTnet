@@ -50,7 +50,7 @@ namespace MQTTnet.Server.Internal
             }
         }
 
-        public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)
+        public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage, Lazy<MqttApplicationMessage> applicationMessageCopy)
         {
             ArgumentNullException.ThrowIfNull(applicationMessage);
 
@@ -61,10 +61,7 @@ namespace MQTTnet.Server.Internal
 
                 lock (_messages)
                 {
-                    var payload = applicationMessage.Payload;
-                    var hasPayload = payload.Length > 0;
-
-                    if (!hasPayload)
+                    if (applicationMessage.Payload.IsEmpty)
                     {
                         saveIsRequired = _messages.Remove(applicationMessage.Topic);
                         _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
@@ -73,15 +70,15 @@ namespace MQTTnet.Server.Internal
                     {
                         if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
                         {
-                            _messages[applicationMessage.Topic] = applicationMessage;
+                            _messages[applicationMessage.Topic] = applicationMessageCopy.Value;
                             saveIsRequired = true;
                         }
                         else
                         {
                             if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
-                                !MqttMemoryHelper.SequenceEqual(existingMessage.Payload, payload))
+                                !MqttMemoryHelper.SequenceEqual(existingMessage.Payload, applicationMessage.Payload))
                             {
-                                _messages[applicationMessage.Topic] = applicationMessage;
+                                _messages[applicationMessage.Topic] = applicationMessageCopy.Value;
                                 saveIsRequired = true;
                             }
                         }
@@ -99,7 +96,7 @@ namespace MQTTnet.Server.Internal
                 {
                     using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
                     {
-                        var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
+                        var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessageCopy.Value, messagesForSave);
                         await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                     }
                 }

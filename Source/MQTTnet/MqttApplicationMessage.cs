@@ -8,6 +8,7 @@ using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace MQTTnet
 {
@@ -142,5 +143,29 @@ namespace MQTTnet
         ///     Hint: MQTT 5 feature only.
         /// </summary>
         public List<MqttUserProperty> UserProperties { get; set; }
+
+        /// <summary>
+        /// Deep clone all fields.
+        /// </summary>
+        /// <returns></returns>
+        public MqttApplicationMessage Clone()
+        {
+            return new MqttApplicationMessage
+            {
+                ContentType = ContentType,
+                CorrelationData = CorrelationData == default ? default : CorrelationData.ToArray(),
+                Dup = Dup,
+                MessageExpiryInterval = MessageExpiryInterval,
+                Payload = Payload.IsEmpty ? default : new ReadOnlySequence<byte>(Payload.ToArray()),
+                PayloadFormatIndicator = PayloadFormatIndicator,
+                QualityOfServiceLevel = QualityOfServiceLevel,
+                Retain = Retain,
+                ResponseTopic = ResponseTopic,
+                Topic = Topic,
+                UserProperties = UserProperties?.Select(u => u.Clone()).ToList(),
+                SubscriptionIdentifiers = SubscriptionIdentifiers?.ToList(),
+                TopicAlias = TopicAlias
+            };
+        }
     }
 }

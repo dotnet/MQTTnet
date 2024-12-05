@@ -48,6 +48,10 @@ public sealed class MqttUserProperty
         return $"{Name} = {Value}";
     }
 
+    /// <summary>
+    /// Deep clone all fields.
+    /// </summary>
+    /// <returns></returns>
     public MqttUserProperty Clone()
     {
         return new MqttUserProperty(Name, Value);

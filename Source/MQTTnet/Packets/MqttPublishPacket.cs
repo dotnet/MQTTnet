@@ -5,6 +5,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Linq;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Packets;
@@ -38,6 +39,31 @@ public sealed class MqttPublishPacket : MqttPacketWithIdentifier
     public ushort TopicAlias { get; set; }
 
     public List<MqttUserProperty> UserProperties { get; set; }
+
+    /// <summary>
+    /// Deep clone all fields.
+    /// </summary>
+    /// <returns></returns>
+    public MqttPublishPacket Clone()
+    {
+        return new MqttPublishPacket
+        {
+            PacketIdentifier = PacketIdentifier,
+            ContentType = ContentType,
+            CorrelationData = CorrelationData == default ? default : CorrelationData.ToArray(),
+            Dup = Dup,
+            MessageExpiryInterval = MessageExpiryInterval,
+            Payload = Payload.IsEmpty ? default : new ReadOnlySequence<byte>(Payload.ToArray()),
+            PayloadFormatIndicator = PayloadFormatIndicator,
+            QualityOfServiceLevel = QualityOfServiceLevel,
+            Retain = Retain,
+            ResponseTopic = ResponseTopic,
+            Topic = Topic,
+            UserProperties = UserProperties?.Select(u => u.Clone()).ToList(),
+            SubscriptionIdentifiers = SubscriptionIdentifiers?.ToList(),
+            TopicAlias = TopicAlias
+        };
+    }
 
     public override string ToString()
     {

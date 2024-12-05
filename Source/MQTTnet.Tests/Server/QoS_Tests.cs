@@ -114,12 +114,23 @@ public sealed class QoS_Tests : BaseTestClass
     [TestMethod]
     public async Task Preserve_Message_Order_For_Queued_Messages()
     {
+        await Preserve_Message_Order_For_Queued_Messages(receivedPublishPacketQueueable: true);
+    }
+
+    [TestMethod]
+    public async Task Preserve_Message_Order_For_Queued_Messages_NoQueue()
+    {
+        await Preserve_Message_Order_For_Queued_Messages(receivedPublishPacketQueueable: false);
+    }
+
+    private async Task Preserve_Message_Order_For_Queued_Messages(bool receivedPublishPacketQueueable)
+    {
         using (var testEnvironment = CreateTestEnvironment())
         {
             var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
             // Create a session which will contain the messages.
-            var dummyClient = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false));
+            var dummyClient = await testEnvironment.ConnectClient(o => o.WithClientId("A").WithCleanSession(false).WithReceivedApplicationMessageQueueable(receivedPublishPacketQueueable));
             await dummyClient.SubscribeAsync("#", MqttQualityOfServiceLevel.AtLeastOnce);
             dummyClient.Dispose();
 

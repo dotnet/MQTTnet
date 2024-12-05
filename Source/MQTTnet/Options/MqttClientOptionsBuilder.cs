@@ -482,4 +482,10 @@ public sealed class MqttClientOptionsBuilder
         _options.WillUserProperties.Add(new MqttUserProperty(name, value));
         return this;
     }
+
+    public MqttClientOptionsBuilder WithReceivedApplicationMessageQueueable(bool value)
+    {
+        _options.ReceivedApplicationMessageQueueable = value;
+        return this;
+    }
 }

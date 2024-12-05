@@ -2,6 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Channel;
+using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Exceptions;
+using MQTTnet.Formatter;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
 using System;
 using System.Buffers;
 using System.IO;
@@ -11,12 +17,6 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Channel;
-using MQTTnet.Diagnostics.Logger;
-using MQTTnet.Exceptions;
-using MQTTnet.Formatter;
-using MQTTnet.Internal;
-using MQTTnet.Packets;
 
 namespace MQTTnet.Adapter;
 
@@ -30,6 +30,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
     readonly MqttNetSourceLogger _logger;
     readonly byte[] _singleByteBuffer = new byte[1];
     readonly AsyncLock _syncRoot = new();
+    private BufferOwner _bodyOwner = null;
 
     Statistics _statistics; // mutable struct, don't make readonly!
 
@@ -259,6 +260,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         {
             _channel.Dispose();
             _syncRoot.Dispose();
+            _bodyOwner?.Dispose();
         }
 
         base.Dispose(disposing);
@@ -402,14 +404,19 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         }
 
         var bodyLength = fixedHeader.RemainingLength;
-        var body = new byte[bodyLength];
+        // Return and clear the previous body buffer
+        _bodyOwner?.Dispose();
+
+        // Re-rent a body buffer
+        _bodyOwner = BufferOwner.Rent(bodyLength);
+        var body = _bodyOwner.Buffer;
 
         var bodyOffset = 0;
         var chunkSize = Math.Min(ReadBufferSize, bodyLength);
 
         do
         {
-            var bytesLeft = body.Length - bodyOffset;
+            var bytesLeft = bodyLength - bodyOffset;
             if (chunkSize > bytesLeft)
             {
                 chunkSize = bytesLeft;
@@ -483,6 +490,38 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         {
             Volatile.Write(ref _bytesReceived, 0);
             Volatile.Write(ref _bytesSent, 0);
+        }
+    }
+
+    sealed class BufferOwner : IDisposable
+    {
+        private bool _disposed = false;
+
+        public byte[] Buffer { get; private set; }
+
+        /// <summary>
+        /// rent a buffer from ArrayPool
+        /// </summary>
+        /// <param name="minBufferSize"></param>
+        /// <returns></returns>
+        public static BufferOwner Rent(int minBufferSize)
+        {
+            return new BufferOwner()
+            {
+                Buffer = ArrayPool<byte>.Shared.Rent(minBufferSize)
+            };
+        }
+
+        /// <summary>
+        /// return the buffer to ArrayPool
+        /// </summary>
+        public void Dispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+                ArrayPool<byte>.Shared.Return(Buffer);
+            }
         }
     }
 }

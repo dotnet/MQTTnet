@@ -164,7 +164,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
                 await localPacketInspector.EndReceivePacket().ConfigureAwait(false);
             }
 
-            Interlocked.Add(ref _statistics._bytesSent, receivedPacket.TotalLength);
+            Interlocked.Add(ref _statistics._bytesReceived, receivedPacket.TotalLength);
 
             if (PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.Unknown)
             {
@@ -237,7 +237,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
                     await _channel.WriteAsync(packetBuffer.Payload, true, cancellationToken).ConfigureAwait(false);
                 }
 
-                Interlocked.Add(ref _statistics._bytesReceived, packetBuffer.Length);
+                Interlocked.Add(ref _statistics._bytesSent, packetBuffer.Length);
             }
             catch (Exception exception)
             {

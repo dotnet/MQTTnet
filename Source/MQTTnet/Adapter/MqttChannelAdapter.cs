@@ -409,7 +409,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
         // Re-rent a body buffer
         _bodyOwner = BufferOwner.Rent(bodyLength);
-        var body = _bodyOwner.Buffer;
+        var bodyBuffer = _bodyOwner.Buffer;
 
         var bodyOffset = 0;
         var chunkSize = Math.Min(ReadBufferSize, bodyLength);
@@ -422,7 +422,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
                 chunkSize = bytesLeft;
             }
 
-            var readBytes = await _channel.ReadAsync(body, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false);
+            var readBytes = await _channel.ReadAsync(bodyBuffer, bodyOffset, chunkSize, cancellationToken).ConfigureAwait(false);
 
             if (cancellationToken.IsCancellationRequested)
             {
@@ -437,11 +437,10 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
             bodyOffset += readBytes;
         } while (bodyOffset < bodyLength);
 
-        PacketInspector?.FillReceiveBuffer(body);
+        var body = bodyBuffer.AsMemory(0, bodyLength);
+        PacketInspector?.FillReceiveBuffer(body.Span);
 
-        var bodySegment = new ArraySegment<byte>(body, 0, bodyLength);
-        var bodySequence = new ReadOnlySequence<byte>(bodySegment);
-        return new ReceivedMqttPacket(fixedHeader.Flags, bodySequence, fixedHeader.TotalLength);
+        return new ReceivedMqttPacket(fixedHeader.Flags, new ReadOnlySequence<byte>(body), fixedHeader.TotalLength);
     }
 
     static bool WrapAndThrowException(Exception exception)

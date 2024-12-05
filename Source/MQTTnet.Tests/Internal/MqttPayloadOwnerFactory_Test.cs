@@ -32,14 +32,38 @@ namespace MQTTnet.Tests.Internal
         }
 
         [TestMethod]
-        public async Task CreateMultipleSegmentTest()
+        public async Task CreateMultipleSegment_1x4K_Test()
         {
+            await CreateMultipleSegmentTest(x4K: 1);
+        }
+
+        [TestMethod]
+        public async Task CreateMultipleSegment_2x4K_Test()
+        {
+            await CreateMultipleSegmentTest(x4K: 2);
+        }
+
+        [TestMethod]
+        public async Task CreateMultipleSegment_4x4K_Test()
+        {
+            await CreateMultipleSegmentTest(x4K: 4);
+        }
+
+        [TestMethod]
+        public async Task CreateMultipleSegment_8x4K_Test()
+        {
+            await CreateMultipleSegmentTest(x4K: 8);
+        }
+
+        private async Task CreateMultipleSegmentTest(int x4K)
+        {
+            const int size4K = 4096;
             var stream = new MemoryStream();
             await using var owner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(async writer =>
             {
-                for (var i = 0; i < 10; i++)
+                for (var i = 0; i < x4K; i++)
                 {
-                    var memory = writer.GetMemory(4096);
+                    var memory = writer.GetMemory(size4K)[..size4K];
                     Random.Shared.NextBytes(memory.Span);
 
                     writer.Advance(memory.Length);
@@ -50,6 +74,8 @@ namespace MQTTnet.Tests.Internal
 
             var buffer = stream.ToArray();
             var buffer2 = owner.Payload.ToArray();
+
+            Assert.AreEqual(size4K * x4K, buffer.Length);
             Assert.IsTrue(buffer.SequenceEqual(buffer2));
         }
     }

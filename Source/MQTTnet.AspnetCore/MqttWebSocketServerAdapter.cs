@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Net;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -28,7 +29,8 @@ public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
     {
         ArgumentNullException.ThrowIfNull(webSocket);
 
-        var endpoint = $"{httpContext.Connection.RemoteIpAddress}:{httpContext.Connection.RemotePort}";
+        var remoteAddress = httpContext.Connection.RemoteIpAddress;
+        var remoteEndPoint = remoteAddress == null ? null : new IPEndPoint(remoteAddress, httpContext.Connection.RemotePort);
 
         var clientCertificate = await httpContext.Connection.GetClientCertificateAsync().ConfigureAwait(false);
         try
@@ -39,7 +41,7 @@ public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
             if (clientHandler != null)
             {
                 var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
-                var channel = new MqttWebSocketChannel(webSocket, endpoint, isSecureConnection, clientCertificate);
+                var channel = new MqttWebSocketChannel(webSocket, remoteEndPoint, isSecureConnection, clientCertificate);
 
                 using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger))
                 {

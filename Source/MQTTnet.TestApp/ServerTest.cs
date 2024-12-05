@@ -43,7 +43,9 @@ namespace MQTTnet.TestApp
         {
             try
             {
-                var options = new MqttServerOptions();
+                var options = new MqttServerOptionsBuilder()
+                    .WithDefaultEndpoint()
+                    .Build();
 
                 // Extend the timestamp for all messages from clients.
                 // Protect several topics from being subscribed from every client.

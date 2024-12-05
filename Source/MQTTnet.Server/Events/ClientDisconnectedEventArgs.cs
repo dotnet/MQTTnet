@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -18,12 +19,12 @@ namespace MQTTnet.Server
             string clientId,
             MqttDisconnectPacket disconnectPacket,
             MqttClientDisconnectType disconnectType,
-            string endpoint,
+            EndPoint remoteEndPoint,
             IDictionary sessionItems)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             DisconnectType = disconnectType;
-            Endpoint = endpoint;
+            RemoteEndPoint = remoteEndPoint;
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
 
             // The DISCONNECT packet can be null in case of a non clean disconnect or session takeover.
@@ -38,7 +39,10 @@ namespace MQTTnet.Server
 
         public MqttClientDisconnectType DisconnectType { get; }
 
-        public string Endpoint { get; }
+        public EndPoint RemoteEndPoint { get; }
+
+        [Obsolete("Use RemoteEndPoint instead.")]
+        public string Endpoint => RemoteEndPoint?.ToString();
 
         /// <summary>
         ///     Gets the reason code sent by the client.

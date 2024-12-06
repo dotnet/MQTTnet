@@ -33,7 +33,7 @@ namespace MQTTnet.Tests.Server
 
                 await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
 
-                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -63,7 +63,7 @@ namespace MQTTnet.Tests.Server
                 var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.DisconnectAsync();
 
-                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -92,7 +92,7 @@ namespace MQTTnet.Tests.Server
                 var client = await testEnvironment.ConnectClient();
                 await client.SubscribeAsync("The/Topic", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -121,7 +121,7 @@ namespace MQTTnet.Tests.Server
                 var client = await testEnvironment.ConnectClient();
                 await client.UnsubscribeAsync("The/Topic");
 
-                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -149,7 +149,7 @@ namespace MQTTnet.Tests.Server
                 var client = await testEnvironment.ConnectClient();
                 await client.PublishStringAsync("The_Topic", "The_Payload");
 
-                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -176,7 +176,7 @@ namespace MQTTnet.Tests.Server
 
                 await server.StartAsync();
 
-                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
             }
@@ -199,7 +199,7 @@ namespace MQTTnet.Tests.Server
 
                 await server.StopAsync();
 
-                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
             }

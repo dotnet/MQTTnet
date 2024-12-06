@@ -23,7 +23,7 @@ namespace MQTTnet.Tests.Mockups
     {
         bool _disposed = false;
         readonly List<string> _clientErrors = new();
-        protected readonly List<IMqttClient> _clients = new();
+        readonly List<IMqttClient> _clients = new();
         readonly List<Exception> _exceptions = new();
         readonly List<ILowLevelMqttClient> _lowLevelClients = new();
         readonly MqttProtocolVersion _protocolVersion;
@@ -196,11 +196,9 @@ namespace MQTTnet.Tests.Mockups
             return new TestApplicationMessageReceivedHandler(mqttClient);
         }
 
-        public virtual IMqttClient CreateClient()
+        public IMqttClient CreateClient()
         {
-            var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : MqttNetNullLogger.Instance;
-
-            var client = ClientFactory.CreateMqttClient(logger);
+            var client = CreateClientCore();
 
             client.ConnectingAsync += e =>
             {
@@ -225,6 +223,12 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
+        protected virtual IMqttClient CreateClientCore()
+        {
+            var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : MqttNetNullLogger.Instance;
+            return ClientFactory.CreateMqttClient(logger);
+        }
+
         public MqttClientOptions CreateDefaultClientOptions()
         {
             return CreateDefaultClientOptionsBuilder().Build();
@@ -240,7 +244,7 @@ namespace MQTTnet.Tests.Mockups
 
         public ILowLevelMqttClient CreateLowLevelClient()
         {
-            var client = ClientFactory.CreateLowLevelMqttClient(ClientLogger);
+            var client = CreateLowLevelClientCore();
 
             lock (_lowLevelClients)
             {
@@ -249,6 +253,12 @@ namespace MQTTnet.Tests.Mockups
 
             return client;
         }
+
+        protected virtual ILowLevelMqttClient CreateLowLevelClientCore()
+        {
+            return ClientFactory.CreateLowLevelMqttClient(ClientLogger);
+        }
+
 
         public virtual MqttServer CreateServer(MqttServerOptions options)
         {

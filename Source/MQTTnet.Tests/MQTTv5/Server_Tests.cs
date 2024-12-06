@@ -182,9 +182,21 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Disconnect_with_Reason()
+        public async Task Disconnect_with_Reason_MQTTnet()
         {
-            using var testEnvironments = CreateMixedTestEnvironment();
+            using var testEnvironments = CreateMQTTnetTestEnvironment();
+            await Disconnect_with_Reason(testEnvironments);
+        }
+
+        [TestMethod]
+        public async Task Disconnect_with_Reason_AspNetCore()
+        {
+            using var testEnvironments = CreateAspNetCoreTestEnvironment();
+            await Disconnect_with_Reason(testEnvironments);
+        }
+
+        private async Task Disconnect_with_Reason(TestEnvironmentCollection testEnvironments)
+        {
             foreach (var testEnvironment in testEnvironments)
             {
                 var disconnectReasonTaskSource = new TaskCompletionSource<MqttClientDisconnectReason>();
@@ -211,14 +223,14 @@ namespace MQTTnet.Tests.MQTTv5
 
                 // Test client should be connected now
 
-                var testClientId = await testClientIdTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var testClientId = await testClientIdTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
                 Assert.IsTrue(testClientId != null);
 
                 // Have the server disconnect the client with AdministrativeAction reason
 
                 await testEnvironment.Server.DisconnectClientAsync(testClientId, MqttDisconnectReasonCode.AdministrativeAction);
 
-                var disconnectReason = await disconnectReasonTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var disconnectReason = await disconnectReasonTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
                 // The reason should be returned to the client in the DISCONNECT packet
 
                 Assert.AreEqual(MqttClientDisconnectReason.AdministrativeAction, disconnectReason);

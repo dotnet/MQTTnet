@@ -9,6 +9,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server
 {
@@ -16,9 +17,21 @@ namespace MQTTnet.Tests.Server
     public sealed class KeepAlive_Tests : BaseTestClass
     {
         [TestMethod]
-        public async Task Disconnect_Client_DueTo_KeepAlive()
+        public async Task Disconnect_Client_DueTo_KeepAlive_MQTTnet()
         {
-            using var testEnvironments = CreateMixedTestEnvironment();
+            using var testEnvironments = CreateMQTTnetTestEnvironment();
+            await Disconnect_Client_DueTo_KeepAlive(testEnvironments);
+        }
+
+        [TestMethod]
+        public async Task Disconnect_Client_DueTo_KeepAlive_AspNetCore()
+        {
+            using var testEnvironments = CreateAspNetCoreTestEnvironment();
+            await Disconnect_Client_DueTo_KeepAlive(testEnvironments);
+        }
+
+        private async Task Disconnect_Client_DueTo_KeepAlive(TestEnvironmentCollection testEnvironments)
+        {
             foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
@@ -41,12 +54,12 @@ namespace MQTTnet.Tests.Server
                 for (var i = 0; i < 6; i++)
                 {
                     await Task.Delay(500);
-                    
+
                     await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
                     responsePacket = await client.ReceiveAsync(CancellationToken.None);
                     Assert.IsTrue(responsePacket is MqttPingRespPacket);
                 }
-                
+
                 // If we reach this point everything works as expected (server did not close the connection
                 // due to proper ping messages.
                 // Now we will wait 1.1 seconds because the server MUST wait 1.5 seconds in total (See spec).

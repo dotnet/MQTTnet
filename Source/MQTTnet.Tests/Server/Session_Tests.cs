@@ -114,7 +114,7 @@ namespace MQTTnet.Tests.Server
                 // Act: Disconnect the client -> Event must be fired.
                 await client.DisconnectAsync();
 
-                var deletedEventFired = await deletedEventFiredTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var deletedEventFired = await deletedEventFiredTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 // Assert that the event was fired properly.
                 Assert.IsTrue(deletedEventFired);
@@ -182,7 +182,7 @@ namespace MQTTnet.Tests.Server
                 var sendClient = await testEnvironment.ConnectClient(option2);
                 await sendClient.PublishStringAsync("aaa", "1");
 
-                var hasReceive = await hasReceiveTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                var hasReceive = await hasReceiveTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.AreEqual(true, hasReceive);
             }
@@ -228,9 +228,22 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
-        public async Task Session_Takeover()
+        public async Task Session_Takeover_MQTTnet()
         {
-            using var testEnvironments = CreateMixedTestEnvironment();
+            using var testEnvironments = CreateMQTTnetTestEnvironment();
+            await Session_Takeover(testEnvironments);
+        }
+
+        [TestMethod]
+        public async Task Session_Takeover_AspNetCore()
+        {
+            using var testEnvironments = CreateAspNetCoreTestEnvironment();
+            await Session_Takeover(testEnvironments);
+        }
+
+
+        private async Task Session_Takeover(TestEnvironmentCollection testEnvironments)
+        {
             foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
@@ -242,11 +255,13 @@ namespace MQTTnet.Tests.Server
                 var client1 = await testEnvironment.ConnectClient(options);
                 await Task.Delay(500);
 
-                var disconnectReasonTaskSource = new TaskCompletionSource<MqttClientDisconnectReason>();
+                var disconnectReason = MqttClientDisconnectReason.NormalDisconnection;
+                var disconnectTaskSource = new TaskCompletionSource();
                 client1.DisconnectedAsync += c =>
                 {
-                    disconnectReasonTaskSource.TrySetResult(c.Reason);
-                    return Task.CompletedTask; ;
+                    disconnectReason = c.Reason;
+                    disconnectTaskSource.TrySetResult();
+                    return CompletedTask.Instance;
                 };
 
                 var client2 = await testEnvironment.ConnectClient(options);
@@ -255,7 +270,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsFalse(client1.IsConnected);
                 Assert.IsTrue(client2.IsConnected);
 
-                var disconnectReason = await disconnectReasonTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
+                await disconnectTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
                 Assert.AreEqual(MqttClientDisconnectReason.SessionTakenOver, disconnectReason);
             }
         }
@@ -318,7 +333,7 @@ namespace MQTTnet.Tests.Server
 
         [TestMethod]
         public async Task Use_Clean_Session()
-        { 
+        {
             using var testEnvironments = CreateMixedTestEnvironment();
             foreach (var testEnvironment in testEnvironments)
             {
@@ -348,10 +363,10 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 // C1 will receive the last will!
-                var c1 = await testEnvironment.ConnectClient(); 
+                var c1 = await testEnvironment.ConnectClient();
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
-                    Interlocked.Increment(ref receivedMessagesCount); 
+                    Interlocked.Increment(ref receivedMessagesCount);
                     return CompletedTask.Instance;
                 };
 

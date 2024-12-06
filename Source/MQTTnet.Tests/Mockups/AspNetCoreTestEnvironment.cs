@@ -10,6 +10,8 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
+using MQTTnet.LowLevelClient;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 using System;
 using System.Linq;
@@ -32,36 +34,22 @@ namespace MQTTnet.Tests.Mockups
         {
         }
 
-        public override IMqttClient CreateClient()
+        protected override IMqttClient CreateClientCore()
+        {
+            return CreateClientFactory().CreateMqttClient();
+        }
+
+        protected override ILowLevelMqttClient CreateLowLevelClientCore()
+        {
+            return CreateClientFactory().CreateLowLevelMqttClient();
+        }
+
+        private IMqttClientFactory CreateClientFactory()
         {
             var services = new ServiceCollection();
             var clientBuilder = services.AddMqttClient();
-            UseLogger(clientBuilder);
-
-            var s = services.BuildServiceProvider();
-            var client = s.GetRequiredService<IMqttClientFactory>().CreateMqttClient();
-
-            client.ConnectingAsync += e =>
-            {
-                if (TestContext != null)
-                {
-                    var clientOptions = e.ClientOptions;
-                    var existingClientId = clientOptions.ClientId;
-                    if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
-                    {
-                        clientOptions.ClientId = TestContext.TestName + "_" + existingClientId;
-                    }
-                }
-
-                return CompletedTask.Instance;
-            };
-
-            lock (_clients)
-            {
-                _clients.Add(client);
-            }
-
-            return client;
+            UseMqttLogger(clientBuilder, "[CLIENT]=>");
+            return services.BuildServiceProvider().GetRequiredService<IMqttClientFactory>();
         }
 
         public override MqttServer CreateServer(MqttServerOptions options)
@@ -69,63 +57,39 @@ namespace MQTTnet.Tests.Mockups
             throw new NotSupportedException("Can not create MqttServer in AspNetCoreTestEnvironment.");
         }
 
-        public override async Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> configure)
+        public override Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> configure)
         {
-            if (Server != null)
-            {
-                throw new InvalidOperationException("Server already started.");
-            }
-
-            var appBuilder = WebApplication.CreateBuilder();
-
-            var serverBuilder = appBuilder.Services.AddMqttServer(optionsBuilder =>
-            {
-                optionsBuilder.WithDefaultEndpoint();
-                optionsBuilder.WithDefaultEndpointPort(ServerPort);
-                optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
-            }).ConfigureMqttServer(configure, o =>
-            {
-                if (o.DefaultEndpointOptions.Port == 0)
-                {
-                    var serverPort = GetServerPort();
-                    o.DefaultEndpointOptions.Port = serverPort;
-                    ServerPort = serverPort;
-                }
-            });
-
-            UseLogger(serverBuilder);
-
-            appBuilder.WebHost.UseKestrel(k => k.ListenMqtt());
-            appBuilder.Host.ConfigureHostOptions(h => h.ShutdownTimeout = TimeSpan.FromMilliseconds(500d));
-
-            _app = appBuilder.Build();
-            await _app.StartAsync();
-
-            Server = _app.Services.GetRequiredService<MqttServer>();
-            return Server;
+            var optionsBuilder = new MqttServerOptionsBuilder();
+            configure?.Invoke(optionsBuilder);
+            return StartServer(optionsBuilder);
         }
 
-        public override async Task<MqttServer> StartServer(MqttServerOptionsBuilder optionsBuilder)
+        public override Task<MqttServer> StartServer(MqttServerOptionsBuilder optionsBuilder)
         {
-            if (Server != null)
-            {
-                throw new InvalidOperationException("Server already started.");
-            }
-
-            if (ServerPort == 0)
-            {
-                ServerPort = GetServerPort();
-            }
-
             optionsBuilder.WithDefaultEndpoint();
-            optionsBuilder.WithDefaultEndpointPort(ServerPort);
             optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
+            var serverOptions = optionsBuilder.Build();
+            return StartServer(serverOptions);
+        }
+
+        private async Task<MqttServer> StartServer(MqttServerOptions serverOptions)
+        {
+            if (Server != null)
+            {
+                throw new InvalidOperationException("Server already started.");
+            }
+
+            if (serverOptions.DefaultEndpointOptions.Port == 0)
+            {
+                var serverPort = ServerPort > 0 ? ServerPort : GetServerPort();
+                serverOptions.DefaultEndpointOptions.Port = serverPort;
+            }
 
             var appBuilder = WebApplication.CreateBuilder();
-            appBuilder.Services.AddSingleton(optionsBuilder.Build());
-            var serverBuilder = appBuilder.Services.AddMqttServer();
+            appBuilder.Services.AddSingleton(serverOptions);
 
-            UseLogger(serverBuilder);
+            var serverBuilder = appBuilder.Services.AddMqttServer();
+            UseMqttLogger(serverBuilder, "[SERVER]=>");
 
             appBuilder.WebHost.UseKestrel(k => k.ListenMqtt());
             appBuilder.Host.ConfigureHostOptions(h => h.ShutdownTimeout = TimeSpan.FromMilliseconds(500d));
@@ -134,19 +98,26 @@ namespace MQTTnet.Tests.Mockups
             await _app.StartAsync();
 
             Server = _app.Services.GetRequiredService<MqttServer>();
+            ServerPort = serverOptions.DefaultEndpointOptions.Port;
+
+            Server.ValidatingConnectionAsync += e =>
+            {
+                if (TestContext != null)
+                {
+                    // Null is used when the client id is assigned from the server!
+                    if (!string.IsNullOrEmpty(e.ClientId) && !e.ClientId.StartsWith(TestContext.TestName))
+                    {
+                        TrackException(new InvalidOperationException($"Invalid client ID used ({e.ClientId}). It must start with UnitTest name."));
+                        e.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
+                    }
+                }
+
+                return CompletedTask.Instance;
+            };
+
             return Server;
         }
 
-        public override void Dispose()
-        {
-            if (_app != null)
-            {
-                _app.StopAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                _app.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
-                _app = null;
-            }
-            base.Dispose();
-        }
 
         private static int GetServerPort()
         {
@@ -161,15 +132,26 @@ namespace MQTTnet.Tests.Mockups
             return port;
         }
 
-        private void UseLogger(IMqttBuilder builder)
+        private void UseMqttLogger(IMqttBuilder builder, string categoryNamePrefix)
         {
             if (EnableLogger)
             {
-                builder.UseAspNetCoreMqttNetLogger();
+                builder.UseAspNetCoreMqttNetLogger(l => l.CategoryNamePrefix = categoryNamePrefix);
             }
             else
             {
                 builder.UseMqttNetNullLogger();
+            }
+        }
+
+        public override void Dispose()
+        {
+            base.Dispose();
+            if (_app != null)
+            {
+                _app.StopAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                _app.DisposeAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+                _app = null;
             }
         }
     }

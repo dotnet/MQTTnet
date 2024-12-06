@@ -12,8 +12,11 @@ using MQTTnet.Internal;
 using MQTTnet.Packets;
 using System;
 using System.Buffers;
+using System.IO;
 using System.IO.Pipelines;
 using System.Net;
+using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,8 +109,18 @@ class MqttChannel : IDisposable
 
     public async Task DisconnectAsync()
     {
-        await _input.CompleteAsync().ConfigureAwait(false);
-        await _output.CompleteAsync().ConfigureAwait(false);
+        try
+        {
+            await _input.CompleteAsync().ConfigureAwait(false);
+            await _output.CompleteAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            if (!WrapAndThrowException(exception))
+            {
+                throw;
+            }
+        }
     }
 
     public virtual void Dispose()
@@ -116,6 +129,29 @@ class MqttChannel : IDisposable
     }
 
     public async Task<MqttPacket?> ReceivePacketAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await ReceivePacketCoreAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+        catch (Exception exception)
+        {
+            if (!WrapAndThrowException(exception))
+            {
+                throw;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<MqttPacket?> ReceivePacketCoreAsync(CancellationToken cancellationToken)
     {
         try
         {
@@ -143,7 +179,7 @@ class MqttChannel : IDisposable
                 {
                     if (!buffer.IsEmpty)
                     {
-                        if (PacketFormatterAdapter.TryDecode(buffer,_packetInspector, out var packet, out consumed, out observed, out var received))
+                        if (PacketFormatterAdapter.TryDecode(buffer, _packetInspector, out var packet, out consumed, out observed, out var received))
                         {
                             BytesReceived += received;
 
@@ -168,11 +204,11 @@ class MqttChannel : IDisposable
                 }
             }
         }
-        catch (Exception exception)
+        catch (Exception)
         {
             // completing the channel makes sure that there is no more data read after a protocol error
-            _input.Complete(exception);
-            _output.Complete(exception);
+            await _input.CompleteAsync().ConfigureAwait(false);
+            await _output.CompleteAsync().ConfigureAwait(false);
 
             throw;
         }
@@ -188,6 +224,21 @@ class MqttChannel : IDisposable
     }
 
     public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await SendPacketCoreAsync(packet, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            if (!WrapAndThrowException(exception))
+            {
+                throw;
+            }
+        }
+    }
+
+    private async Task SendPacketCoreAsync(MqttPacket packet, CancellationToken cancellationToken)
     {
         using (await _writerLock.EnterAsync(cancellationToken).ConfigureAwait(false))
         {
@@ -240,5 +291,45 @@ class MqttChannel : IDisposable
         var offset = buffer.Packet.Count;
         buffer.Payload.CopyTo(destination: span.Slice(offset));
         output.Advance(buffer.Length);
+    }
+
+    public static bool WrapAndThrowException(Exception exception)
+    {
+        if (exception is OperationCanceledException ||
+            exception is MqttCommunicationTimedOutException ||
+            exception is MqttCommunicationException ||
+            exception is MqttProtocolViolationException)
+        {
+            return false;
+        }
+
+        if (exception is IOException && exception.InnerException is SocketException innerException)
+        {
+            exception = innerException;
+        }
+
+        if (exception is SocketException socketException)
+        {
+            if (socketException.SocketErrorCode == SocketError.OperationAborted)
+            {
+                throw new OperationCanceledException();
+            }
+
+            if (socketException.SocketErrorCode == SocketError.ConnectionAborted)
+            {
+                throw new MqttCommunicationException(socketException);
+            }
+        }
+
+        if (exception is COMException comException)
+        {
+            const uint ErrorOperationAborted = 0x800703E3;
+            if ((uint)comException.HResult == ErrorOperationAborted)
+            {
+                throw new OperationCanceledException();
+            }
+        }
+
+        throw new MqttCommunicationException(exception);
     }
 }

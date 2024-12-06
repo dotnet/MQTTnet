@@ -37,7 +37,7 @@ namespace MQTTnet.Tests.ASP
             await Assert.ThrowsExceptionAsync<MqttProtocolViolationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
 
             // the first exception should complete the pipes so if someone tries to use the connection after that it should throw immidiatly
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
         }
 
         // TODO: Fix test

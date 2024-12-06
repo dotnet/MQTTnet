@@ -8,6 +8,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.LowLevelClient;
@@ -47,8 +48,11 @@ namespace MQTTnet.Tests.Mockups
         private IMqttClientFactory CreateClientFactory()
         {
             var services = new ServiceCollection();
-            var clientBuilder = services.AddMqttClient();
-            UseMqttLogger(clientBuilder, "[CLIENT]=>");
+
+            var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : MqttNetNullLogger.Instance;
+            services.AddSingleton(logger);
+            services.AddMqttClient();
+
             return services.BuildServiceProvider().GetRequiredService<IMqttClientFactory>();
         }
 
@@ -67,6 +71,7 @@ namespace MQTTnet.Tests.Mockups
         public override Task<MqttServer> StartServer(MqttServerOptionsBuilder optionsBuilder)
         {
             optionsBuilder.WithDefaultEndpoint();
+            optionsBuilder.WithDefaultEndpointPort(ServerPort);
             optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
             var serverOptions = optionsBuilder.Build();
             return StartServer(serverOptions);
@@ -88,14 +93,14 @@ namespace MQTTnet.Tests.Mockups
             var appBuilder = WebApplication.CreateBuilder();
             appBuilder.Services.AddSingleton(serverOptions);
 
-            var serverBuilder = appBuilder.Services.AddMqttServer();
-            UseMqttLogger(serverBuilder, "[SERVER]=>");
+            var logger = EnableLogger ? (IMqttNetLogger)ServerLogger : new MqttNetNullLogger();
+            appBuilder.Services.AddSingleton(logger);
+            appBuilder.Services.AddMqttServer();
 
             appBuilder.WebHost.UseKestrel(k => k.ListenMqtt());
             appBuilder.Host.ConfigureHostOptions(h => h.ShutdownTimeout = TimeSpan.FromMilliseconds(500d));
 
             _app = appBuilder.Build();
-            await _app.StartAsync();
 
             Server = _app.Services.GetRequiredService<MqttServer>();
             ServerPort = serverOptions.DefaultEndpointOptions.Port;
@@ -115,6 +120,12 @@ namespace MQTTnet.Tests.Mockups
                 return CompletedTask.Instance;
             };
 
+            var appStartedSource = new TaskCompletionSource();
+            _app.Lifetime.ApplicationStarted.Register(() => appStartedSource.TrySetResult());
+
+            await _app.StartAsync();
+            await appStartedSource.Task;
+
             return Server;
         }
 
@@ -130,18 +141,6 @@ namespace MQTTnet.Tests.Mockups
                 port += 1;
             }
             return port;
-        }
-
-        private void UseMqttLogger(IMqttBuilder builder, string categoryNamePrefix)
-        {
-            if (EnableLogger)
-            {
-                builder.UseAspNetCoreMqttNetLogger(l => l.CategoryNamePrefix = categoryNamePrefix);
-            }
-            else
-            {
-                builder.UseMqttNetNullLogger();
-            }
         }
 
         public override void Dispose()

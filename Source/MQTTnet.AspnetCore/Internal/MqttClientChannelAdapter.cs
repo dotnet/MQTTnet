@@ -52,13 +52,23 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        _connection = _channelOptions switch
+        try
         {
-            MqttClientTcpOptions tcpOptions => await ClientConnectionContext.CreateAsync(tcpOptions, cancellationToken).ConfigureAwait(false),
-            MqttClientWebSocketOptions webSocketOptions => await ClientConnectionContext.CreateAsync(webSocketOptions, cancellationToken).ConfigureAwait(false),
-            _ => throw new NotSupportedException(),
-        };
-        _channel = new MqttChannel(_packetFormatterAdapter, _connection, _packetInspector, _allowPacketFragmentation);
+            _connection = _channelOptions switch
+            {
+                MqttClientTcpOptions tcpOptions => await ClientConnectionContext.CreateAsync(tcpOptions, cancellationToken).ConfigureAwait(false),
+                MqttClientWebSocketOptions webSocketOptions => await ClientConnectionContext.CreateAsync(webSocketOptions, cancellationToken).ConfigureAwait(false),
+                _ => throw new NotSupportedException(),
+            };
+            _channel = new MqttChannel(_packetFormatterAdapter, _connection, _packetInspector, _allowPacketFragmentation);
+        }
+        catch (Exception ex)
+        {
+            if (!MqttChannel.WrapAndThrowException(ex))
+            {
+                throw;
+            }
+        }
     }
 
     public Task DisconnectAsync(CancellationToken cancellationToken)

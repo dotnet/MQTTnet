@@ -182,21 +182,9 @@ namespace MQTTnet.Tests.MQTTv5
         }
 
         [TestMethod]
-        public async Task Disconnect_with_Reason_MQTTnet()
+        public async Task Disconnect_with_Reason()
         {
-            using var testEnvironments = CreateMQTTnetTestEnvironment();
-            await Disconnect_with_Reason(testEnvironments);
-        }
-
-        [TestMethod]
-        public async Task Disconnect_with_Reason_AspNetCore()
-        {
-            using var testEnvironments = CreateAspNetCoreTestEnvironment();
-            await Disconnect_with_Reason(testEnvironments);
-        }
-
-        private async Task Disconnect_with_Reason(TestEnvironmentCollection testEnvironments)
-        {
+            using var testEnvironments = CreateMixedTestEnvironment();            
             foreach (var testEnvironment in testEnvironments)
             {
                 var disconnectReasonTaskSource = new TaskCompletionSource<MqttClientDisconnectReason>();

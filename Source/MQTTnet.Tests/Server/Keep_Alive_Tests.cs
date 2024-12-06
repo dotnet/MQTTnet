@@ -17,21 +17,9 @@ namespace MQTTnet.Tests.Server
     public sealed class KeepAlive_Tests : BaseTestClass
     {
         [TestMethod]
-        public async Task Disconnect_Client_DueTo_KeepAlive_MQTTnet()
+        public async Task Disconnect_Client_DueTo_KeepAlive()
         {
-            using var testEnvironments = CreateMQTTnetTestEnvironment();
-            await Disconnect_Client_DueTo_KeepAlive(testEnvironments);
-        }
-
-        [TestMethod]
-        public async Task Disconnect_Client_DueTo_KeepAlive_AspNetCore()
-        {
-            using var testEnvironments = CreateAspNetCoreTestEnvironment();
-            await Disconnect_Client_DueTo_KeepAlive(testEnvironments);
-        }
-
-        private async Task Disconnect_Client_DueTo_KeepAlive(TestEnvironmentCollection testEnvironments)
-        {
+            using var testEnvironments = CreateMixedTestEnvironment();
             foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();

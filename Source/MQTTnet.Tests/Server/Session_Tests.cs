@@ -228,22 +228,9 @@ namespace MQTTnet.Tests.Server
         }
 
         [TestMethod]
-        public async Task Session_Takeover_MQTTnet()
+        public async Task Session_Takeover()
         {
-            using var testEnvironments = CreateMQTTnetTestEnvironment();
-            await Session_Takeover(testEnvironments);
-        }
-
-        [TestMethod]
-        public async Task Session_Takeover_AspNetCore()
-        {
-            using var testEnvironments = CreateAspNetCoreTestEnvironment();
-            await Session_Takeover(testEnvironments);
-        }
-
-
-        private async Task Session_Takeover(TestEnvironmentCollection testEnvironments)
-        {
+            using var testEnvironments = CreateMixedTestEnvironment();           
             foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();

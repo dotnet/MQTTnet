@@ -114,7 +114,7 @@ namespace MQTTnet.Tests.Server
                 // Act: Disconnect the client -> Event must be fired.
                 await client.DisconnectAsync();
 
-                var deletedEventFired = await deletedEventFiredTaskSource.Task;
+                var deletedEventFired = await deletedEventFiredTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
 
                 // Assert that the event was fired properly.
                 Assert.IsTrue(deletedEventFired);
@@ -182,7 +182,7 @@ namespace MQTTnet.Tests.Server
                 var sendClient = await testEnvironment.ConnectClient(option2);
                 await sendClient.PublishStringAsync("aaa", "1");
 
-                var hasReceive = await hasReceiveTaskSource.Task;
+                var hasReceive = await hasReceiveTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
 
                 Assert.AreEqual(true, hasReceive);
             }
@@ -255,7 +255,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsFalse(client1.IsConnected);
                 Assert.IsTrue(client2.IsConnected);
 
-                var disconnectReason = await disconnectReasonTaskSource.Task;
+                var disconnectReason = await disconnectReasonTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
                 Assert.AreEqual(MqttClientDisconnectReason.SessionTakenOver, disconnectReason);
             }
         }
@@ -318,7 +318,7 @@ namespace MQTTnet.Tests.Server
 
         [TestMethod]
         public async Task Use_Clean_Session()
-        {
+        { 
             using var testEnvironments = CreateMixedTestEnvironment();
             foreach (var testEnvironment in testEnvironments)
             {
@@ -348,12 +348,10 @@ namespace MQTTnet.Tests.Server
                 await testEnvironment.StartServer();
 
                 // C1 will receive the last will!
-                var c1 = await testEnvironment.ConnectClient();
-                var taskCompletionSource = new TaskCompletionSource();
+                var c1 = await testEnvironment.ConnectClient(); 
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
-                    Interlocked.Increment(ref receivedMessagesCount);
-                    taskCompletionSource.TrySetResult();
+                    Interlocked.Increment(ref receivedMessagesCount); 
                     return CompletedTask.Instance;
                 };
 
@@ -367,7 +365,7 @@ namespace MQTTnet.Tests.Server
                 // C3 will do the connection takeover.
                 await testEnvironment.ConnectClient(clientOptions);
 
-                await taskCompletionSource.Task;
+                await LongTestDelay();
 
                 Assert.AreEqual(0, receivedMessagesCount);
             }

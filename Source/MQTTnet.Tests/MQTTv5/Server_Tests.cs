@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using System;
 
 namespace MQTTnet.Tests.MQTTv5
 {
@@ -42,7 +43,7 @@ namespace MQTTnet.Tests.MQTTv5
                 var c2 = await testEnvironment.ConnectClient(clientOptions);
                 c2.Dispose(); // Dispose will not send a DISCONNECT packet first so the will message must be sent.
 
-                await taskSource.Task;
+                await taskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.AreEqual(1, receivedMessagesCount);
             }
@@ -210,14 +211,14 @@ namespace MQTTnet.Tests.MQTTv5
 
                 // Test client should be connected now
 
-                var testClientId = await testClientIdTaskSource.Task;
+                var testClientId = await testClientIdTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
                 Assert.IsTrue(testClientId != null);
 
                 // Have the server disconnect the client with AdministrativeAction reason
 
                 await testEnvironment.Server.DisconnectClientAsync(testClientId, MqttDisconnectReasonCode.AdministrativeAction);
 
-                var disconnectReason = await disconnectReasonTaskSource.Task;
+                var disconnectReason = await disconnectReasonTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d)); ;
                 // The reason should be returned to the client in the DISCONNECT packet
 
                 Assert.AreEqual(MqttClientDisconnectReason.AdministrativeAction, disconnectReason);

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Buffers;
 using System.IO;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics.Logger;
@@ -79,6 +80,22 @@ public sealed class MqttPacketInspector
         }
 
         _receivedPacketBuffer?.Write(buffer);
+    }
+
+    public void FillReceiveBuffer(ReadOnlySequence<byte> buffer)
+    {
+        if (!_asyncEvent.HasHandlers)
+        {
+            return;
+        }
+
+        if (_receivedPacketBuffer != null)
+        {
+            foreach (var memory in buffer)
+            {
+                _receivedPacketBuffer.Write(memory.Span);
+            }
+        }
     }
 
     async Task InspectPacket(byte[] buffer, MqttPacketFlowDirection direction)

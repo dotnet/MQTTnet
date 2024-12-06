@@ -36,14 +36,7 @@ namespace MQTTnet.Tests.Mockups
         {
             var services = new ServiceCollection();
             var clientBuilder = services.AddMqttClient();
-            if (EnableLogger)
-            {
-                clientBuilder.UseAspNetCoreMqttNetLogger();
-            }
-            else
-            {
-                clientBuilder.UseMqttNetNullLogger();
-            }
+            UseLogger(clientBuilder);
 
             var s = services.BuildServiceProvider();
             var client = s.GetRequiredService<IMqttClientFactory>().CreateMqttClient();
@@ -84,7 +77,8 @@ namespace MQTTnet.Tests.Mockups
             }
 
             var appBuilder = WebApplication.CreateBuilder();
-            appBuilder.Services.AddMqttServer(optionsBuilder =>
+
+            var serverBuilder = appBuilder.Services.AddMqttServer(optionsBuilder =>
             {
                 optionsBuilder.WithDefaultEndpoint();
                 optionsBuilder.WithDefaultEndpointPort(ServerPort);
@@ -93,19 +87,20 @@ namespace MQTTnet.Tests.Mockups
             {
                 if (o.DefaultEndpointOptions.Port == 0)
                 {
-                    o.DefaultEndpointOptions.Port = GetServerPort();
+                    var serverPort = GetServerPort();
+                    o.DefaultEndpointOptions.Port = serverPort;
+                    ServerPort = serverPort;
                 }
             });
+
+            UseLogger(serverBuilder);
 
             appBuilder.WebHost.UseKestrel(k => k.ListenMqtt());
             appBuilder.Host.ConfigureHostOptions(h => h.ShutdownTimeout = TimeSpan.FromMilliseconds(500d));
 
             _app = appBuilder.Build();
-
-            // The OS has chosen the port to we have to properly expose it to the tests.
-            ServerPort = _app.Services.GetRequiredService<MqttServerOptions>().DefaultEndpointOptions.Port;
-
             await _app.StartAsync();
+
             Server = _app.Services.GetRequiredService<MqttServer>();
             return Server;
         }
@@ -126,17 +121,18 @@ namespace MQTTnet.Tests.Mockups
             optionsBuilder.WithDefaultEndpointPort(ServerPort);
             optionsBuilder.WithMaxPendingMessagesPerClient(int.MaxValue);
 
-            var options = optionsBuilder.Build();
-
             var appBuilder = WebApplication.CreateBuilder();
-            appBuilder.Services.AddMqttServer();
-            appBuilder.Services.AddSingleton(options);
+            appBuilder.Services.AddSingleton(optionsBuilder.Build());
+            var serverBuilder = appBuilder.Services.AddMqttServer();
+
+            UseLogger(serverBuilder);
 
             appBuilder.WebHost.UseKestrel(k => k.ListenMqtt());
             appBuilder.Host.ConfigureHostOptions(h => h.ShutdownTimeout = TimeSpan.FromMilliseconds(500d));
 
             _app = appBuilder.Build();
             await _app.StartAsync();
+
             Server = _app.Services.GetRequiredService<MqttServer>();
             return Server;
         }
@@ -163,6 +159,18 @@ namespace MQTTnet.Tests.Mockups
                 port += 1;
             }
             return port;
+        }
+
+        private void UseLogger(IMqttBuilder builder)
+        {
+            if (EnableLogger)
+            {
+                builder.UseAspNetCoreMqttNetLogger();
+            }
+            else
+            {
+                builder.UseMqttNetNullLogger();
+            }
         }
     }
 }

@@ -80,7 +80,7 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [TestMethod]
         public async Task Loose_Connection()
         {
-            using var testEnvironments = CreateTestEnvironment();
+            using var testEnvironments = CreateMQTTnetTestEnvironment();
             foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreServerLogErrors = true;

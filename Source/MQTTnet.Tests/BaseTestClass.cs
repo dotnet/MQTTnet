@@ -14,7 +14,7 @@ namespace MQTTnet.Tests
     {
         public TestContext TestContext { get; set; }
 
-        protected TestEnvironmentCollection CreateTestEnvironment(MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+        protected TestEnvironmentCollection CreateMQTTnetTestEnvironment(MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
         {
             var mqttnet = new TestEnvironment(TestContext, protocolVersion);
             return new TestEnvironmentCollection(mqttnet);

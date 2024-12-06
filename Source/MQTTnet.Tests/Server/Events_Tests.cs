@@ -162,7 +162,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Started_Event()
         {
-            using var testEnvironments = CreateTestEnvironment();
+            using var testEnvironments = CreateMQTTnetTestEnvironment();
             foreach (var testEnvironment in testEnvironments)
             {
                 var server = testEnvironment.CreateServer(new MqttServerOptions());

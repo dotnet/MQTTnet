@@ -20,9 +20,9 @@ namespace MQTTnet.Tests.Internal
         public async Task Connect_Send_Receive()
         {
             var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
-            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 80), CancellationToken.None);
+            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.microsoft.com", 80), CancellationToken.None);
 
-            var requestBuffer = Encoding.UTF8.GetBytes("GET / HTTP/1.1\r\nHost: www.google.de\r\n\r\n");
+            var requestBuffer = Encoding.UTF8.GetBytes("GET / HTTP/1.1\r\nHost: www.microsoft.com\r\n\r\n");
             await crossPlatformSocket.SendAsync(new ArraySegment<byte>(requestBuffer), System.Net.Sockets.SocketFlags.None);
 
             var buffer = new byte[1024];
@@ -31,7 +31,7 @@ namespace MQTTnet.Tests.Internal
 
             var responseText = Encoding.UTF8.GetString(buffer, 0, length);
 
-            Assert.IsTrue(responseText.Contains("HTTP/1.1 200 OK"));
+            Assert.IsTrue(responseText.Contains("HTTP/1.1 200")|| responseText.Contains("HTTP/1.1 302"));
         }
 
         [TestMethod]

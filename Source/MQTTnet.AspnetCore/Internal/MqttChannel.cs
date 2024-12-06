@@ -143,7 +143,7 @@ class MqttChannel : IDisposable
                 {
                     if (!buffer.IsEmpty)
                     {
-                        if (PacketFormatterAdapter.TryDecode(buffer, out var packet, out consumed, out observed, out var received))
+                        if (PacketFormatterAdapter.TryDecode(buffer,_packetInspector, out var packet, out consumed, out observed, out var received))
                         {
                             BytesReceived += received;
 

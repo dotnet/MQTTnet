@@ -116,7 +116,7 @@ namespace MQTTnet.Benchmarks
                 {
                     if (!buffer.IsEmpty)
                     {
-                        if (MqttPacketFormatterAdapterExtensions.TryDecode(mqttPacketFormatter, buffer, out var packet, out consumed, out observed, out var received))
+                        if (MqttPacketFormatterAdapterExtensions.TryDecode(mqttPacketFormatter, buffer, null, out var packet, out consumed, out observed, out var received))
                         {
                             break;
                         }

@@ -26,10 +26,16 @@ namespace MQTTnet.AspNetCore
 
         public void Publish(MqttNetLogLevel logLevel, string? source, string? message, object[]? parameters, Exception? exception)
         {
-            var categoryName = $"{_loggerOptions.CategoryNamePrefix}{source}";
-            var logger = _loggerFactory.CreateLogger(categoryName);
-            var level = _loggerOptions.LogLevelConverter(logLevel);
-            logger.Log(level, exception, message, parameters ?? []);
+            try
+            {
+                var categoryName = $"{_loggerOptions.CategoryNamePrefix}{source}";
+                var logger = _loggerFactory.CreateLogger(categoryName);
+                var level = _loggerOptions.LogLevelConverter(logLevel);
+                logger.Log(level, exception, message, parameters ?? []);
+            }
+            catch (ObjectDisposedException)
+            {
+            }
         }
     }
 }

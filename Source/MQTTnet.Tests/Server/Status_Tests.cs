@@ -18,7 +18,8 @@ public sealed class Status_Tests : BaseTestClass
     [TestMethod]
     public async Task Disconnect_Client()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer();
 
@@ -46,7 +47,8 @@ public sealed class Status_Tests : BaseTestClass
     [TestMethod]
     public async Task Keep_Persistent_Session_Version311()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
@@ -80,7 +82,8 @@ public sealed class Status_Tests : BaseTestClass
     [TestMethod]
     public async Task Keep_Persistent_Session_Version500()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
@@ -116,7 +119,8 @@ public sealed class Status_Tests : BaseTestClass
     [TestMethod]
     public async Task Show_Client_And_Session_Statistics()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer();
 
@@ -150,7 +154,8 @@ public sealed class Status_Tests : BaseTestClass
     [TestMethod]
     public async Task Track_Sent_Application_Messages()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 
@@ -171,7 +176,8 @@ public sealed class Status_Tests : BaseTestClass
     [TestMethod]
     public async Task Track_Sent_Packets()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
 

@@ -18,7 +18,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Disconnect_Client_DueTo_KeepAlive()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

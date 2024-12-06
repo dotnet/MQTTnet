@@ -18,7 +18,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Do_Not_Affect_Authorized_Clients()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -116,11 +117,12 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Use_Username_Null_Password_Empty()
         {
-            string username = null;
-            var password = string.Empty;
-
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
+                string username = null;
+                var password = string.Empty;
+
                 testEnvironment.IgnoreClientLogErrors = true;
 
                 await testEnvironment.StartServer();
@@ -137,7 +139,8 @@ namespace MQTTnet.Tests.Server
 
         async Task TestCredentials(string userName, string password)
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 

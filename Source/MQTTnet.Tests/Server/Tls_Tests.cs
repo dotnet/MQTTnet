@@ -50,7 +50,7 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Tls_Swap_Test()
         {
-            var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+            using var testEnvironment = new TestEnvironment(TestContext, MqttProtocolVersion.V500);
             var serverOptionsBuilder = testEnvironment.ServerFactory.CreateServerOptionsBuilder();
 
             var firstOid = "1.3.6.1.5.5.7.3.1";

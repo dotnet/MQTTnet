@@ -28,19 +28,19 @@ public sealed class MqttPacketFormatterAdapterExtensionsTest
         var read = 0;
 
         part = sequence.Slice(sequence.Start, 0); // empty message should fail
-        var result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        var result = serializer.TryDecode(part,null, out _, out consumed, out observed, out read);
         Assert.IsFalse(result);
 
         part = sequence.Slice(sequence.Start, 1); // partial fixed header should fail
-        result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        result = serializer.TryDecode(part, null, out _, out consumed, out observed, out read);
         Assert.IsFalse(result);
 
         part = sequence.Slice(sequence.Start, 4); // partial body should fail
-        result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        result = serializer.TryDecode(part, null, out _, out consumed, out observed, out read);
         Assert.IsFalse(result);
 
         part = sequence; // complete msg should work
-        result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        result = serializer.TryDecode(part, null, out _, out consumed, out observed, out read);
         Assert.IsTrue(result);
     }
 }

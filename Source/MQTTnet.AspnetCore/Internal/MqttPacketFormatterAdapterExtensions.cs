@@ -18,6 +18,7 @@ static class MqttPacketFormatterAdapterExtensions
     public static bool TryDecode(
         this MqttPacketFormatterAdapter formatter,
         in ReadOnlySequence<byte> input,
+        MqttPacketInspector? packetInspector,
         [MaybeNullWhen(false)] out MqttPacket packet,
         out SequencePosition consumed,
         out SequencePosition observed,
@@ -50,6 +51,12 @@ static class MqttPacketFormatterAdapterExtensions
 
         var bodySlice = copy.Slice(0, bodyLength);
         var bodySegment = GetArraySegment(ref bodySlice);
+
+        if (packetInspector != null)
+        {
+            packetInspector.FillReceiveBuffer(input.Slice(input.Start, headerLength).ToArray());
+            packetInspector.FillReceiveBuffer(bodySegment.ToArray());
+        }
 
         var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
         if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)

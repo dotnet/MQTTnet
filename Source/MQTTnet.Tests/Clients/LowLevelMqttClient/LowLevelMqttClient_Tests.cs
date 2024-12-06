@@ -22,7 +22,8 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [TestMethod]
         public async Task Authenticate()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -43,7 +44,8 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [TestMethod]
         public async Task Connect_And_Disconnect()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -78,7 +80,8 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [TestMethod]
         public async Task Loose_Connection()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreServerLogErrors = true;
 
@@ -116,7 +119,8 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [TestMethod]
         public async Task Maintain_IsConnected_Property()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreServerLogErrors = true;
 
@@ -161,7 +165,8 @@ namespace MQTTnet.Tests.Clients.LowLevelMqttClient
         [TestMethod]
         public async Task Subscribe()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

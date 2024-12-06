@@ -11,7 +11,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Inject_Application_Message_At_Session_Level()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
                 var receiver1 = await testEnvironment.ConnectClient();
@@ -40,7 +41,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Inject_ApplicationMessage_At_Server_Level()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -64,7 +66,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Injected_Application_Message()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 

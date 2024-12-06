@@ -19,10 +19,11 @@ using MQTTnet.Server;
 
 namespace MQTTnet.Tests.Mockups
 {
-    public sealed class TestEnvironment : IDisposable
+    public class TestEnvironment : IDisposable
     {
+        bool _disposed = false;
         readonly List<string> _clientErrors = new();
-        readonly List<IMqttClient> _clients = new();
+        protected readonly List<IMqttClient> _clients = new();
         readonly List<Exception> _exceptions = new();
         readonly List<ILowLevelMqttClient> _lowLevelClients = new();
         readonly MqttProtocolVersion _protocolVersion;
@@ -87,7 +88,7 @@ namespace MQTTnet.Tests.Mockups
 
         public bool IgnoreServerLogErrors { get; set; }
 
-        public MqttServer Server { get; private set; }
+        public MqttServer Server { get; protected set; }
 
         public MqttNetEventLogger ServerLogger { get; } = new("server");
 
@@ -195,7 +196,7 @@ namespace MQTTnet.Tests.Mockups
             return new TestApplicationMessageReceivedHandler(mqttClient);
         }
 
-        public IMqttClient CreateClient()
+        public virtual IMqttClient CreateClient()
         {
             var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : MqttNetNullLogger.Instance;
 
@@ -249,7 +250,7 @@ namespace MQTTnet.Tests.Mockups
             return client;
         }
 
-        public MqttServer CreateServer(MqttServerOptions options)
+        public virtual MqttServer CreateServer(MqttServerOptions options)
         {
             if (Server != null)
             {
@@ -278,8 +279,14 @@ namespace MQTTnet.Tests.Mockups
             return Server;
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+
             try
             {
                 lock (_clients)
@@ -350,7 +357,7 @@ namespace MQTTnet.Tests.Mockups
             return StartServer(ServerFactory.CreateServerOptionsBuilder());
         }
 
-        public async Task<MqttServer> StartServer(MqttServerOptionsBuilder optionsBuilder)
+        public virtual async Task<MqttServer> StartServer(MqttServerOptionsBuilder optionsBuilder)
         {
             optionsBuilder.WithDefaultEndpoint();
             optionsBuilder.WithDefaultEndpointPort(ServerPort);
@@ -365,7 +372,7 @@ namespace MQTTnet.Tests.Mockups
             return server;
         }
 
-        public async Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> configure)
+        public virtual async Task<MqttServer> StartServer(Action<MqttServerOptionsBuilder> configure)
         {
             var optionsBuilder = ServerFactory.CreateServerOptionsBuilder();
 

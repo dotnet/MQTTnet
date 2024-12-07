@@ -119,18 +119,21 @@ public sealed class MqttPacketInspector
 
     public async Task EndReceivePacket()
     {
-        if (_receiveState == ReceiveState.Disable || _receiveState == ReceiveState.End)
+        if (_receiveState == ReceiveState.Disable)
         {
             return;
         }
 
-        await _pipeIn.Writer.FlushAsync().ConfigureAwait(false);
-        await _pipeIn.Writer.CompleteAsync().ConfigureAwait(false);
-        await InspectPacketAsync(_pipeIn.Reader, MqttPacketFlowDirection.Inbound).ConfigureAwait(false);
+        if (_receiveState == ReceiveState.Fill)
+        {
+            await _pipeIn.Writer.FlushAsync().ConfigureAwait(false);
+            await _pipeIn.Writer.CompleteAsync().ConfigureAwait(false);
+            await InspectPacketAsync(_pipeIn.Reader, MqttPacketFlowDirection.Inbound).ConfigureAwait(false);
 
-        // reset pipe
-        await _pipeIn.Reader.CompleteAsync().ConfigureAwait(false);
-        _pipeIn.Reset();
+            // reset pipe
+            await _pipeIn.Reader.CompleteAsync().ConfigureAwait(false);
+            _pipeIn.Reset();
+        }
 
         _receiveState = ReceiveState.End;
     }

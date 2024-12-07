@@ -981,7 +981,7 @@ namespace MQTTnet.Tests.Server
                 {
                     if (e.Buffer.Length > 0)
                     {
-                        if (e.Buffer[0] == (byte)MqttControlPacketType.Disconnect << 4)
+                        if (e.Buffer.FirstSpan[0] == (byte)MqttControlPacketType.Disconnect << 4)
                         {
                             disconnectPacketReceived = true;
                         }

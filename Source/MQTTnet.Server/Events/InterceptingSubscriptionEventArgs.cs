@@ -15,12 +15,14 @@ namespace MQTTnet.Server
         public InterceptingSubscriptionEventArgs(
             CancellationToken cancellationToken,
             string clientId,
+            string userName,
             MqttSessionStatus session,
             MqttTopicFilter topicFilter,
             List<MqttUserProperty> userProperties)
         {
             CancellationToken = cancellationToken;
             ClientId = clientId;
+            UserName = userName;
             Session = session;
             TopicFilter = topicFilter;
             UserProperties = userProperties;
@@ -36,6 +38,11 @@ namespace MQTTnet.Server
         ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
         public string ClientId { get; }
+
+        /// <summary>
+        /// Gets the user name of the client.
+        /// </summary>
+        public string UserName { get; }
 
         /// <summary>
         ///     Gets or sets whether the broker should close the client connection.

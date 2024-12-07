@@ -255,6 +255,7 @@ public class MqttServer : Disposable
 
         return _clientSessionsManager.DispatchApplicationMessage(
             injectedApplicationMessage.SenderClientId,
+            senderUserName: null,
             sessionItems,
             injectedApplicationMessage.ApplicationMessage,
             cancellationToken);

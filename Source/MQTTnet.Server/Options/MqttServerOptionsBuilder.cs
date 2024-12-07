@@ -8,6 +8,7 @@ using System.Net.Security;
 using System.Security.Authentication;
 using MQTTnet.Certificates;
 using System.Security.Cryptography.X509Certificates;
+using MQTTnet.Adapter;
 
 // ReSharper disable UnusedMember.Global
 namespace MQTTnet.Server
@@ -136,6 +137,13 @@ namespace MQTTnet.Server
         {
             _options.DefaultEndpointOptions.AllowPacketFragmentation = false;
             _options.TlsEndpointOptions.AllowPacketFragmentation = false;
+            return WithPacketFragmentationSelector(null);
+        }
+
+        public MqttServerOptionsBuilder WithPacketFragmentationSelector(Func<IMqttChannelAdapter, bool> selector)
+        {
+            _options.DefaultEndpointOptions.AllowPacketFragmentationSelector = selector;
+            _options.TlsEndpointOptions.AllowPacketFragmentationSelector = selector;
             return this;
         }
 

@@ -24,6 +24,8 @@ public interface IMqttChannelAdapter : IDisposable
 
     bool IsSecureConnection { get; }
 
+    bool IsWebSocketConnection { get; }
+
     MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
     Task ConnectAsync(CancellationToken cancellationToken);

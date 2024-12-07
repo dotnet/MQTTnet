@@ -78,6 +78,8 @@ namespace MQTTnet.Server
 
         public bool IsSecureConnection => ChannelAdapter.IsSecureConnection;
 
+        public bool IsWebSocketConnection => ChannelAdapter.IsWebSocketConnection;
+
         /// <summary>
         ///     Gets or sets the keep alive period.
         ///     The connection is normally left open by the client so that is can send and receive data at any time.

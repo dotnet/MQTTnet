@@ -41,6 +41,8 @@ namespace MQTTnet.Implementations
 
         public bool IsSecureConnection { get; private set; }
 
+        public bool IsWebSocketConnection => true;
+
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             var uri = _options.Uri;

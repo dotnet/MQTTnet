@@ -104,6 +104,15 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         }
     }
 
+    public bool IsWebSocketConnection
+    {
+        get
+        {
+            var httpFeature = _connection.Features.Get<IHttpContextFeature>();
+            return httpFeature != null && httpFeature.HttpContext != null && httpFeature.HttpContext.WebSockets.IsWebSocketRequest;
+        }
+    }
+
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
     public async Task ConnectAsync(CancellationToken cancellationToken)

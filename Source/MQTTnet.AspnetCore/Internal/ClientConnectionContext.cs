@@ -3,14 +3,11 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Pipelines;
-using System.Net.Sockets;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -66,28 +63,6 @@ namespace MQTTnet.AspNetCore
             public PipeReader Input { get; } = PipeReader.Create(stream, new StreamPipeReaderOptions(leaveOpen: true));
 
             public PipeWriter Output { get; } = PipeWriter.Create(stream, new StreamPipeWriterOptions(leaveOpen: true));
-        }
-
-        private class TlsConnectionFeature : ITlsConnectionFeature
-        {
-            public static readonly TlsConnectionFeature Default = new(null);
-
-            public X509Certificate2? ClientCertificate { get; set; }
-
-            public Task<X509Certificate2?> GetClientCertificateAsync(CancellationToken cancellationToken)
-            {
-                return Task.FromResult(ClientCertificate);
-            }
-
-            public TlsConnectionFeature(X509Certificate? clientCertificate)
-            {
-                ClientCertificate = clientCertificate as X509Certificate2;
-            }
-        }
-
-        private class ConnectionSocketFeature(Socket socket) : IConnectionSocketFeature
-        {
-            public Socket Socket { get; } = socket;
         }
     }
 }

@@ -4,7 +4,9 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.Extensions.DependencyInjection;
+using MQTTnet.Adapter;
 using MQTTnet.Server;
+using System;
 
 namespace MQTTnet.AspNetCore
 {
@@ -15,15 +17,16 @@ namespace MQTTnet.AspNetCore
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="protocols"></param>
+        /// <param name="allowPacketFragmentationSelector"></param>
         /// <returns></returns>
-        public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder, MqttProtocols protocols = MqttProtocols.MqttAndWebSocket)
+        public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder, MqttProtocols protocols = MqttProtocols.MqttAndWebSocket, Func<IMqttChannelAdapter, bool>? allowPacketFragmentationSelector = null)
         {
             // check services.AddMqttServer()
             builder.ApplicationServices.GetRequiredService<MqttServer>();
             builder.ApplicationServices.GetRequiredService<MqttConnectionHandler>().UseFlag = true;
 
             var middleware = builder.ApplicationServices.GetRequiredService<MqttConnectionMiddleware>();
-            return builder.Use(next => context => middleware.InvokeAsync(next, context, protocols));
+            return builder.Use(next => context => middleware.InvokeAsync(next, context, protocols, allowPacketFragmentationSelector));
         }
     }
 }

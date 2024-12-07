@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Connections.Features;
+using Microsoft.AspNetCore.Http.Connections;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
@@ -51,12 +52,19 @@ sealed class MqttConnectionHandler : ConnectionHandler
             transferFormatFeature.ActiveFormat = TransferFormat.Binary;
         }
 
-        var bufferWriter = _bufferWriterPool.Rent();
+        // WebSocketConnectionFeature will be accessed in MqttChannel
+        var httpContext = connection.GetHttpContext();
+        if (httpContext != null && httpContext.WebSockets.IsWebSocketRequest)
+        {
+            var path = httpContext.Request.Path;
+            connection.Features.Set(new WebSocketConnectionFeature(path));
+        }
 
+        var bufferWriter = _bufferWriterPool.Rent();
         try
         {
             var formatter = new MqttPacketFormatterAdapter(bufferWriter);
-            using var adapter = new MqttServerChannelAdapter(formatter, connection);
+            using var adapter = new MqttServerChannelAdapter(formatter, connection, httpContext);
             await clientHandler(adapter).ConfigureAwait(false);
         }
         finally

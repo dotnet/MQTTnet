@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Http.Features;
 using System;
 using System.Net;
@@ -72,7 +71,11 @@ namespace MQTTnet.AspNetCore
             var networkStream = new NetworkStream(socket, ownsSocket: true);
             if (options.TlsOptions?.UseTls != true)
             {
-                return new ClientConnectionContext(networkStream);
+                return new ClientConnectionContext(networkStream)
+                {
+                    LocalEndPoint = socket.LocalEndPoint,
+                    RemoteEndPoint = socket.RemoteEndPoint,
+                };
             }
 
             var targetHost = options.TlsOptions.TargetHost;
@@ -143,7 +146,6 @@ namespace MQTTnet.AspNetCore
                 RemoteEndPoint = socket.RemoteEndPoint,
             };
 
-            connection.Features.Set<IConnectionSocketFeature>(new ConnectionSocketFeature(socket));
             connection.Features.Set<ITlsConnectionFeature>(new TlsConnectionFeature(sslStream.LocalCertificate));
             return connection;
 

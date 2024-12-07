@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http.Connections;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics.Logger;
@@ -27,7 +28,7 @@ public sealed class ConnectionHandlerMockup : IMqttServerAdapter
         try
         {
             var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
-            var context = new MqttServerChannelAdapter(formatter, connection);
+            var context = new MqttServerChannelAdapter(formatter, connection, connection.GetHttpContext());
             Context.TrySetResult(context);
 
             await ClientHandler(context);

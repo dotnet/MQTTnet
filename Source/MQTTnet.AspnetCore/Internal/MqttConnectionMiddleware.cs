@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.AspNetCore.Connections;
+using MQTTnet.Adapter;
 using System;
 using System.Buffers;
 using System.Threading.Tasks;
@@ -23,8 +24,17 @@ sealed class MqttConnectionMiddleware
         _connectionHandler = connectionHandler;
     }
 
-    public async Task InvokeAsync(ConnectionDelegate next, ConnectionContext connection, MqttProtocols protocols)
+    public async Task InvokeAsync(
+        ConnectionDelegate next,
+        ConnectionContext connection,
+        MqttProtocols protocols,
+        Func<IMqttChannelAdapter, bool>? allowPacketFragmentationSelector)
     {
+        if (allowPacketFragmentationSelector != null)
+        {
+            connection.Features.Set(new PacketFragmentationFeature(allowPacketFragmentationSelector));
+        }
+
         if (protocols == MqttProtocols.MqttAndWebSocket)
         {
             var input = connection.Transport.Input;

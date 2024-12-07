@@ -22,19 +22,19 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
     private MqttChannel? _channel;
     private readonly MqttPacketFormatterAdapter _packetFormatterAdapter;
     private readonly IMqttClientChannelOptions _channelOptions;
+    private readonly bool _allowPacketFragmentation;
     private readonly MqttPacketInspector? _packetInspector;
-    private readonly bool? _allowPacketFragmentation;
 
     public MqttClientChannelAdapter(
         MqttPacketFormatterAdapter packetFormatterAdapter,
         IMqttClientChannelOptions channelOptions,
-        MqttPacketInspector? packetInspector,
-        bool? allowPacketFragmentation)
+        bool allowPacketFragmentation,
+        MqttPacketInspector? packetInspector)
     {
         _packetFormatterAdapter = packetFormatterAdapter;
         _channelOptions = channelOptions;
-        _packetInspector = packetInspector;
         _allowPacketFragmentation = allowPacketFragmentation;
+        _packetInspector = packetInspector;
     }
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter => GetChannel().PacketFormatterAdapter;
@@ -49,6 +49,8 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
 
     public bool IsSecureConnection => GetChannel().IsSecureConnection;
 
+    public bool IsWebSocketConnection => GetChannel().IsSecureConnection;
+
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
@@ -60,7 +62,8 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
                 MqttClientWebSocketOptions webSocketOptions => await ClientConnectionContext.CreateAsync(webSocketOptions, cancellationToken).ConfigureAwait(false),
                 _ => throw new NotSupportedException(),
             };
-            _channel = new MqttChannel(_packetFormatterAdapter, _connection, _packetInspector, _allowPacketFragmentation);
+            _channel = new MqttChannel(_packetFormatterAdapter, _connection, httpContext: null, _packetInspector);
+            _channel.SetAllowPacketFragmentation(_allowPacketFragmentation);
         }
         catch (Exception ex)
         {

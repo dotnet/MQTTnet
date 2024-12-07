@@ -48,9 +48,10 @@ namespace MQTTnet.AspNetCore
                 RemoteEndPoint = new DnsEndPoint(uri.Host, uri.Port),
             };
 
+            connection.Features.Set(new WebSocketConnectionFeature(uri.AbsolutePath));
             if (uri.Scheme == Uri.UriSchemeWss)
             {
-                connection.Features.Set<ITlsConnectionFeature>(TlsConnectionFeature.Default);
+                connection.Features.Set<ITlsConnectionFeature>(TlsConnectionFeature.WithoutClientCertificate);
             }
             return connection;
         }

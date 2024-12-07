@@ -37,7 +37,7 @@
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>
         <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <!--<AnalysisLevel>latest-Recommended</AnalysisLevel>-->
     </PropertyGroup>
 
     <ItemGroup>

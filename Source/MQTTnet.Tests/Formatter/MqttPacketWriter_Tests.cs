@@ -36,10 +36,10 @@ namespace MQTTnet.Tests.Formatter
             writer.WriteVariableByteInteger(1234U);
             writer.WriteVariableByteInteger(9876U);
 
-            var buffer = writer.GetBuffer();
+            var buffer = writer.GetWrittenMemory();
 
             var reader = new MqttBufferReader();
-            reader.SetBuffer(buffer, 0, writer.Length);
+            reader.SetBuffer(buffer);
 
             Assert.AreEqual("AString", reader.ReadString());
             Assert.IsTrue(reader.ReadByte() == 1);
@@ -48,13 +48,13 @@ namespace MQTTnet.Tests.Formatter
             Assert.AreEqual(1234U, reader.ReadVariableByteInteger());
             Assert.AreEqual(9876U, reader.ReadVariableByteInteger());
         }
-        
+
         [TestMethod]
         [ExpectedException(typeof(MqttProtocolViolationException))]
         public void Throw_If_String_Too_Long()
         {
             var writer = new MqttBufferWriter(4096, 65535);
-            
+
             writer.WriteString(string.Empty.PadLeft(65536));
         }
 
@@ -75,14 +75,12 @@ namespace MQTTnet.Tests.Formatter
             writer.WriteString("fjgffiogfhgfhoihgoireghreghreguhreguireoghreouighreouighreughreguiorehreuiohruiorehreuioghreug");
             writer.WriteBinary(new byte[3]);
 
-            var readPayload = new ArraySegment<byte>(writer.GetBuffer(), 0, writer.Length).ToArray();
-
-            var reader = new MqttBufferReader();
-            reader.SetBuffer(readPayload, 0, readPayload.Length);
+            var readPayload = writer.GetWrittenMemory();
 
             for (var i = 0; i < 100000; i++)
             {
-                reader.Seek(0);
+                var reader = new MqttBufferReader();
+                reader.SetBuffer(readPayload);
 
                 reader.ReadString();
                 reader.ReadBinaryData();

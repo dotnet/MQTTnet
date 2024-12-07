@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using MQTTnet.Protocol;
 
@@ -14,7 +15,7 @@ public sealed class MqttConnAckPacket : MqttPacket
     /// </summary>
     public string AssignedClientIdentifier { get; set; }
 
-    public byte[] AuthenticationData { get; set; }
+    public ReadOnlyMemory<byte> AuthenticationData { get; set; }
 
     public string AuthenticationMethod { get; set; }
 

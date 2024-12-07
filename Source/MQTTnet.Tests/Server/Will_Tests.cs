@@ -11,7 +11,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Will_Message()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer().ConfigureAwait(false);
 
@@ -36,7 +37,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Will_Message_Do_Not_Send_On_Clean_Disconnect()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -59,7 +61,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Will_Message_Send()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

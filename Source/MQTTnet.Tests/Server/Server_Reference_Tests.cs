@@ -16,7 +16,8 @@ public sealed class Server_Reference_Tests : BaseTestClass
     [TestMethod]
     public async Task Server_Reports_With_Reference_Server()
     {
-        using (var testEnvironment = CreateTestEnvironment())
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             testEnvironment.IgnoreClientLogErrors = true;
 

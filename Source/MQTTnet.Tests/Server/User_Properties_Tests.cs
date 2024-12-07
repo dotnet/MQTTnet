@@ -15,14 +15,13 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.Server
 {
     [TestClass]
-    public class Feature_Tests
+    public class Feature_Tests : BaseTestClass
     {
-        public TestContext TestContext { get; set; }
-
         [TestMethod]
         public async Task Use_User_Properties()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

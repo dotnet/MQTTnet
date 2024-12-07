@@ -10,6 +10,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server
 {
@@ -20,7 +21,8 @@ namespace MQTTnet.Tests.Server
         [ExpectedException(typeof(MqttClientDisconnectedException))]
         public async Task Disconnect_While_Unsubscribing()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -36,7 +38,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Unsubscribe_With_User_Properties()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 

@@ -39,7 +39,8 @@ namespace MQTTnet.Tests.Server
         [DataRow("A/B1/B2/C", "A/+/C", false)]
         public async Task Subscription_Roundtrip(string topic, string filter, bool shouldWork)
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer().ConfigureAwait(false);
 
@@ -66,7 +67,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Deny_Invalid_Topic()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -93,7 +95,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Subscribe_With_User_Properties()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -117,7 +120,8 @@ namespace MQTTnet.Tests.Server
         [ExpectedException(typeof(MqttClientDisconnectedException))]
         public async Task Disconnect_While_Subscribing()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -132,7 +136,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Enqueue_Message_After_Subscription()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -156,7 +161,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Subscription()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -199,7 +205,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Response_Contains_Equal_Reason_Codes()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -219,7 +226,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscribe_Lots_In_Multiple_Requests()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var receivedMessagesCount = 0;
 
@@ -262,7 +270,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscribe_Lots_In_Single_Request()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var receivedMessagesCount = 0;
 
@@ -302,7 +311,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscribe_Multiple_In_Multiple_Request()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var receivedMessagesCount = 0;
 
@@ -340,7 +350,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscribe_Multiple_In_Single_Request()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var receivedMessagesCount = 0;
 
@@ -374,7 +385,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscribe_Unsubscribe()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var receivedMessagesCount = 0;
 

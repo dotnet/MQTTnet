@@ -44,7 +44,7 @@
         <NuGetAuditMode>all</NuGetAuditMode>
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <!--<AnalysisLevel>latest-Recommended</AnalysisLevel>-->
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">

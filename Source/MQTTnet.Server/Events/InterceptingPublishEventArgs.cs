@@ -10,11 +10,12 @@ namespace MQTTnet.Server
 {
     public sealed class InterceptingPublishEventArgs : EventArgs
     {
-        public InterceptingPublishEventArgs(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken, string clientId, IDictionary sessionItems)
+        public InterceptingPublishEventArgs(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken, string clientId, string userName, IDictionary sessionItems)
         {
             ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
             CancellationToken = cancellationToken;
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            UserName = userName;
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
         }
 
@@ -30,6 +31,11 @@ namespace MQTTnet.Server
         ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
         public string ClientId { get; }
+
+        /// <summary>
+        /// Gets the user name of the client.
+        /// </summary>
+        public string UserName { get; }
 
         public bool CloseConnection { get; set; }
 

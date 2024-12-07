@@ -10,9 +10,10 @@ namespace MQTTnet.Server
 {
     public sealed class ClientAcknowledgedPublishPacketEventArgs : EventArgs
     {
-        public ClientAcknowledgedPublishPacketEventArgs(string clientId, IDictionary sessionItems, MqttPublishPacket publishPacket, MqttPacketWithIdentifier acknowledgePacket)
+        public ClientAcknowledgedPublishPacketEventArgs(string clientId, string userName, IDictionary sessionItems, MqttPublishPacket publishPacket, MqttPacketWithIdentifier acknowledgePacket)
         {
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
+            UserName = userName;
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
             PublishPacket = publishPacket ?? throw new ArgumentNullException(nameof(publishPacket));
             AcknowledgePacket = acknowledgePacket ?? throw new ArgumentNullException(nameof(acknowledgePacket));
@@ -27,6 +28,11 @@ namespace MQTTnet.Server
         ///     Gets the ID of the client which acknowledged a PUBLISH packet.
         /// </summary>
         public string ClientId { get; }
+
+        /// <summary>
+        /// Gets the user name of the client.
+        /// </summary>
+        public string UserName { get; }
 
         /// <summary>
         ///     Gets whether the PUBLISH packet is fully acknowledged. This is the case for PUBACK (QoS 1) and PUBCOMP (QoS 2.

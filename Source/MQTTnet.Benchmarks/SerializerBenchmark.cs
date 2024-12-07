@@ -83,6 +83,8 @@ namespace MQTTnet.Benchmarks
 
             public X509Certificate2 ClientCertificate { get; }
 
+            public bool IsWebSocketConnection => false;
+
             public void Reset()
             {
                 _position = _buffer.Offset;

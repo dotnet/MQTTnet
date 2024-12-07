@@ -29,6 +29,14 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
+                ValidatingConnectionEventArgs validatingEventArgs = null;
+                server.ValidatingConnectionAsync += e =>
+                {
+                    validatingEventArgs = e;
+                    return CompletedTask.Instance;
+                };
+
+
                 await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
 
                 await LongTestDelay();
@@ -39,6 +47,10 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
                 Assert.AreEqual(MqttProtocolVersion.V311, eventArgs.ProtocolVersion);
                 Assert.AreEqual("TheUser", eventArgs.UserName);
+
+                Assert.AreEqual("TheUser", validatingEventArgs.UserName);
+                Assert.IsFalse(validatingEventArgs.IsSecureConnection);
+                Assert.IsFalse(validatingEventArgs.IsWebSocketConnection);
             }
         }
 

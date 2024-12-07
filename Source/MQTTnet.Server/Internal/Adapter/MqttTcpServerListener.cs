@@ -218,7 +218,14 @@ namespace MQTTnet.Server.Internal.Adapter
 
                     using (var clientAdapter = new MqttChannelAdapter(tcpChannel, packetFormatterAdapter, _rootLogger))
                     {
-                        clientAdapter.AllowPacketFragmentation = _options.AllowPacketFragmentation;
+                        if (_options.AllowPacketFragmentationSelector == null)
+                        {
+                            clientAdapter.AllowPacketFragmentation = _options.AllowPacketFragmentation;
+                        }
+                        else
+                        {
+                            clientAdapter.AllowPacketFragmentation = _options.AllowPacketFragmentationSelector(clientAdapter);
+                        }
                         await clientHandler(clientAdapter).ConfigureAwait(false);
                     }
                 }

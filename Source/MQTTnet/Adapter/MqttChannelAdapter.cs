@@ -56,6 +56,8 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
     public bool IsSecureConnection => _channel.IsSecureConnection;
 
+    public bool IsWebSocketConnection => _channel.IsWebSocketConnection;
+
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
     public MqttPacketInspector PacketInspector { get; set; }

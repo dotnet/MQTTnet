@@ -53,6 +53,8 @@ namespace MQTTnet.Implementations
 
         public bool IsSecureConnection { get; }
 
+        public bool IsWebSocketConnection => false;
+
         public async Task ConnectAsync(CancellationToken cancellationToken)
         {
             CrossPlatformSocket socket = null;

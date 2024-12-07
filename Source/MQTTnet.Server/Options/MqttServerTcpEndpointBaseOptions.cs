@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Adapter;
 using System.Net;
 using System.Net.Sockets;
 
@@ -30,6 +31,12 @@ namespace MQTTnet.Server
         ///     server the flag must be set to _false_.
         /// </summary>
         public bool AllowPacketFragmentation { get; set; } = true;
+
+        /// <summary>
+        /// Select whether to AllowPacketFragmentation for an <see cref="IMqttChannelAdapter"/>.
+        /// Its priority is higher than the <see cref="AllowPacketFragmentation"/>.
+        /// </summary>
+        public Func<IMqttChannelAdapter, bool> AllowPacketFragmentationSelector { get; set; }
 
         /// <summary>
         ///     Gets or sets the TCP keep alive interval.

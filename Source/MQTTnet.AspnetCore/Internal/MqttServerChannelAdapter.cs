@@ -24,18 +24,18 @@ sealed class MqttServerChannelAdapter : MqttChannel, IMqttChannelAdapter
         // When connection is from MapMqtt(),
         // the PacketFragmentationFeature instance is copied from kestrel's ConnectionContext.Features to HttpContext.Features,
         // but no longer from HttpContext.Features to connection.Features.     
-        var feature = httpContext == null
+        var packetFragmentationFeature = httpContext == null
             ? connection.Features.Get<PacketFragmentationFeature>()
             : httpContext.Features.Get<PacketFragmentationFeature>();
 
-        if (feature == null)
+        if (packetFragmentationFeature == null)
         {
-            var value = !IsWebSocketConnection;
+            var value = PacketFragmentationFeature.IsAllowPacketFragmentation(this, null);
             SetAllowPacketFragmentation(value);
         }
         else
         {
-            var value = feature.AllowPacketFragmentationSelector(this);
+            var value = packetFragmentationFeature.AllowPacketFragmentationSelector(this);
             SetAllowPacketFragmentation(value);
         }
     }

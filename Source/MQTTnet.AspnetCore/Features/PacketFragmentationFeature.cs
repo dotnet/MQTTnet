@@ -3,12 +3,32 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Adapter;
+using MQTTnet.Server;
 using System;
 
 namespace MQTTnet.AspNetCore
 {
     sealed class PacketFragmentationFeature(Func<IMqttChannelAdapter, bool> allowPacketFragmentationSelector)
     {
-        public Func<IMqttChannelAdapter, bool> AllowPacketFragmentationSelector { get; } = allowPacketFragmentationSelector;       
+        public Func<IMqttChannelAdapter, bool> AllowPacketFragmentationSelector { get; } = allowPacketFragmentationSelector;
+
+        public static bool IsAllowPacketFragmentation(IMqttChannelAdapter channelAdapter, MqttServerTcpEndpointBaseOptions? endpointOptions)
+        {
+            //if (endpointOptions != null && endpointOptions.AllowPacketFragmentationSelector != null)
+            //{
+            //    return endpointOptions.AllowPacketFragmentationSelector(channelAdapter);
+            //}
+
+            // In the AspNetCore environment, we need to exclude WebSocket before AllowPacketFragmentation.
+            if (channelAdapter is MqttServerChannelAdapter serverChannelAdapter)
+            {
+                if (serverChannelAdapter.IsWebSocketConnection)
+                {
+                    return false;
+                }
+            }
+
+            return endpointOptions == null || endpointOptions.AllowPacketFragmentation;
+        }
     }
 }

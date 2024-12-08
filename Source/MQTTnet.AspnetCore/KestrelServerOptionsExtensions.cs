@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Extensions.DependencyInjection;
-using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Server;
 using System;
@@ -91,19 +90,7 @@ namespace MQTTnet.AspNetCore
                             tlsConfigure?.Invoke(httpsOptions);
                         });
                     }
-                    listenOptions.UseMqtt(protocols, AllowPacketFragmentationSelector);
-                }
-
-                bool AllowPacketFragmentationSelector(IMqttChannelAdapter channelAdapter)
-                {
-                    if (channelAdapter is MqttServerChannelAdapter serverChannelAdapter)
-                    {
-                        if (serverChannelAdapter.IsWebSocketConnection)
-                        {
-                            return false;
-                        }
-                    }
-                    return endpoint.AllowPacketFragmentation;
+                    listenOptions.UseMqtt(protocols, channelAdapter => PacketFragmentationFeature.IsAllowPacketFragmentation(channelAdapter, endpoint));
                 }
             }
         }

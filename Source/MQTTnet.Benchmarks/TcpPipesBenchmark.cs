@@ -2,18 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Jobs;
 using System.IO.Pipelines;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Jobs;
-using MQTTnet.AspNetCore;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class TcpPipesBenchmark : BaseBenchmark
     {
@@ -29,15 +28,15 @@ namespace MQTTnet.Benchmarks
 
             var task = Task.Run(() => server.AcceptSocket());
 
-            var clientConnection = new SocketConnection(new IPEndPoint(IPAddress.Loopback, 1883));
+            var clientConnection = new Socket(SocketType.Stream, ProtocolType.Tcp);
+            clientConnection.Connect(new IPEndPoint(IPAddress.Loopback, 1883));
+            _client = new SocketDuplexPipe(clientConnection);
 
-            clientConnection.StartAsync().GetAwaiter().GetResult();
-            _client = clientConnection.Transport;
-
-            var serverConnection = new SocketConnection(task.GetAwaiter().GetResult());
-            serverConnection.StartAsync().GetAwaiter().GetResult();
-            _server = serverConnection.Transport;
+            var serverConnection =task.GetAwaiter().GetResult();
+            _server = new SocketDuplexPipe(serverConnection);
         }
+
+
 
 
         [Benchmark]
@@ -74,6 +73,20 @@ namespace MQTTnet.Benchmarks
             for (var i = 0; i < iterations; i++)
             {
                 await output.WriteAsync(new byte[size], CancellationToken.None).ConfigureAwait(false);
+            }
+        }
+
+        private class SocketDuplexPipe : IDuplexPipe
+        {
+            public PipeReader Input { get; }
+
+            public PipeWriter Output { get; }
+
+            public SocketDuplexPipe(Socket socket)
+            {
+                var stream = new NetworkStream(socket);
+                this.Input = PipeReader.Create(stream);
+                this.Output = PipeWriter.Create(stream);
             }
         }
     }

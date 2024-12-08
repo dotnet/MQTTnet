@@ -17,7 +17,8 @@ public sealed class QoS_Tests : BaseTestClass
     [TestMethod]
     public async Task Fire_Event_On_Client_Acknowledges_QoS_0()
     {
-        using (var testEnvironment = CreateTestEnvironment())
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer();
 
@@ -44,7 +45,8 @@ public sealed class QoS_Tests : BaseTestClass
     [TestMethod]
     public async Task Fire_Event_On_Client_Acknowledges_QoS_1()
     {
-        using (var testEnvironment = CreateTestEnvironment())
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer();
 
@@ -75,7 +77,8 @@ public sealed class QoS_Tests : BaseTestClass
     [TestMethod]
     public async Task Fire_Event_On_Client_Acknowledges_QoS_2()
     {
-        using (var testEnvironment = CreateTestEnvironment())
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer();
 
@@ -114,7 +117,8 @@ public sealed class QoS_Tests : BaseTestClass
     [TestMethod]
     public async Task Preserve_Message_Order_For_Queued_Messages()
     {
-        using (var testEnvironment = CreateTestEnvironment())
+        using var testEnvironments = CreateMixedTestEnvironment();
+        foreach (var testEnvironment in testEnvironments)
         {
             var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 

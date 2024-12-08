@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [RPlotExporter, RankColumn]
     [MemoryDiagnoser]
     public class ReaderExtensionsBenchmark
@@ -116,7 +116,7 @@ namespace MQTTnet.Benchmarks
                 {
                     if (!buffer.IsEmpty)
                     {
-                        if (ReaderExtensions.TryDecode(mqttPacketFormatter, buffer, out var packet, out consumed, out observed, out var received))
+                        if (MqttPacketFormatterAdapterExtensions.TryDecode(mqttPacketFormatter, buffer, null, out var packet, out consumed, out observed, out var received))
                         {
                             break;
                         }

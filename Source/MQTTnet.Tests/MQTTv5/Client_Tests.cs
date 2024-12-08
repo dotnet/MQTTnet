@@ -21,7 +21,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect_With_New_Mqtt_Features()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -66,7 +67,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500).Build());
@@ -76,7 +78,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect_And_Disconnect()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -88,7 +91,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Subscribe()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -114,7 +118,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Unsubscribe()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -133,7 +138,8 @@ namespace MQTTnet.Tests.MQTTv5
         public async Task Publish_QoS_0_LargeBuffer()
         {
             using var recyclableMemoryStream = GetLargePayload();
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -149,7 +155,8 @@ namespace MQTTnet.Tests.MQTTv5
         public async Task Publish_QoS_1_LargeBuffer()
         {
             using var recyclableMemoryStream = GetLargePayload();
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -165,7 +172,8 @@ namespace MQTTnet.Tests.MQTTv5
         public async Task Publish_QoS_2_LargeBuffer()
         {
             using var recyclableMemoryStream = GetLargePayload();
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -180,7 +188,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Publish_QoS_0()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -195,7 +204,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Publish_QoS_1()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -210,7 +220,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Publish_QoS_2()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -226,7 +237,8 @@ namespace MQTTnet.Tests.MQTTv5
         public async Task Publish_With_RecyclableMemoryStream()
         {
             var memoryManager = new RecyclableMemoryStreamManager(options: new RecyclableMemoryStreamManager.Options { BlockSize = 4096 });
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -264,7 +276,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Publish_With_Properties()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -293,7 +306,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Subscribe_And_Publish()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -321,7 +335,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Publish_And_Receive_New_Properties()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

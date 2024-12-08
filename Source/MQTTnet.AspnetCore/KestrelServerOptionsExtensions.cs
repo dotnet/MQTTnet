@@ -90,7 +90,7 @@ namespace MQTTnet.AspNetCore
                             tlsConfigure?.Invoke(httpsOptions);
                         });
                     }
-                    listenOptions.UseMqtt(protocols, channelAdapter => PacketFragmentationFeature.IsAllowPacketFragmentation(channelAdapter, endpoint));
+                    listenOptions.UseMqtt(protocols, channelAdapter => PacketFragmentationFeature.CanAllowPacketFragmentation(channelAdapter, endpoint));
                 }
             }
         }

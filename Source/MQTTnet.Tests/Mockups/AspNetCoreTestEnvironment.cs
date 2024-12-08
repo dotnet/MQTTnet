@@ -50,8 +50,7 @@ namespace MQTTnet.Tests.Mockups
             var services = new ServiceCollection();
 
             var logger = EnableLogger ? (IMqttNetLogger)ClientLogger : MqttNetNullLogger.Instance;
-            services.AddSingleton(logger);
-            services.AddMqttClient();
+            services.AddMqttClient().UseLogger(logger);
 
             return services.BuildServiceProvider().GetRequiredService<IMqttClientFactory>();
         }
@@ -94,8 +93,7 @@ namespace MQTTnet.Tests.Mockups
             appBuilder.Services.AddSingleton(serverOptions);
 
             var logger = EnableLogger ? (IMqttNetLogger)ServerLogger : new MqttNetNullLogger();
-            appBuilder.Services.AddSingleton(logger);
-            appBuilder.Services.AddMqttServer();
+            appBuilder.Services.AddMqttServer().UseLogger(logger);
 
             appBuilder.WebHost.UseKestrel(k => k.ListenMqtt());
             appBuilder.Host.ConfigureHostOptions(h => h.ShutdownTimeout = TimeSpan.FromMilliseconds(500d));

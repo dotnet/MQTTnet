@@ -12,7 +12,7 @@ namespace MQTTnet.AspNetCore
     {
         public Func<IMqttChannelAdapter, bool> AllowPacketFragmentationSelector { get; } = allowPacketFragmentationSelector;
 
-        public static bool IsAllowPacketFragmentation(IMqttChannelAdapter channelAdapter, MqttServerTcpEndpointBaseOptions? endpointOptions)
+        public static bool CanAllowPacketFragmentation(IMqttChannelAdapter channelAdapter, MqttServerTcpEndpointBaseOptions? endpointOptions)
         {
             //if (endpointOptions != null && endpointOptions.AllowPacketFragmentationSelector != null)
             //{

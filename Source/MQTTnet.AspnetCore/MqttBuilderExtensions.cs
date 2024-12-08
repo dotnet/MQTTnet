@@ -41,7 +41,7 @@ namespace MQTTnet.AspNetCore
         /// <returns></returns>
         public static IMqttBuilder UseMqttNetNullLogger(this IMqttBuilder builder)
         {
-            return builder.UseLogger<MqttNetNullLogger>();
+            return builder.UseLogger(MqttNetNullLogger.Instance);
         }
 
         /// <summary>
@@ -55,6 +55,19 @@ namespace MQTTnet.AspNetCore
         {
             builder.Services.Replace(ServiceDescriptor.Singleton<IMqttNetLogger, TLogger>());
             return builder;
-        } 
+        }
+
+        /// <summary>
+        /// Use a logger
+        /// </summary>
+        /// <param name="builder"></param>
+        /// <param name="logger"></param>
+        /// <returns></returns>
+        public static IMqttBuilder UseLogger(this IMqttBuilder builder, IMqttNetLogger logger)
+        {
+            ArgumentNullException.ThrowIfNull(logger);
+            builder.Services.Replace(ServiceDescriptor.Singleton(logger));
+            return builder;
+        }
     }
 }

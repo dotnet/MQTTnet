@@ -30,7 +30,7 @@ sealed class MqttServerChannelAdapter : MqttChannel, IMqttChannelAdapter
 
         if (packetFragmentationFeature == null)
         {
-            var value = PacketFragmentationFeature.IsAllowPacketFragmentation(this, null);
+            var value = PacketFragmentationFeature.CanAllowPacketFragmentation(this, null);
             SetAllowPacketFragmentation(value);
         }
         else

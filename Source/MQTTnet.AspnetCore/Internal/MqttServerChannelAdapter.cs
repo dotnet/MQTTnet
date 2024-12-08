@@ -4,18 +4,24 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
-using MQTTnet.Adapter;
+using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Formatter;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class MqttServerChannelAdapter : MqttChannel, IMqttChannelAdapter
+sealed class MqttServerChannelAdapter : MqttChannel, IAspNetCoreMqttChannelAdapter
 {
+    public HttpContext? HttpContext { get; }
+    public IFeatureCollection? Features { get; }
+
     public MqttServerChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection, HttpContext? httpContext)
         : base(packetFormatterAdapter, connection, httpContext, packetInspector: null)
     {
+        HttpContext = httpContext;
+        Features = connection.Features;
+
         SetAllowPacketFragmentation(connection, httpContext);
     }
 

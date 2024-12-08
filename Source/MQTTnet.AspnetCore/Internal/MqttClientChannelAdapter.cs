@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -15,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
+sealed class MqttClientChannelAdapter : IAspNetCoreMqttChannelAdapter, IAsyncDisposable
 {
     private bool _disposed = false;
     private ConnectionContext? _connection;
@@ -24,6 +26,9 @@ sealed class MqttClientChannelAdapter : IMqttChannelAdapter, IAsyncDisposable
     private readonly IMqttClientChannelOptions _channelOptions;
     private readonly bool _allowPacketFragmentation;
     private readonly MqttPacketInspector? _packetInspector;
+
+    public HttpContext? HttpContext => null;
+    public IFeatureCollection? Features => _connection?.Features;
 
     public MqttClientChannelAdapter(
         MqttPacketFormatterAdapter packetFormatterAdapter,

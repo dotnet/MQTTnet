@@ -20,12 +20,9 @@ namespace MQTTnet.AspNetCore
             //}
 
             // In the AspNetCore environment, we need to exclude WebSocket before AllowPacketFragmentation.
-            if (channelAdapter is MqttServerChannelAdapter serverChannelAdapter)
+            if (channelAdapter.IsWebSocketConnection() == true)
             {
-                if (serverChannelAdapter.IsWebSocketConnection)
-                {
-                    return false;
-                }
+                return false;
             }
 
             return endpointOptions == null || endpointOptions.AllowPacketFragmentation;

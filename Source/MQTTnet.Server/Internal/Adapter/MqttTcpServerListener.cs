@@ -68,36 +68,6 @@ namespace MQTTnet.Server.Internal.Adapter
                     _socket.ReuseAddress = true;
                 }
 
-                if (_options.NoDelay)
-                {
-                    _socket.NoDelay = true;
-                }
-
-                if (_options.LingerState != null)
-                {
-                    _socket.LingerState = _options.LingerState;
-                }
-
-                if (_options.KeepAlive.HasValue)
-                {
-                    _socket.KeepAlive = _options.KeepAlive.Value;
-                }
-
-                if (_options.TcpKeepAliveInterval.HasValue)
-                {
-                    _socket.TcpKeepAliveInterval = _options.TcpKeepAliveInterval.Value;
-                }
-
-                if (_options.TcpKeepAliveRetryCount.HasValue)
-                {
-                    _socket.TcpKeepAliveInterval = _options.TcpKeepAliveRetryCount.Value;
-                }
-
-                if (_options.TcpKeepAliveTime.HasValue)
-                {
-                    _socket.TcpKeepAliveTime = _options.TcpKeepAliveTime.Value;
-                }
-
                 _socket.Bind(_localEndPoint);
 
                 // Get the local endpoint back from the socket. The port may have changed.
@@ -176,6 +146,32 @@ namespace MQTTnet.Server.Internal.Adapter
                 _logger.Verbose("TCP client '{0}' accepted (Local endpoint={1})", remoteEndPoint, _localEndPoint);
 
                 clientSocket.NoDelay = _options.NoDelay;
+
+                if (_options.LingerState != null)
+                {
+                    clientSocket.LingerState = _options.LingerState;
+                }
+
+                if (_options.KeepAlive.HasValue)
+                {
+                    clientSocket.KeepAlive = _options.KeepAlive.Value;
+                }
+
+                if (_options.TcpKeepAliveInterval.HasValue)
+                {
+                    clientSocket.TcpKeepAliveInterval = _options.TcpKeepAliveInterval.Value;
+                }
+
+                if (_options.TcpKeepAliveRetryCount.HasValue)
+                {
+                    clientSocket.TcpKeepAliveInterval = _options.TcpKeepAliveRetryCount.Value;
+                }
+
+                if (_options.TcpKeepAliveTime.HasValue)
+                {
+                    clientSocket.TcpKeepAliveTime = _options.TcpKeepAliveTime.Value;
+                }
+
                 stream = clientSocket.GetStream();
                 var clientCertificate = _tlsOptions?.CertificateProvider?.GetCertificate();
 

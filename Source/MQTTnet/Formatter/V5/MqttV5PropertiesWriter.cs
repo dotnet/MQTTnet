@@ -315,9 +315,6 @@ namespace MQTTnet.Formatter.V5
 
         void Write(MqttPropertyId id, ushort value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteTwoByteInteger(value);
-
             const int size = 3;
             var bufferWriter = _bufferWriter.AsLowLevelBufferWriter();
             var span = bufferWriter.GetSpan(size);

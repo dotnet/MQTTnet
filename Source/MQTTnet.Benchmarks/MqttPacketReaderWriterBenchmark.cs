@@ -15,8 +15,8 @@ namespace MQTTnet.Benchmarks
     public class MqttPacketReaderWriterBenchmark : BaseBenchmark
     {
         readonly byte[] _demoPayload = new byte[1024];
-        
-        byte[] _readPayload;
+
+        ReadOnlyMemory<byte> _readPayload;
 
         [GlobalCleanup]
         public void GlobalCleanup()
@@ -27,7 +27,7 @@ namespace MQTTnet.Benchmarks
         public void GlobalSetup()
         {
             TestEnvironment.EnableLogger = false;
-            
+
             var writer = new MqttBufferWriter(4096, 65535);
             writer.WriteString("A relative short string.");
             writer.WriteBinary(_demoPayload);
@@ -42,18 +42,16 @@ namespace MQTTnet.Benchmarks
             writer.WriteString("fjgffiogfhgfhoihgoireghreghreguhreguireoghreouighreouighreughreguiorehreuiohruiorehreuioghreug");
             writer.WriteBinary(_demoPayload);
 
-            _readPayload = new ArraySegment<byte>(writer.GetBuffer(), 0, writer.Length).ToArray();
+            _readPayload = writer.GetWrittenMemory();
         }
 
         [Benchmark]
         public void Read_100_000_Messages()
         {
-            var reader = new MqttBufferReader();
-            reader.SetBuffer(_readPayload, 0, _readPayload.Length);
-
             for (var i = 0; i < 100000; i++)
             {
-                reader.Seek(0);
+                var reader = new MqttBufferReader();
+                reader.SetBuffer(_readPayload);
 
                 reader.ReadString();
                 reader.ReadBinaryData();
@@ -69,7 +67,7 @@ namespace MQTTnet.Benchmarks
                 reader.ReadBinaryData();
             }
         }
-        
+
         [Benchmark]
         public void Write_100_000_Messages()
         {

@@ -326,7 +326,7 @@ namespace MQTTnet.Formatter.V5
 
         void Write(MqttPropertyId id, ReadOnlySpan<byte> value)
         {
-            if (value == null)
+            if (value.IsEmpty)
             {
                 return;
             }

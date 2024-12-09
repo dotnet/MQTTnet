@@ -24,13 +24,7 @@ namespace MQTTnet.AspNetCore
         /// <returns></returns>
         public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, [StringSyntax("Route")] string pattern)
         {
-            return endpoints.MapMqtt(pattern, options => options.WebSockets.SubProtocolSelector = SelectSubProtocol);
-
-            static string SelectSubProtocol(IList<string> requestedSubProtocolValues)
-            {
-                // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
-                return requestedSubProtocolValues.OrderByDescending(p => p.Length).FirstOrDefault(p => p.ToLower().StartsWith("mqtt"))!;
-            }
+            return endpoints.MapMqtt(pattern, null);
         }
 
         /// <summary>
@@ -38,15 +32,29 @@ namespace MQTTnet.AspNetCore
         /// </summary>
         /// <param name="endpoints"></param>
         /// <param name="pattern"></param>
-        /// <param name="options"></param>
+        /// <param name="configureOptions"></param>
         /// <returns></returns>
-        public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, [StringSyntax("Route")] string pattern, Action<HttpConnectionDispatcherOptions> options)
+        public static ConnectionEndpointRouteBuilder MapMqtt(this IEndpointRouteBuilder endpoints, [StringSyntax("Route")] string pattern, Action<HttpConnectionDispatcherOptions>? configureOptions)
         {
             // check services.AddMqttServer()
             endpoints.ServiceProvider.GetRequiredService<MqttServer>();
 
             endpoints.ServiceProvider.GetRequiredService<MqttConnectionHandler>().MapFlag = true;
-            return endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, options);
+            return endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, ConfigureOptions);
+
+
+            void ConfigureOptions(HttpConnectionDispatcherOptions options)
+            {
+                options.Transports = HttpTransportType.WebSockets;
+                options.WebSockets.SubProtocolSelector = SelectSubProtocol;
+                configureOptions?.Invoke(options);
+            }
+
+            static string SelectSubProtocol(IList<string> requestedSubProtocolValues)
+            {
+                // Order the protocols to also match "mqtt", "mqttv-3.1", "mqttv-3.11" etc.
+                return requestedSubProtocolValues.OrderByDescending(p => p.Length).FirstOrDefault(p => p.ToLower().StartsWith("mqtt"))!;
+            }
         }
     }
 }

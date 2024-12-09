@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
@@ -10,6 +11,7 @@ using MQTTnet.Exceptions;
 using MQTTnet.Server;
 using System;
 using System.Net;
+using System.Net.Sockets;
 using System.Security.Cryptography.X509Certificates;
 
 namespace MQTTnet.AspNetCore
@@ -82,6 +84,16 @@ namespace MQTTnet.AspNetCore
 
                 void UseMiddleware(ListenOptions listenOptions)
                 {
+                    listenOptions.Use(next => context =>
+                    {
+                        var socketFeature = context.Features.Get<IConnectionSocketFeature>();
+                        if (socketFeature != null)
+                        {
+                            endpoint.AdaptTo(socketFeature.Socket);
+                        }
+                        return next(context);
+                    });
+
                     if (endpoint is MqttServerTlsTcpEndpointOptions tlsEndPoint)
                     {
                         listenOptions.UseHttps(httpsOptions =>
@@ -90,8 +102,51 @@ namespace MQTTnet.AspNetCore
                             tlsConfigure?.Invoke(httpsOptions);
                         });
                     }
+
                     listenOptions.UseMqtt(protocols, channelAdapter => PacketFragmentationFeature.CanAllowPacketFragmentation(channelAdapter, endpoint));
                 }
+            }
+        }
+
+        private static void AdaptTo(this MqttServerTcpEndpointBaseOptions endpoint, Socket socket)
+        {
+            if (endpoint.NoDelay)
+            {
+                socket.NoDelay = true;
+            }
+
+            if (endpoint.LingerState != null)
+            {
+                socket.LingerState = endpoint.LingerState;
+            }
+
+            if (endpoint.ReuseAddress)
+            {
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            }
+
+            if (endpoint.KeepAlive.HasValue)
+            {
+                var value = endpoint.KeepAlive.Value;
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, value);
+            }
+
+            if (endpoint.TcpKeepAliveInterval.HasValue)
+            {
+                var value = endpoint.TcpKeepAliveInterval.Value;
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveInterval, value);
+            }
+
+            if (endpoint.TcpKeepAliveRetryCount.HasValue)
+            {
+                var value = endpoint.TcpKeepAliveRetryCount.Value;
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveRetryCount, value);
+            }
+
+            if (endpoint.TcpKeepAliveTime.HasValue)
+            {
+                var value = endpoint.TcpKeepAliveTime.Value;
+                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveTime, value);
             }
         }
 

@@ -120,11 +120,6 @@ namespace MQTTnet.AspNetCore
                 socket.LingerState = endpoint.LingerState;
             }
 
-            if (endpoint.ReuseAddress)
-            {
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            }
-
             if (endpoint.KeepAlive.HasValue)
             {
                 var value = endpoint.KeepAlive.Value;

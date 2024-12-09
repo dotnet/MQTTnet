@@ -5,6 +5,7 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 
 namespace MQTTnet.Formatter.V5
@@ -297,20 +298,34 @@ namespace MQTTnet.Formatter.V5
 
         void Write(MqttPropertyId id, bool value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteByte(value ? (byte)0x1 : (byte)0x0);
+            Write(id, value ? (byte)0x1 : default);
         }
 
         void Write(MqttPropertyId id, byte value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteByte(value);
+            const int size = 2;
+            var bufferWriter = _bufferWriter.AsLowLevelBufferWriter();
+            var span = bufferWriter.GetSpan(size);
+
+            span[0] = (byte)id;
+            span[1] = value;
+
+            bufferWriter.Advance(size);
         }
 
         void Write(MqttPropertyId id, ushort value)
         {
             _bufferWriter.WriteByte((byte)id);
             _bufferWriter.WriteTwoByteInteger(value);
+
+            const int size = 3;
+            var bufferWriter = _bufferWriter.AsLowLevelBufferWriter();
+            var span = bufferWriter.GetSpan(size);
+
+            span[0] = (byte)id;
+            BinaryPrimitives.WriteUInt16BigEndian(span[1..], value);
+
+            bufferWriter.Advance(size);
         }
 
         void Write(MqttPropertyId id, string value)
@@ -337,8 +352,14 @@ namespace MQTTnet.Formatter.V5
 
         void WriteAsFourByteInteger(MqttPropertyId id, uint value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteFourByteInteger(value);
+            const int size = 5;
+            var bufferWriter = _bufferWriter.AsLowLevelBufferWriter();
+            var span = bufferWriter.GetSpan(size);
+
+            span[0] = (byte)id;
+            BinaryPrimitives.WriteUInt32BigEndian(span[1..], value);
+
+            bufferWriter.Advance(size);
         }
 
         void WriteAsVariableByteInteger(MqttPropertyId id, uint value)

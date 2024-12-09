@@ -5,6 +5,7 @@
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 using System;
+using System.Buffers;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -26,6 +27,7 @@ namespace MQTTnet.Formatter
 
         byte[] _buffer;
         int _position;
+        IBufferWriter<byte> _lowLevelBufferWriter;
 
         public int Length { get; private set; }
 
@@ -285,6 +287,25 @@ namespace MQTTnet.Formatter
                 // pre allocated buffer.
                 Length = _position;
             }
+        }
+
+        /// <summary>
+        /// Returns a lower-level <see cref="IBufferWriter{T} "/> wrapper.
+        /// </summary>
+        /// <returns></returns>
+        public IBufferWriter<byte> AsLowLevelBufferWriter()
+        {
+            _lowLevelBufferWriter ??= new LowLevelBufferWriter(this);
+            return _lowLevelBufferWriter;
+        }
+
+
+        private sealed class LowLevelBufferWriter(MqttBufferWriter bufferWriter) : IBufferWriter<byte>
+        {
+            private readonly MqttBufferWriter _bufferWriter = bufferWriter;
+            public void Advance(int count) => _bufferWriter.Advance(count);
+            public Span<byte> GetSpan(int sizeHint = 0) => _bufferWriter.GetSpan(sizeHint);
+            public Memory<byte> GetMemory(int sizeHint = 0) => throw new NotSupportedException();
         }
     }
 }

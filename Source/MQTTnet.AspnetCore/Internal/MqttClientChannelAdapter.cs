@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -17,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class MqttClientChannelAdapter : IAspNetCoreMqttChannelAdapter, IAsyncDisposable
+sealed class MqttClientChannelAdapter : IAsyncDisposable, IMqttChannelAdapter, IAspNetCoreMqttChannel
 {
     private bool _disposed = false;
     private ConnectionContext? _connection;
@@ -26,9 +25,6 @@ sealed class MqttClientChannelAdapter : IAspNetCoreMqttChannelAdapter, IAsyncDis
     private readonly IMqttClientChannelOptions _channelOptions;
     private readonly bool _allowPacketFragmentation;
     private readonly MqttPacketInspector? _packetInspector;
-
-    public HttpContext? HttpContext => null;
-    public IFeatureCollection? Features => _connection?.Features;
 
     public MqttClientChannelAdapter(
         MqttPacketFormatterAdapter packetFormatterAdapter,
@@ -55,6 +51,13 @@ sealed class MqttClientChannelAdapter : IAspNetCoreMqttChannelAdapter, IAsyncDis
     public bool IsSecureConnection => GetChannel().IsSecureConnection;
 
     public bool IsWebSocketConnection => GetChannel().IsSecureConnection;
+
+    public HttpContext? HttpContext => GetChannel().HttpContext;
+
+    public TFeature? GetFeature<TFeature>()
+    {
+        return GetChannel().GetFeature<TFeature>();
+    }
 
 
     public async Task ConnectAsync(CancellationToken cancellationToken)

@@ -13,8 +13,8 @@ namespace MQTTnet.AspNetCore
         public static bool? IsWebSocketConnection(this IMqttChannelAdapter channelAdapter)
         {
             ArgumentNullException.ThrowIfNull(channelAdapter);
-            return channelAdapter is IAspNetCoreMqttChannelAdapter adapter
-                ? adapter.Features != null && adapter.Features.Get<WebSocketConnectionFeature>() != null
+            return channelAdapter is IAspNetCoreMqttChannel channel
+                ? channel.IsWebSocketConnection
                 : null;
         }
 
@@ -27,8 +27,8 @@ namespace MQTTnet.AspNetCore
         public static TFeature? GetFeature<TFeature>(this IMqttChannelAdapter channelAdapter)
         {
             ArgumentNullException.ThrowIfNull(channelAdapter);
-            return channelAdapter is IAspNetCoreMqttChannelAdapter adapter && adapter.Features != null
-                ? adapter.Features.Get<TFeature>()
+            return channelAdapter is IAspNetCoreMqttChannel channel
+                ? channel.GetFeature<TFeature>()
                 : default;
         }
 
@@ -40,8 +40,8 @@ namespace MQTTnet.AspNetCore
         public static HttpContext? GetHttpContext(this IMqttChannelAdapter channelAdapter)
         {
             ArgumentNullException.ThrowIfNull(channelAdapter);
-            return channelAdapter is IAspNetCoreMqttChannelAdapter adapter
-                ? adapter.HttpContext
+            return channelAdapter is IAspNetCoreMqttChannel channel
+                ? channel.HttpContext
                 : null;
         }
     }

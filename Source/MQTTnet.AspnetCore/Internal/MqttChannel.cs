@@ -23,8 +23,11 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-class MqttChannel : IDisposable
+class MqttChannel : IAspNetCoreMqttChannel, IDisposable
 {
+    readonly ConnectionContext _connection;
+    readonly HttpContext? _httpContext;
+
     readonly AsyncLock _writerLock = new();
     readonly PipeReader _input;
     readonly PipeWriter _output;
@@ -45,6 +48,7 @@ class MqttChannel : IDisposable
 
     public bool IsWebSocketConnection { get; }
 
+    public HttpContext? HttpContext => _httpContext;
 
     public MqttChannel(
         MqttPacketFormatterAdapter packetFormatterAdapter,
@@ -53,16 +57,37 @@ class MqttChannel : IDisposable
         MqttPacketInspector? packetInspector)
     {
         PacketFormatterAdapter = packetFormatterAdapter;
-
-        var tlsConnectionFeature = connection.Features.Get<ITlsConnectionFeature>();
-        RemoteEndPoint = GetRemoteEndPoint(connection.RemoteEndPoint, httpContext);
-        ClientCertificate = GetClientCertificate(tlsConnectionFeature, httpContext);
-        IsSecureConnection = IsTlsConnection(tlsConnectionFeature, httpContext);
-        IsWebSocketConnection = connection.Features.Get<WebSocketConnectionFeature>() != null;
-
+        _connection = connection;
+        _httpContext = httpContext;
         _packetInspector = packetInspector;
+
         _input = connection.Transport.Input;
         _output = connection.Transport.Output;
+
+        var tlsConnectionFeature = GetFeature<ITlsConnectionFeature>();
+        var webSocketConnectionFeature = GetFeature<WebSocketConnectionFeature>();
+
+        IsWebSocketConnection = webSocketConnectionFeature != null;
+        IsSecureConnection = tlsConnectionFeature != null;
+        ClientCertificate = tlsConnectionFeature?.ClientCertificate;
+        RemoteEndPoint = GetRemoteEndPoint(connection.RemoteEndPoint, httpContext);
+    }
+
+
+    public TFeature? GetFeature<TFeature>()
+    {
+        var feature = _connection.Features.Get<TFeature>();
+        if (feature != null)
+        {
+            return feature;
+        }
+
+        if (_httpContext != null)
+        {
+            return _httpContext.Features.Get<TFeature>();
+        }
+
+        return default;
     }
 
     private static EndPoint? GetRemoteEndPoint(EndPoint? remoteEndPoint, HttpContext? httpContext)
@@ -83,18 +108,6 @@ class MqttChannel : IDisposable
         }
 
         return null;
-    }
-
-    private static bool IsTlsConnection(ITlsConnectionFeature? tlsConnectionFeature, HttpContext? httpContext)
-    {
-        return tlsConnectionFeature != null || (httpContext != null && httpContext.Request.IsHttps);
-    }
-
-    private static X509Certificate2? GetClientCertificate(ITlsConnectionFeature? tlsConnectionFeature, HttpContext? httpContext)
-    {
-        return tlsConnectionFeature != null
-            ? tlsConnectionFeature.ClientCertificate
-            : httpContext?.Connection.ClientCertificate;
     }
 
     public void SetAllowPacketFragmentation(bool value)

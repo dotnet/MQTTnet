@@ -4,36 +4,19 @@
 
 using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
+using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-sealed class MqttServerChannelAdapter : MqttChannel, IAspNetCoreMqttChannelAdapter
+sealed class MqttServerChannelAdapter : MqttChannel, IMqttChannelAdapter, IAspNetCoreMqttChannel
 {
-    public HttpContext? HttpContext { get; }
-    public IFeatureCollection? Features { get; }
-
     public MqttServerChannelAdapter(MqttPacketFormatterAdapter packetFormatterAdapter, ConnectionContext connection, HttpContext? httpContext)
         : base(packetFormatterAdapter, connection, httpContext, packetInspector: null)
     {
-        HttpContext = httpContext;
-        Features = connection.Features;
-
-        SetAllowPacketFragmentation(connection, httpContext);
-    }
-
-    private void SetAllowPacketFragmentation(ConnectionContext connection, HttpContext? httpContext)
-    {
-        // When connection is from MapMqtt(),
-        // the PacketFragmentationFeature instance is copied from kestrel's ConnectionContext.Features to HttpContext.Features,
-        // but no longer from HttpContext.Features to connection.Features.     
-        var packetFragmentationFeature = httpContext == null
-            ? connection.Features.Get<PacketFragmentationFeature>()
-            : httpContext.Features.Get<PacketFragmentationFeature>();
-
+        var packetFragmentationFeature = GetFeature<PacketFragmentationFeature>();
         if (packetFragmentationFeature == null)
         {
             var value = PacketFragmentationFeature.CanAllowPacketFragmentation(this, null);

@@ -127,7 +127,7 @@ public sealed class MqttClientOptions
     ///         connect properly.
     ///     </remarks>
     /// </summary>
-    public bool TryPrivate { get; set; } = true;
+    public bool TryPrivate { get; set; } // Implementation in Mosquitto: https://github.com/eclipse-mosquitto/mosquitto/blob/3cbe805e71ac41a2a20cc9b2ea6b3b619f49554a/lib/send_connect.c#L153
 
     /// <summary>
     ///     Gets or sets the user properties.

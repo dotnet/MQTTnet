@@ -6,7 +6,9 @@ using Microsoft.AspNetCore.Connections.Features;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using MQTTnet.Exceptions;
 using MQTTnet.Server;
 using System;
@@ -56,8 +58,9 @@ namespace MQTTnet.AspNetCore
             // check services.AddMqttServer()
             kestrel.ApplicationServices.GetRequiredService<MqttServer>();
 
-            var connectionHandler = kestrel.ApplicationServices.GetRequiredService<MqttConnectionHandler>();
             var serverOptions = kestrel.ApplicationServices.GetRequiredService<MqttServerOptions>();
+            var connectionHandler = kestrel.ApplicationServices.GetRequiredService<MqttConnectionHandler>();
+            var listenSocketFactory = kestrel.ApplicationServices.GetRequiredService<IOptions<SocketTransportOptions>>().Value.CreateBoundListenSocket ?? SocketTransportOptions.CreateDefaultBoundListenSocket;
 
             Listen(serverOptions.DefaultEndpointOptions);
             Listen(serverOptions.TlsEndpointOptions);
@@ -73,16 +76,19 @@ namespace MQTTnet.AspNetCore
                     return;
                 }
 
-                // No need to listen any IPv4 when has IPv6Any
-                if (!IPAddress.IPv6Any.Equals(endpoint.BoundInterNetworkV6Address))
+                // No need to listen IPv4EndPoint when IPv6EndPoint's DualMode is true.
+                var ipV6EndPoint = new IPEndPoint(endpoint.BoundInterNetworkV6Address, endpoint.Port);
+                using var listenSocket = listenSocketFactory.Invoke(ipV6EndPoint);
+                if (!listenSocket.DualMode)
                 {
-                    kestrel.Listen(endpoint.BoundInterNetworkAddress, endpoint.Port, UseMiddleware);
+                    kestrel.Listen(endpoint.BoundInterNetworkAddress, endpoint.Port, UseMiddlewares);
                 }
-                kestrel.Listen(endpoint.BoundInterNetworkV6Address, endpoint.Port, UseMiddleware);
+
+                kestrel.Listen(ipV6EndPoint, UseMiddlewares);
                 connectionHandler.ListenFlag = true;
 
 
-                void UseMiddleware(ListenOptions listenOptions)
+                void UseMiddlewares(ListenOptions listenOptions)
                 {
                     listenOptions.Use(next => context =>
                     {
@@ -108,40 +114,36 @@ namespace MQTTnet.AspNetCore
             }
         }
 
-        private static void AdaptTo(this MqttServerTcpEndpointBaseOptions endpoint, Socket socket)
+        private static void AdaptTo(this MqttServerTcpEndpointBaseOptions endpoint, Socket acceptSocket)
         {
-            if (endpoint.NoDelay)
-            {
-                socket.NoDelay = true;
-            }
-
+            acceptSocket.NoDelay = endpoint.NoDelay;
             if (endpoint.LingerState != null)
             {
-                socket.LingerState = endpoint.LingerState;
+                acceptSocket.LingerState = endpoint.LingerState;
             }
 
             if (endpoint.KeepAlive.HasValue)
             {
                 var value = endpoint.KeepAlive.Value;
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, value);
+                acceptSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, value);
             }
 
             if (endpoint.TcpKeepAliveInterval.HasValue)
             {
                 var value = endpoint.TcpKeepAliveInterval.Value;
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveInterval, value);
+                acceptSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveInterval, value);
             }
 
             if (endpoint.TcpKeepAliveRetryCount.HasValue)
             {
                 var value = endpoint.TcpKeepAliveRetryCount.Value;
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveRetryCount, value);
+                acceptSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveRetryCount, value);
             }
 
             if (endpoint.TcpKeepAliveTime.HasValue)
             {
                 var value = endpoint.TcpKeepAliveTime.Value;
-                socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveTime, value);
+                acceptSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.TcpKeepAliveTime, value);
             }
         }
 

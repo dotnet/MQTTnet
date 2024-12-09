@@ -198,6 +198,16 @@ namespace MQTTnet.Formatter
             Advance(size);
         }
 
+        public void WriteFourByteInteger(uint value)
+        {
+            const int size = sizeof(uint);
+            var span = GetSpan(size);
+
+            BinaryPrimitives.WriteUInt32BigEndian(span, value);
+
+            Advance(size);
+        }
+
         public void WriteVariableByteInteger(uint value)
         {
             EnsureCapacity(sizeof(uint));

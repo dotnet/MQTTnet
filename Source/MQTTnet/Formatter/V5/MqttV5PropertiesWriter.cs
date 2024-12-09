@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using System;
+using System.Collections.Generic;
 
 namespace MQTTnet.Formatter.V5
 {
@@ -338,10 +338,7 @@ namespace MQTTnet.Formatter.V5
         void WriteAsFourByteInteger(MqttPropertyId id, uint value)
         {
             _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteByte((byte)(value >> 24));
-            _bufferWriter.WriteByte((byte)(value >> 16));
-            _bufferWriter.WriteByte((byte)(value >> 8));
-            _bufferWriter.WriteByte((byte)value);
+            _bufferWriter.WriteFourByteInteger(value);
         }
 
         void WriteAsVariableByteInteger(MqttPropertyId id, uint value)

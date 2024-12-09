@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using System;
 
 namespace MQTTnet.Tests.MQTTv5
 {
@@ -19,7 +20,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Will_Message_Send()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -28,9 +30,11 @@ namespace MQTTnet.Tests.MQTTv5
                 var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));
 
                 var receivedMessagesCount = 0;
+                var taskSource = new TaskCompletionSource();
                 c1.ApplicationMessageReceivedAsync += e =>
                 {
                     Interlocked.Increment(ref receivedMessagesCount);
+                    taskSource.TrySetResult();
                     return CompletedTask.Instance;
                 };
 
@@ -39,7 +43,7 @@ namespace MQTTnet.Tests.MQTTv5
                 var c2 = await testEnvironment.ConnectClient(clientOptions);
                 c2.Dispose(); // Dispose will not send a DISCONNECT packet first so the will message must be sent.
 
-                await LongTestDelay();
+                await taskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.AreEqual(1, receivedMessagesCount);
             }
@@ -48,7 +52,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Validate_IsSessionPresent()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 // Create server with persistent sessions enabled
 
@@ -85,7 +90,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Connect_with_Undefined_SessionExpiryInterval()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 // Create server with persistent sessions enabled
 
@@ -125,7 +131,8 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Reconnect_with_different_SessionExpiryInterval()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 // Create server with persistent sessions enabled
 
@@ -177,17 +184,18 @@ namespace MQTTnet.Tests.MQTTv5
         [TestMethod]
         public async Task Disconnect_with_Reason()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();            
+            foreach (var testEnvironment in testEnvironments)
             {
-                var disconnectReason = MqttClientDisconnectReason.UnspecifiedError;
+                var disconnectReasonTaskSource = new TaskCompletionSource<MqttClientDisconnectReason>();
 
-                string testClientId = null;
+                var testClientIdTaskSource = new TaskCompletionSource<string>();
 
                 await testEnvironment.StartServer();
 
                 testEnvironment.Server.ClientConnectedAsync += e =>
                 {
-                    testClientId = e.ClientId;
+                    testClientIdTaskSource.TrySetResult(e.ClientId);
                     return CompletedTask.Instance;
                 };
 
@@ -195,7 +203,7 @@ namespace MQTTnet.Tests.MQTTv5
 
                 client.DisconnectedAsync += e =>
                 {
-                    disconnectReason = e.Reason;
+                    disconnectReasonTaskSource.TrySetResult(e.Reason);
                     return CompletedTask.Instance;
                 };
 
@@ -203,14 +211,14 @@ namespace MQTTnet.Tests.MQTTv5
 
                 // Test client should be connected now
 
+                var testClientId = await testClientIdTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
                 Assert.IsTrue(testClientId != null);
 
                 // Have the server disconnect the client with AdministrativeAction reason
 
                 await testEnvironment.Server.DisconnectClientAsync(testClientId, MqttDisconnectReasonCode.AdministrativeAction);
 
-                await LongTestDelay();
-
+                var disconnectReason = await disconnectReasonTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
                 // The reason should be returned to the client in the DISCONNECT packet
 
                 Assert.AreEqual(MqttClientDisconnectReason.AdministrativeAction, disconnectReason);

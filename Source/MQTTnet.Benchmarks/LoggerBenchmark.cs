@@ -8,7 +8,7 @@ using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [RPlotExporter]
     [MemoryDiagnoser]
     public class LoggerBenchmark : BaseBenchmark

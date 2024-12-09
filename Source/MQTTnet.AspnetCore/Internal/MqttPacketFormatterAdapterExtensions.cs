@@ -2,22 +2,24 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Buffers;
-using System.Runtime.InteropServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
+using System;
+using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.InteropServices;
 
 namespace MQTTnet.AspNetCore;
 
-public static class ReaderExtensions
+static class MqttPacketFormatterAdapterExtensions
 {
     public static bool TryDecode(
         this MqttPacketFormatterAdapter formatter,
         in ReadOnlySequence<byte> input,
-        out MqttPacket packet,
+        MqttPacketInspector? packetInspector,
+        [MaybeNullWhen(false)] out MqttPacket packet,
         out SequencePosition consumed,
         out SequencePosition observed,
         out int bytesRead)
@@ -49,6 +51,12 @@ public static class ReaderExtensions
 
         var bodySlice = copy.Slice(0, bodyLength);
         var bodySegment = GetArraySegment(ref bodySlice);
+
+        if (packetInspector != null)
+        {
+            packetInspector.FillReceiveBuffer(input.Slice(input.Start, headerLength).ToArray());
+            packetInspector.FillReceiveBuffer(bodySegment.ToArray());
+        }
 
         var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
         if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)

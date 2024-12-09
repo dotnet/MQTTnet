@@ -82,7 +82,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Disconnect_Clean()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -110,7 +111,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Disconnect_Clean_With_Custom_Reason()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -138,7 +140,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Disconnect_Clean_With_User_Properties()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -169,7 +172,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task No_Unobserved_Exception()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -201,7 +205,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Return_Non_Success()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 

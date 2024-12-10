@@ -62,8 +62,6 @@ public sealed class MqttConnectedClient : IDisposable
 
     public string Id => ConnectPacket.ClientId;
 
-    public string UserName => ConnectPacket.Username;
-
     public bool IsRunning { get; private set; }
 
     public bool IsTakenOver { get; set; }
@@ -73,6 +71,8 @@ public sealed class MqttConnectedClient : IDisposable
     public MqttSession Session { get; }
 
     public MqttClientStatistics Statistics { get; } = new();
+
+    public string UserName => ConnectPacket.Username;
 
     public void Dispose()
     {
@@ -219,7 +219,8 @@ public sealed class MqttConnectedClient : IDisposable
 
         var applicationMessage = MqttApplicationMessageFactory.Create(publishPacket);
 
-        var dispatchApplicationMessageResult = await _sessionsManager.DispatchApplicationMessage(Id, UserName, Session.Items, applicationMessage, cancellationToken).ConfigureAwait(false);
+        var dispatchApplicationMessageResult =
+            await _sessionsManager.DispatchApplicationMessage(Id, UserName, Session.Items, applicationMessage, cancellationToken).ConfigureAwait(false);
 
         if (dispatchApplicationMessageResult.CloseConnection)
         {
@@ -230,26 +231,26 @@ public sealed class MqttConnectedClient : IDisposable
         switch (publishPacket.QualityOfServiceLevel)
         {
             case MqttQualityOfServiceLevel.AtMostOnce:
-                {
-                    // Do nothing since QoS 0 has no ACK at all!
-                    break;
-                }
+            {
+                // Do nothing since QoS 0 has no ACK at all!
+                break;
+            }
             case MqttQualityOfServiceLevel.AtLeastOnce:
-                {
-                    var pubAckPacket = MqttPubAckPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
-                    Session.EnqueueControlPacket(new MqttPacketBusItem(pubAckPacket));
-                    break;
-                }
+            {
+                var pubAckPacket = MqttPubAckPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
+                Session.EnqueueControlPacket(new MqttPacketBusItem(pubAckPacket));
+                break;
+            }
             case MqttQualityOfServiceLevel.ExactlyOnce:
-                {
-                    var pubRecPacket = MqttPubRecPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
-                    Session.EnqueueControlPacket(new MqttPacketBusItem(pubRecPacket));
-                    break;
-                }
+            {
+                var pubRecPacket = MqttPubRecPacketFactory.Create(publishPacket, dispatchApplicationMessageResult);
+                Session.EnqueueControlPacket(new MqttPacketBusItem(pubRecPacket));
+                break;
+            }
             default:
-                {
-                    throw new MqttCommunicationException("Received a not supported QoS level");
-                }
+            {
+                throw new MqttCommunicationException("Received a not supported QoS level");
+            }
         }
     }
 

@@ -225,4 +225,9 @@ public sealed class MqttClientOptions
     ///     Do not change this value when no memory issues are experienced.
     /// </summary>
     public int WriterBufferSizeMax { get; set; } = 65535;
+
+    /// <summary>
+    /// When enabled, received ApplicationMessage will be deep cloned and enqueued.
+    /// </summary>
+    public bool ReceivedApplicationMessageQueueable { get; set; } = true;
 }

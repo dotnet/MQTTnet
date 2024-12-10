@@ -126,6 +126,7 @@ public sealed class MqttSession : IDisposable
                 if (firstItem != null)
                 {
                     firstItem.Fail(new MqttPendingMessagesOverflowException(Id, _serverOptions.PendingMessagesOverflowStrategy));
+
                     if (_eventContainer.QueuedApplicationMessageOverwrittenEvent.HasHandlers)
                     {
                         var eventArgs = new QueueMessageOverwrittenEventArgs(Id, firstItem.Packet);

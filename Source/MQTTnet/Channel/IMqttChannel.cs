@@ -18,6 +18,8 @@ public interface IMqttChannel : IDisposable
 
     bool IsSecureConnection { get; }
 
+    bool IsWebSocketConnection { get; }
+
     Task ConnectAsync(CancellationToken cancellationToken);
 
     Task DisconnectAsync(CancellationToken cancellationToken);

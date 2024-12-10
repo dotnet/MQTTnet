@@ -34,6 +34,8 @@ namespace MQTTnet.Tests.Mockups
 
         public X509Certificate2 ClientCertificate { get; }
 
+        public bool IsWebSocketConnection => false;
+
         public Task ConnectAsync(CancellationToken cancellationToken)
         {
             return CompletedTask.Instance;

@@ -53,6 +53,8 @@ public sealed class MqttSession : IDisposable
 
     public string Id => _connectPacket.ClientId;
 
+    public string UserName => _connectPacket.Username;
+
     public IDictionary Items { get; }
 
     public MqttConnectPacket LatestConnectPacket { get; set; }

@@ -209,7 +209,7 @@ namespace MQTTnet.Server.Internal
             {
                 foreach (var finalTopicFilter in finalTopicFilters)
                 {
-                    var eventArgs = new ClientSubscribedTopicEventArgs(_session.Id, finalTopicFilter, _session.Items);
+                    var eventArgs = new ClientSubscribedTopicEventArgs(_session.Id, _session.UserName, finalTopicFilter, _session.Items);
                     await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
@@ -297,7 +297,7 @@ namespace MQTTnet.Server.Internal
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    var eventArgs = new ClientUnsubscribedTopicEventArgs(_session.Id, topicFilter, _session.Items);
+                    var eventArgs = new ClientUnsubscribedTopicEventArgs(_session.Id, _session.UserName, topicFilter, _session.Items);
                     await _eventContainer.ClientUnsubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
@@ -460,7 +460,7 @@ namespace MQTTnet.Server.Internal
             List<MqttUserProperty> userProperties,
             CancellationToken cancellationToken)
         {
-            var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, new MqttSessionStatus(_session), topicFilter, userProperties);
+            var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, _session.UserName, new MqttSessionStatus(_session), topicFilter, userProperties);
 
             if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
@@ -493,7 +493,7 @@ namespace MQTTnet.Server.Internal
             List<MqttUserProperty> userProperties,
             CancellationToken cancellationToken)
         {
-            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, _session.Id, _session.Items, topicFilter, userProperties)
+            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, _session.Id, _session.UserName, _session.Items, topicFilter, userProperties)
             {
                 Response =
                 {

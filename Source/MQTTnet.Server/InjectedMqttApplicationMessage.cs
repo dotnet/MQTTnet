@@ -23,4 +23,6 @@ public sealed class InjectedMqttApplicationMessage
     public IDictionary CustomSessionItems { get; set; }
 
     public string SenderClientId { get; set; } = string.Empty;
+
+    public string SenderUserName { get; set; }
 }

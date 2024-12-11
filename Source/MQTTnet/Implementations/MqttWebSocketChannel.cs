@@ -200,6 +200,9 @@ namespace MQTTnet.Implementations
                 }
             }
 
+            if (_options.DangerousDeflateOptions != null)
+                clientWebSocket.Options.DangerousDeflateOptions = _options.DangerousDeflateOptions;
+
             // Only set the value if it is actually true. This property is not supported on all platforms
             // and will throw a _PlatformNotSupported_ (i.e. WASM) exception when being used regardless of the actual value.
             if (_options.UseDefaultCredentials)

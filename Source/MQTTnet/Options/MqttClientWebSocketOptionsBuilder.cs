@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.WebSockets;
 
 namespace MQTTnet;
 
@@ -20,6 +21,18 @@ public sealed class MqttClientWebSocketOptionsBuilder
     public MqttClientWebSocketOptionsBuilder WithCookieContainer(CookieContainer cookieContainer)
     {
         _webSocketOptions.CookieContainer = cookieContainer;
+        return this;
+    }
+
+    /// <summary>
+    /// Allows the client to negotiate deflate compression on every message, by using the permessage-deflate WebSocket extension.
+    /// This adds the Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits header.
+    /// </summary>
+    /// <param name="dangerousDeflateOptions"></param>
+    /// <returns></returns>
+    public MqttClientWebSocketOptionsBuilder WithDangerousDeflateOptions(WebSocketDeflateOptions dangerousDeflateOptions)
+    {
+        _webSocketOptions.DangerousDeflateOptions = dangerousDeflateOptions;
         return this;
     }
 

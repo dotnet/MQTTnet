@@ -12,6 +12,7 @@ namespace MQTTnet;
 public sealed class MqttClientWebSocketOptions : IMqttClientChannelOptions
 {
     public CookieContainer CookieContainer { get; set; }
+    public WebSocketDeflateOptions DangerousDeflateOptions { get; set; }
 
     public ICredentials Credentials { get; set; }
 

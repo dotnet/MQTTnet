@@ -9,9 +9,10 @@ namespace MQTTnet.Server
 {
     public sealed class SessionDeletedEventArgs : EventArgs
     {
-        public SessionDeletedEventArgs(string id, IDictionary sessionItems)
+        public SessionDeletedEventArgs(string id, string userName, IDictionary sessionItems)
         {
             Id = id ?? throw new ArgumentNullException(nameof(id));
+            UserName = userName;
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
         }
 
@@ -19,6 +20,11 @@ namespace MQTTnet.Server
         ///     Gets the ID of the session.
         /// </summary>
         public string Id { get; }
+
+        /// <summary>
+        /// Gets the user name of the session.
+        /// </summary>
+        public string UserName { get; }
 
         /// <summary>
         ///     Gets or sets a key/value collection that can be used to share data within the scope of this session.

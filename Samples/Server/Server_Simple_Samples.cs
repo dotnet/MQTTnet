@@ -44,18 +44,13 @@ public static class Server_Simple_Samples
          * See _Run_Minimal_Server_ for more information.
          */
 
-        using (var mqttServer = await StartMqttServer())
-        {
-            // Create a new message using the builder as usual.
-            var message = new MqttApplicationMessageBuilder().WithTopic("HelloWorld").WithPayload("Test").Build();
+        using var mqttServer = await StartMqttServer();
 
-            // Now inject the new message at the broker.
-            await mqttServer.InjectApplicationMessage(
-                new InjectedMqttApplicationMessage(message)
-                {
-                    SenderClientId = "SenderClientId"
-                });
-        }
+        // Now inject the new message at the broker.
+        await mqttServer.InjectStringAsync(
+            clientId: "SenderClientId",
+            topic: "HelloWorld",
+            payload: "Test");
     }
 
     public static async Task Run_Minimal_Server()

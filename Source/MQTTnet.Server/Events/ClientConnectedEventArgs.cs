@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Net;
+using System.Text;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 
@@ -55,6 +56,11 @@ namespace MQTTnet.Server
         ///     Gets the user name of the connected client.
         /// </summary>
         public string UserName => _connectPacket.Username;
+
+        /// <summary>
+        ///     Gets the password of the connected client.
+        /// </summary>
+        public string Password => Encoding.UTF8.GetString(_connectPacket.Password.AsSpan());
 
         /// <summary>
         ///     Gets the user properties sent by the client.

@@ -101,7 +101,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         {
             if (_eventContainer.SessionDeletedEvent.HasHandlers && session != null)
             {
-                var eventArgs = new SessionDeletedEventArgs(clientId, session.Items);
+                var eventArgs = new SessionDeletedEventArgs(clientId, session.UserName, session.Items);
                 await _eventContainer.SessionDeletedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
             }
         }
@@ -117,6 +117,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task<DispatchApplicationMessageResult> DispatchApplicationMessage(
         string senderId,
+        string senderUserName,
         IDictionary senderSessionItems,
         MqttApplicationMessage applicationMessage,
         CancellationToken cancellationToken)
@@ -130,7 +131,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         // Allow the user to intercept application message...
         if (_eventContainer.InterceptingPublishEvent.HasHandlers)
         {
-            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderSessionItems);
+            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderUserName, senderSessionItems);
             if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
             {
                 // This can happen if a topic alias us used but the topic is
@@ -408,7 +409,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 if (connectedClient.Id != null && !connectedClient.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
                     var disconnectType = connectedClient.DisconnectPacket != null ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
-                    var eventArgs = new ClientDisconnectedEventArgs(connectedClient.Id, connectedClient.DisconnectPacket, disconnectType, endpoint, connectedClient.Session.Items);
+                    var eventArgs = new ClientDisconnectedEventArgs(
+                        connectedClient.ConnectPacket,
+                        connectedClient.DisconnectPacket,
+                        disconnectType,
+                        endpoint,
+                        connectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
@@ -592,7 +598,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
                     var eventArgs = new ClientDisconnectedEventArgs(
-                        oldConnectedClient.Id,
+                        oldConnectedClient.ConnectPacket,
                         null,
                         MqttClientDisconnectType.Takeover,
                         oldConnectedClient.RemoteEndPoint,

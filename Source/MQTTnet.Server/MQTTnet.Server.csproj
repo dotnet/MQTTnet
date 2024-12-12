@@ -36,7 +36,7 @@
         <NuGetAuditLevel>low</NuGetAuditLevel>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <!--<AnalysisLevel>latest-Recommended</AnalysisLevel>-->
     </PropertyGroup>
 
     <ItemGroup>

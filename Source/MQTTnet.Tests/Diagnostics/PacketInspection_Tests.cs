@@ -18,7 +18,8 @@ namespace MQTTnet.Tests.Diagnostics
         [TestMethod]
         public async Task Inspect_Client_Packets()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

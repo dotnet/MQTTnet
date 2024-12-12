@@ -14,7 +14,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Server_Reports_Subscription_Identifiers_Supported()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -30,7 +31,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscribe_With_Subscription_Identifier()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -57,7 +59,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscribe_With_Multiple_Subscription_Identifiers()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

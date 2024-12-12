@@ -17,7 +17,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Server_Reports_Topic_Alias_Supported()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -35,7 +36,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Publish_With_Topic_Alias()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

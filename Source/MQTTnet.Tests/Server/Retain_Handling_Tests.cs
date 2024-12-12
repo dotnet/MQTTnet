@@ -36,7 +36,8 @@ namespace MQTTnet.Tests.Server
             int expectedCountAfterSecondPublish,
             int expectedCountAfterSecondSubscribe)
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

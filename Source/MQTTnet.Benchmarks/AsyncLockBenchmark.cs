@@ -11,7 +11,7 @@ using MQTTnet.Internal;
 
 namespace MQTTnet.Benchmarks
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
+    [SimpleJob(RuntimeMoniker.Net80)]
     [MemoryDiagnoser]
     public class AsyncLockBenchmark : BaseBenchmark
     {

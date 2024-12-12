@@ -9,6 +9,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server
 {
@@ -18,20 +19,21 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Client_Connected_Event()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
-
-                ClientConnectedEventArgs eventArgs = null;
+                var eventArgsTaskSource = new TaskCompletionSource<ClientConnectedEventArgs>();
+                 
                 server.ClientConnectedAsync += e =>
                 {
-                    eventArgs = e;
+                    eventArgsTaskSource.TrySetResult(e);
                     return CompletedTask.Instance;
                 };
 
                 await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
 
-                await LongTestDelay();
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -46,21 +48,23 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Client_Disconnected_Event()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
-                ClientDisconnectedEventArgs eventArgs = null;
+                var eventArgsTaskSource = new TaskCompletionSource<ClientDisconnectedEventArgs>();
+
                 server.ClientDisconnectedAsync += e =>
                 {
-                    eventArgs = e;
+                    eventArgsTaskSource.TrySetResult(e);
                     return CompletedTask.Instance;
                 };
 
                 var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
                 await client.DisconnectAsync();
 
-                await LongTestDelay();
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -76,21 +80,23 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Client_Subscribed_Event()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
-                ClientSubscribedTopicEventArgs eventArgs = null;
+                var eventArgsTaskSource = new TaskCompletionSource<ClientSubscribedTopicEventArgs>();
+                 
                 server.ClientSubscribedTopicAsync += e =>
                 {
-                    eventArgs = e;
+                    eventArgsTaskSource.TrySetResult(e);
                     return CompletedTask.Instance;
                 };
 
                 var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.SubscribeAsync("The/Topic", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                await LongTestDelay();
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -104,21 +110,23 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Client_Unsubscribed_Event()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
-                ClientUnsubscribedTopicEventArgs eventArgs = null;
+                var eventArgsTaskSource = new TaskCompletionSource<ClientUnsubscribedTopicEventArgs>();
+             
                 server.ClientUnsubscribedTopicAsync += e =>
                 {
-                    eventArgs = e;
+                    eventArgsTaskSource.TrySetResult(e);
                     return CompletedTask.Instance;
                 };
 
                 var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.UnsubscribeAsync("The/Topic");
 
-                await LongTestDelay();
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -131,21 +139,23 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Application_Message_Received_Event()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
-                InterceptingPublishEventArgs eventArgs = null;
+                var eventArgsTaskSource = new TaskCompletionSource<InterceptingPublishEventArgs>();
+
                 server.InterceptingPublishAsync += e =>
                 {
-                    eventArgs = e;
+                    eventArgsTaskSource.TrySetResult(e);
                     return CompletedTask.Instance;
                 };
 
                 var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.PublishStringAsync("The_Topic", "The_Payload");
 
-                await LongTestDelay();
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
 
@@ -159,20 +169,21 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Started_Event()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMQTTnetTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = testEnvironment.CreateServer(new MqttServerOptions());
 
-                EventArgs eventArgs = null;
+                var eventArgsTaskSource = new TaskCompletionSource<EventArgs>();
                 server.StartedAsync += e =>
                 {
-                    eventArgs = e;
+                    eventArgsTaskSource.TrySetResult(e);
                     return CompletedTask.Instance;
                 };
 
                 await server.StartAsync();
 
-                await LongTestDelay();
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
             }
@@ -181,20 +192,21 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Fire_Stopped_Event()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
-
-                EventArgs eventArgs = null;
+                var eventArgsTaskSource = new TaskCompletionSource<EventArgs>();
+                 
                 server.StoppedAsync += e =>
                 {
-                    eventArgs = e;
+                    eventArgsTaskSource.TrySetResult(e);
                     return CompletedTask.Instance;
                 };
 
                 await server.StopAsync();
 
-                await LongTestDelay();
+                var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
                 Assert.IsNotNull(eventArgs);
             }

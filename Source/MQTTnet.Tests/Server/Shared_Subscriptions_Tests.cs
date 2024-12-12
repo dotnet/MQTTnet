@@ -15,7 +15,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Server_Reports_Shared_Subscriptions_Not_Supported()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -31,7 +32,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Subscription_Of_Shared_Subscription_Is_Denied()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

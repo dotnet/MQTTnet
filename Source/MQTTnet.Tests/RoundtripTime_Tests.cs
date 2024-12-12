@@ -13,14 +13,14 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests
 {
     [TestClass]
-    public class RoundtripTime_Tests
+    public class RoundtripTime_Tests : BaseTestClass
     {
-        public TestContext TestContext { get; set; }
 
         [TestMethod]
         public async Task Round_Trip_Time()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

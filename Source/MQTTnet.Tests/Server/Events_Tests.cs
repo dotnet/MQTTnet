@@ -31,7 +31,7 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
+                await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
 
                 var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
 
@@ -41,6 +41,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
                 Assert.AreEqual(MqttProtocolVersion.V311, eventArgs.ProtocolVersion);
                 Assert.AreEqual("TheUser", eventArgs.UserName);
+                Assert.AreEqual("ThePassword", eventArgs.Password);
             }
         }
 
@@ -60,7 +61,7 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
+                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
                 await client.DisconnectAsync();
 
                 var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
@@ -70,6 +71,9 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Disconnected_Event)));
                 Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
                 Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
+
+                Assert.AreEqual("TheUser", eventArgs.UserName);
+                Assert.AreEqual("ThePassword", eventArgs.Password);
             }
         }
 
@@ -89,7 +93,7 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                var client = await testEnvironment.ConnectClient();
+                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.SubscribeAsync("The/Topic", MqttQualityOfServiceLevel.AtLeastOnce);
 
                 var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
@@ -99,6 +103,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Subscribed_Event)));
                 Assert.AreEqual("The/Topic", eventArgs.TopicFilter.Topic);
                 Assert.AreEqual(MqttQualityOfServiceLevel.AtLeastOnce, eventArgs.TopicFilter.QualityOfServiceLevel);
+                Assert.AreEqual("TheUser", eventArgs.UserName);
             }
         }
 
@@ -118,7 +123,7 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                var client = await testEnvironment.ConnectClient();
+                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.UnsubscribeAsync("The/Topic");
 
                 var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
@@ -127,6 +132,7 @@ namespace MQTTnet.Tests.Server
 
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Unsubscribed_Event)));
                 Assert.AreEqual("The/Topic", eventArgs.TopicFilter);
+                Assert.AreEqual("TheUser", eventArgs.UserName);
             }
         }
 
@@ -146,7 +152,7 @@ namespace MQTTnet.Tests.Server
                     return CompletedTask.Instance;
                 };
 
-                var client = await testEnvironment.ConnectClient();
+                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
                 await client.PublishStringAsync("The_Topic", "The_Payload");
 
                 var eventArgs = await eventArgsTaskSource.Task.WaitAsync(TimeSpan.FromSeconds(10d));
@@ -156,6 +162,7 @@ namespace MQTTnet.Tests.Server
                 Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Application_Message_Received_Event)));
                 Assert.AreEqual("The_Topic", eventArgs.ApplicationMessage.Topic);
                 Assert.AreEqual("The_Payload", eventArgs.ApplicationMessage.ConvertPayloadToString());
+                Assert.AreEqual("TheUser", eventArgs.UserName);
             }
         }
 

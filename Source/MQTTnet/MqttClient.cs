@@ -183,10 +183,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
     public async Task DisconnectAsync(MqttClientDisconnectOptions options, CancellationToken cancellationToken = default)
     {
-        if (options is null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         ThrowIfDisposed();
 
@@ -293,10 +290,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
     public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
     {
-        if (data == null)
-        {
-            throw new ArgumentNullException(nameof(data));
-        }
+        ArgumentNullException.ThrowIfNull(data);
 
         ThrowIfDisposed();
         ThrowIfNotConnected();
@@ -316,10 +310,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
     public async Task<MqttClientSubscribeResult> SubscribeAsync(MqttClientSubscribeOptions options, CancellationToken cancellationToken = default)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         foreach (var topicFilter in options.TopicFilters)
         {
@@ -355,10 +346,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
     public async Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken = default)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         foreach (var topicFilter in options.TopicFilters)
         {
@@ -919,10 +907,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
     static void ThrowIfOptionsInvalid(MqttClientOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         if (options.ChannelOptions == null)
         {

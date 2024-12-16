@@ -16,15 +16,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, MqttServerOptions options)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
-
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(options);
 
         services.AddSingleton(options);
         services.AddHostedMqttServer();
@@ -34,10 +27,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddHostedMqttServer(this IServiceCollection services, Action<MqttServerOptionsBuilder> configure)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         var serverOptionsBuilder = new MqttServerOptionsBuilder();
 
@@ -61,10 +51,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton(
             s =>
@@ -89,20 +76,14 @@ public static class ServiceCollectionExtensions
 
     public static void AddMqttLogger(this IServiceCollection services, IMqttNetLogger logger)
     {
-        if (services == null)
-        {
-            throw new ArgumentNullException(nameof(services));
-        }
+        ArgumentNullException.ThrowIfNull(services);
 
         services.AddSingleton(logger);
     }
 
     public static IServiceCollection AddMqttServer(this IServiceCollection serviceCollection, Action<MqttServerOptionsBuilder> configure = null)
     {
-        if (serviceCollection is null)
-        {
-            throw new ArgumentNullException(nameof(serviceCollection));
-        }
+        ArgumentNullException.ThrowIfNull(serviceCollection);
 
         serviceCollection.AddMqttConnectionHandler();
         serviceCollection.AddHostedMqttServer(configure);

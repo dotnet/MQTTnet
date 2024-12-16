@@ -12,10 +12,7 @@ namespace MQTTnet.AspNetCore
     {
         public static void MapMqtt(this IEndpointRouteBuilder endpoints, string pattern)
         {
-            if (endpoints == null)
-            {
-                throw new ArgumentNullException(nameof(endpoints));
-            }
+            ArgumentNullException.ThrowIfNull(endpoints);
 
             endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, options =>
             {

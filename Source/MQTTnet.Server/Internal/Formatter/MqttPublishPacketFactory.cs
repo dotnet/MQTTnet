@@ -11,10 +11,7 @@ public static class MqttPublishPacketFactory
 {
     public static MqttPublishPacket Create(MqttConnectPacket connectPacket)
     {
-        if (connectPacket == null)
-        {
-            throw new ArgumentNullException(nameof(connectPacket));
-        }
+        ArgumentNullException.ThrowIfNull(connectPacket);
 
         if (!connectPacket.WillFlag)
         {
@@ -46,10 +43,7 @@ public static class MqttPublishPacketFactory
 
     public static MqttPublishPacket Create(MqttApplicationMessage applicationMessage)
     {
-        if (applicationMessage == null)
-        {
-            throw new ArgumentNullException(nameof(applicationMessage));
-        }
+        ArgumentNullException.ThrowIfNull(applicationMessage);
 
         // Copy all values to their matching counterparts.
         // The not supported values in MQTT 3.1.1 are not serialized (excluded) later.
@@ -75,10 +69,7 @@ public static class MqttPublishPacketFactory
 
     public static MqttPublishPacket Create(MqttRetainedMessageMatch retainedMessage)
     {
-        if (retainedMessage == null)
-        {
-            throw new ArgumentNullException(nameof(retainedMessage));
-        }
+        ArgumentNullException.ThrowIfNull(retainedMessage);
 
         var publishPacket = Create(retainedMessage.ApplicationMessage);
         publishPacket.QualityOfServiceLevel = retainedMessage.SubscriptionQualityOfServiceLevel;

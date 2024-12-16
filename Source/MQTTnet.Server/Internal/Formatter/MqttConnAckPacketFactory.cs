@@ -12,10 +12,7 @@ public static class MqttConnAckPacketFactory
 {
     public static MqttConnAckPacket Create(ValidatingConnectionEventArgs validatingConnectionEventArgs)
     {
-        if (validatingConnectionEventArgs == null)
-        {
-            throw new ArgumentNullException(nameof(validatingConnectionEventArgs));
-        }
+        ArgumentNullException.ThrowIfNull(validatingConnectionEventArgs);
 
         var connAckPacket = new MqttConnAckPacket
         {

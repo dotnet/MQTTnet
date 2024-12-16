@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using MQTTnet.Adapter;
@@ -70,7 +71,10 @@ namespace MQTTnet.Server
         /// </summary>
         public string ClientId => _connectPacket.ClientId;
 
-        public string Endpoint => ChannelAdapter.Endpoint;
+        public EndPoint RemoteEndPoint => ChannelAdapter.RemoteEndPoint;
+
+        [Obsolete("Use RemoteEndPoint instead.")]
+        public string Endpoint => RemoteEndPoint?.ToString();
 
         public bool IsSecureConnection => ChannelAdapter.IsSecureConnection;
 

@@ -161,10 +161,7 @@ namespace MQTTnet.Server.Internal
 
         public async Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)
         {
-            if (subscribePacket == null)
-            {
-                throw new ArgumentNullException(nameof(subscribePacket));
-            }
+            ArgumentNullException.ThrowIfNull(subscribePacket);
 
             var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
             var result = new SubscribeResult(subscribePacket.TopicFilters.Count);
@@ -212,7 +209,7 @@ namespace MQTTnet.Server.Internal
             {
                 foreach (var finalTopicFilter in finalTopicFilters)
                 {
-                    var eventArgs = new ClientSubscribedTopicEventArgs(_session.Id, finalTopicFilter, _session.Items);
+                    var eventArgs = new ClientSubscribedTopicEventArgs(_session.Id, _session.UserName, finalTopicFilter, _session.Items);
                     await _eventContainer.ClientSubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
@@ -222,10 +219,7 @@ namespace MQTTnet.Server.Internal
 
         public async Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
         {
-            if (unsubscribePacket == null)
-            {
-                throw new ArgumentNullException(nameof(unsubscribePacket));
-            }
+            ArgumentNullException.ThrowIfNull(unsubscribePacket);
 
             var result = new UnsubscribeResult();
 
@@ -303,7 +297,7 @@ namespace MQTTnet.Server.Internal
             {
                 foreach (var topicFilter in unsubscribePacket.TopicFilters)
                 {
-                    var eventArgs = new ClientUnsubscribedTopicEventArgs(_session.Id, topicFilter, _session.Items);
+                    var eventArgs = new ClientUnsubscribedTopicEventArgs(_session.Id, _session.UserName, topicFilter, _session.Items);
                     await _eventContainer.ClientUnsubscribedTopicEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
@@ -440,7 +434,7 @@ namespace MQTTnet.Server.Internal
                 var retainedMessageMatch = new MqttRetainedMessageMatch(retainedMessage, createSubscriptionResult.Subscription.GrantedQualityOfServiceLevel);
                 if (retainedMessageMatch.SubscriptionQualityOfServiceLevel > retainedMessageMatch.ApplicationMessage.QualityOfServiceLevel)
                 {
-                    // UPGRADING the QoS is not allowed! 
+                    // UPGRADING the QoS is not allowed!
                     // From MQTT spec: Subscribing to a Topic Filter at QoS 2 is equivalent to saying
                     // "I would like to receive Messages matching this filter at the QoS with which they were published".
                     // This means a publisher is responsible for determining the maximum QoS a Message can be delivered at,
@@ -455,7 +449,7 @@ namespace MQTTnet.Server.Internal
 
                 subscribeResult.RetainedMessages.Add(retainedMessageMatch);
 
-                // Clear the retained message from the list because the client should receive every message only 
+                // Clear the retained message from the list because the client should receive every message only
                 // one time even if multiple subscriptions affect them.
                 retainedMessages[index] = null;
             }
@@ -466,7 +460,7 @@ namespace MQTTnet.Server.Internal
             List<MqttUserProperty> userProperties,
             CancellationToken cancellationToken)
         {
-            var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, new MqttSessionStatus(_session), topicFilter, userProperties);
+            var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, _session.UserName, new MqttSessionStatus(_session), topicFilter, userProperties);
 
             if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
             {
@@ -499,7 +493,7 @@ namespace MQTTnet.Server.Internal
             List<MqttUserProperty> userProperties,
             CancellationToken cancellationToken)
         {
-            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, _session.Id, _session.Items, topicFilter, userProperties)
+            var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, _session.Id, _session.UserName, _session.Items, topicFilter, userProperties)
             {
                 Response =
                 {

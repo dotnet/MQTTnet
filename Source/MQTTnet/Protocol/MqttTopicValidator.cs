@@ -11,10 +11,7 @@ namespace MQTTnet.Protocol
     {
         public static void ThrowIfInvalid(MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessage == null)
-            {
-                throw new ArgumentNullException(nameof(applicationMessage));
-            }
+            ArgumentNullException.ThrowIfNull(applicationMessage);
 
             if (applicationMessage.TopicAlias == 0)
             {

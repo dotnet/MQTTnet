@@ -23,10 +23,7 @@ public static class MqttClientExtensions
         List<MqttUserProperty> userProperties = null,
         CancellationToken cancellationToken = default)
     {
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
+        ArgumentNullException.ThrowIfNull(client);
 
         var disconnectOptions = new MqttClientDisconnectOptions
         {
@@ -47,15 +44,8 @@ public static class MqttClientExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        if (mqttClient == null)
-        {
-            throw new ArgumentNullException(nameof(mqttClient));
-        }
-
-        if (topic == null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(mqttClient);
+        ArgumentNullException.ThrowIfNull(topic);
 
         var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topic)
             .WithPayload(payload)
@@ -74,15 +64,8 @@ public static class MqttClientExtensions
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        if (mqttClient == null)
-        {
-            throw new ArgumentNullException(nameof(mqttClient));
-        }
-
-        if (topic == null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(mqttClient);
+        ArgumentNullException.ThrowIfNull(topic);
 
         var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topic)
             .WithPayload(payload)
@@ -118,25 +101,15 @@ public static class MqttClientExtensions
 
     public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
     {
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
+        ArgumentNullException.ThrowIfNull(client);
 
         return client.SendExtendedAuthenticationExchangeDataAsync(data, CancellationToken.None);
     }
 
     public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient mqttClient, MqttTopicFilter topicFilter, CancellationToken cancellationToken = default)
     {
-        if (mqttClient == null)
-        {
-            throw new ArgumentNullException(nameof(mqttClient));
-        }
-
-        if (topicFilter == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilter));
-        }
+        ArgumentNullException.ThrowIfNull(mqttClient);
+        ArgumentNullException.ThrowIfNull(topicFilter);
 
         var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topicFilter).Build();
 
@@ -149,15 +122,8 @@ public static class MqttClientExtensions
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         CancellationToken cancellationToken = default)
     {
-        if (mqttClient == null)
-        {
-            throw new ArgumentNullException(nameof(mqttClient));
-        }
-
-        if (topic == null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(mqttClient);
+        ArgumentNullException.ThrowIfNull(topic);
 
         var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(topic, qualityOfServiceLevel).Build();
 
@@ -169,10 +135,7 @@ public static class MqttClientExtensions
         MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
         string reasonString = null)
     {
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
+        ArgumentNullException.ThrowIfNull(client);
 
         try
         {
@@ -189,10 +152,7 @@ public static class MqttClientExtensions
 
     public static async Task<bool> TryPingAsync(this IMqttClient client, CancellationToken cancellationToken = default)
     {
-        if (client == null)
-        {
-            throw new ArgumentNullException(nameof(client));
-        }
+        ArgumentNullException.ThrowIfNull(client);
 
         try
         {
@@ -209,15 +169,8 @@ public static class MqttClientExtensions
 
     public static Task<MqttClientUnsubscribeResult> UnsubscribeAsync(this IMqttClient mqttClient, string topic, CancellationToken cancellationToken = default)
     {
-        if (mqttClient == null)
-        {
-            throw new ArgumentNullException(nameof(mqttClient));
-        }
-
-        if (topic == null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(mqttClient);
+        ArgumentNullException.ThrowIfNull(topic);
 
         var unsubscribeOptions = new MqttClientUnsubscribeOptionsBuilder().WithTopicFilter(topic).Build();
 

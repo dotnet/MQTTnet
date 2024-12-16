@@ -42,10 +42,7 @@ public sealed class MqttSessionStatus
 
     public Task DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)
     {
-        if (applicationMessage == null)
-        {
-            throw new ArgumentNullException(nameof(applicationMessage));
-        }
+        ArgumentNullException.ThrowIfNull(applicationMessage);
 
         var packetBusItem = new MqttPacketBusItem(MqttPublishPacketFactory.Create(applicationMessage));
         _session.EnqueueDataPacket(packetBusItem);
@@ -55,10 +52,7 @@ public sealed class MqttSessionStatus
 
     public Task EnqueueApplicationMessageAsync(MqttApplicationMessage applicationMessage)
     {
-        if (applicationMessage == null)
-        {
-            throw new ArgumentNullException(nameof(applicationMessage));
-        }
+        ArgumentNullException.ThrowIfNull(applicationMessage);
 
         _session.EnqueueDataPacket(new MqttPacketBusItem(MqttPublishPacketFactory.Create(applicationMessage)));
 

@@ -124,20 +124,14 @@ public sealed class CrossPlatformSocket : IDisposable
 
     public void Bind(EndPoint localEndPoint)
     {
-        if (localEndPoint is null)
-        {
-            throw new ArgumentNullException(nameof(localEndPoint));
-        }
+        ArgumentNullException.ThrowIfNull(localEndPoint);
 
         _socket.Bind(localEndPoint);
     }
 
     public async Task ConnectAsync(EndPoint endPoint, CancellationToken cancellationToken)
     {
-        if (endPoint is null)
-        {
-            throw new ArgumentNullException(nameof(endPoint));
-        }
+        ArgumentNullException.ThrowIfNull(endPoint);
 
         cancellationToken.ThrowIfCancellationRequested();
 

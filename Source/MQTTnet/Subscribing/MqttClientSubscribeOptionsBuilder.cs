@@ -50,10 +50,7 @@ public sealed class MqttClientSubscribeOptionsBuilder
 
     public MqttClientSubscribeOptionsBuilder WithTopicFilter(Action<MqttTopicFilterBuilder> topicFilterBuilder)
     {
-        if (topicFilterBuilder == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilterBuilder));
-        }
+        ArgumentNullException.ThrowIfNull(topicFilterBuilder);
 
         var internalTopicFilterBuilder = new MqttTopicFilterBuilder();
         topicFilterBuilder(internalTopicFilterBuilder);
@@ -63,20 +60,14 @@ public sealed class MqttClientSubscribeOptionsBuilder
 
     public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilterBuilder topicFilterBuilder)
     {
-        if (topicFilterBuilder == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilterBuilder));
-        }
+        ArgumentNullException.ThrowIfNull(topicFilterBuilder);
 
         return WithTopicFilter(topicFilterBuilder.Build());
     }
 
     public MqttClientSubscribeOptionsBuilder WithTopicFilter(MqttTopicFilter topicFilter)
     {
-        if (topicFilter == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilter));
-        }
+        ArgumentNullException.ThrowIfNull(topicFilter);
 
         if (_subscribeOptions.TopicFilters == null)
         {

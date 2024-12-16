@@ -13,10 +13,7 @@ public static class MqttServerExtensions
 {
     public static Task DisconnectClientAsync(this MqttServer server, string id, MqttDisconnectReasonCode reasonCode = MqttDisconnectReasonCode.NormalDisconnection)
     {
-        if (server == null)
-        {
-            throw new ArgumentNullException(nameof(server));
-        }
+        ArgumentNullException.ThrowIfNull(server);
 
         return server.DisconnectClientAsync(id, new MqttServerClientDisconnectOptions { ReasonCode = reasonCode });
     }
@@ -28,15 +25,8 @@ public static class MqttServerExtensions
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false)
     {
-        if (server == null)
-        {
-            throw new ArgumentNullException(nameof(server));
-        }
-
-        if (topic == null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(server);
+        ArgumentNullException.ThrowIfNull(topic);
 
         var payloadBuffer = EmptyBuffer.Array;
         if (payload is string stringPayload)
@@ -57,50 +47,25 @@ public static class MqttServerExtensions
 
     public static Task StopAsync(this MqttServer server)
     {
-        if (server == null)
-        {
-            throw new ArgumentNullException(nameof(server));
-        }
+        ArgumentNullException.ThrowIfNull(server);
 
         return server.StopAsync(new MqttServerStopOptions());
     }
 
     public static Task SubscribeAsync(this MqttServer server, string clientId, params MqttTopicFilter[] topicFilters)
     {
-        if (server == null)
-        {
-            throw new ArgumentNullException(nameof(server));
-        }
-
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topicFilters == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilters));
-        }
+        ArgumentNullException.ThrowIfNull(server);
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topicFilters);
 
         return server.SubscribeAsync(clientId, topicFilters);
     }
 
     public static Task SubscribeAsync(this MqttServer server, string clientId, string topic)
     {
-        if (server == null)
-        {
-            throw new ArgumentNullException(nameof(server));
-        }
-
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topic == null)
-        {
-            throw new ArgumentNullException(nameof(topic));
-        }
+        ArgumentNullException.ThrowIfNull(server);
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topic);
 
         var topicFilters = new MqttTopicFilterBuilder().WithTopic(topic).Build();
         return server.SubscribeAsync(clientId, topicFilters);

@@ -13,10 +13,7 @@ namespace MQTTnet
     {
         public static void ThrowIfNotSupported(MqttApplicationMessage applicationMessage, MqttProtocolVersion protocolVersion)
         {
-            if (applicationMessage == null)
-            {
-                throw new ArgumentNullException(nameof(applicationMessage));
-            }
+            ArgumentNullException.ThrowIfNull(applicationMessage);
 
             if (protocolVersion == MqttProtocolVersion.V500)
             {
@@ -28,38 +25,38 @@ namespace MQTTnet
             {
                 Throw(nameof(applicationMessage.ContentType));
             }
-            
+
             if (applicationMessage.UserProperties?.Any() == true)
             {
                 Throw(nameof(applicationMessage.UserProperties));
             }
-            
+
             if (applicationMessage.CorrelationData?.Any() == true)
             {
                 Throw(nameof(applicationMessage.CorrelationData));
             }
-            
+
             if (applicationMessage.ResponseTopic?.Any() == true)
             {
                 Throw(nameof(applicationMessage.ResponseTopic));
             }
-            
+
             if (applicationMessage.SubscriptionIdentifiers?.Any() == true)
             {
                 Throw(nameof(applicationMessage.SubscriptionIdentifiers));
             }
-            
+
             if (applicationMessage.TopicAlias > 0)
             {
                 Throw(nameof(applicationMessage.TopicAlias));
             }
-            
+
             if (applicationMessage.PayloadFormatIndicator != MqttPayloadFormatIndicator.Unspecified)
             {
                 Throw(nameof(applicationMessage.PayloadFormatIndicator));
             }
         }
-        
+
         static void Throw(string featureName)
         {
             throw new NotSupportedException($"Feature {featureName} requires MQTT version 5.0.0.");

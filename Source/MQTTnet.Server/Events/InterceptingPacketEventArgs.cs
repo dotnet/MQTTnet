@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections;
+using System.Net;
 using System.Threading;
 using MQTTnet.Packets;
 
@@ -11,11 +12,12 @@ namespace MQTTnet.Server
 {
     public sealed class InterceptingPacketEventArgs : EventArgs
     {
-        public InterceptingPacketEventArgs(CancellationToken cancellationToken, string clientId, string endpoint, MqttPacket packet, IDictionary sessionItems)
+        public InterceptingPacketEventArgs(CancellationToken cancellationToken, string clientId, string userName, EndPoint remoteEndPoint, MqttPacket packet, IDictionary sessionItems)
         {
             CancellationToken = cancellationToken;
             ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
-            Endpoint = endpoint;
+            UserName = userName;
+            RemoteEndPoint = remoteEndPoint;
             Packet = packet ?? throw new ArgumentNullException(nameof(packet));
             SessionItems = sessionItems;
         }
@@ -32,9 +34,17 @@ namespace MQTTnet.Server
         public string ClientId { get; }
 
         /// <summary>
+        /// Gets the user name of the client.
+        /// </summary>
+        public string UserName { get; }
+
+        /// <summary>
         ///     Gets the endpoint of the sending or receiving client.
         /// </summary>
-        public string Endpoint { get; }
+        public EndPoint RemoteEndPoint { get; }
+
+        [Obsolete("Use RemoteEndPoint instead.")]
+        public string Endpoint => RemoteEndPoint?.ToString();
 
         /// <summary>
         ///     Gets or sets the MQTT packet which was received or will be sent.

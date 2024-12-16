@@ -14,7 +14,7 @@ namespace MQTTnet.TestApp
 
         public static void ForwardToConsole(MqttNetEventLogger logger)
         {
-            if (logger == null) throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
 
             logger.LogMessagePublished -= PrintToConsole;
             logger.LogMessagePublished += PrintToConsole;

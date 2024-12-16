@@ -8,3 +8,5 @@
 * Namespace changes **(BREAKING CHANGE)**
 * Removal of Managed Client **(BREAKING CHANGE)**
 * Client: MQTT 5.0.0 is now the default version when connecting with a server **(BREAKING CHANGE)**
+* Server: Set default for "MaxPendingMessagesPerClient" to 1000 **(BREAKING CHANGE)**
+* Server: Set SSL version to "None" which will let the OS choose the version **(BREAKING CHANGE)**

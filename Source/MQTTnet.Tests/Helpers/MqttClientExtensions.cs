@@ -11,10 +11,7 @@ namespace MQTTnet.Tests.Helpers
     {
         public static TestApplicationMessageReceivedHandler TrackReceivedMessages(this IMqttClient client)
         {
-            if (client == null)
-            {
-                throw new ArgumentNullException(nameof(client));
-            }
+            ArgumentNullException.ThrowIfNull(client);
 
             return new TestApplicationMessageReceivedHandler(client);
         }

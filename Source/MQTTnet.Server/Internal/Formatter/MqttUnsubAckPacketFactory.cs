@@ -10,15 +10,8 @@ namespace MQTTnet.Server.Internal.Formatter
     {
         public static MqttUnsubAckPacket Create(MqttUnsubscribePacket unsubscribePacket, UnsubscribeResult unsubscribeResult)
         {
-            if (unsubscribePacket == null)
-            {
-                throw new ArgumentNullException(nameof(unsubscribePacket));
-            }
-
-            if (unsubscribeResult == null)
-            {
-                throw new ArgumentNullException(nameof(unsubscribeResult));
-            }
+            ArgumentNullException.ThrowIfNull(unsubscribePacket);
+            ArgumentNullException.ThrowIfNull(unsubscribeResult);
 
             var unsubAckPacket = new MqttUnsubAckPacket
             {

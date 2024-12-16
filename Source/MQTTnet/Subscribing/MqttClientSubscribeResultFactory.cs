@@ -16,15 +16,8 @@ public sealed class MqttClientSubscribeResultFactory
 
     public MqttClientSubscribeResult Create(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
     {
-        if (subscribePacket == null)
-        {
-            throw new ArgumentNullException(nameof(subscribePacket));
-        }
-
-        if (subAckPacket == null)
-        {
-            throw new ArgumentNullException(nameof(subAckPacket));
-        }
+        ArgumentNullException.ThrowIfNull(subscribePacket);
+        ArgumentNullException.ThrowIfNull(subAckPacket);
 
         // MQTTv5.0.0 handling.
         if (subAckPacket.ReasonCodes.Any() && subAckPacket.ReasonCodes.Count != subscribePacket.TopicFilters.Count)

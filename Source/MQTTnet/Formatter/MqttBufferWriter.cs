@@ -105,10 +105,7 @@ namespace MQTTnet.Formatter
 
         public void Write(MqttBufferWriter propertyWriter)
         {
-            if (propertyWriter == null)
-            {
-                throw new ArgumentNullException(nameof(propertyWriter));
-            }
+            ArgumentNullException.ThrowIfNull(propertyWriter);
 
             WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
         }
@@ -140,10 +137,7 @@ namespace MQTTnet.Formatter
 
         public void WriteBinary(byte[] buffer, int offset, int count)
         {
-            if (buffer == null)
-            {
-                throw new ArgumentNullException(nameof(buffer));
-            }
+            ArgumentNullException.ThrowIfNull(buffer);
 
             if (count == 0)
             {
@@ -292,7 +286,7 @@ namespace MQTTnet.Formatter
 
             if (_position > Length)
             {
-                // Also extend the position because we reached the end of the 
+                // Also extend the position because we reached the end of the
                 // pre allocated buffer.
                 Length = _position;
             }

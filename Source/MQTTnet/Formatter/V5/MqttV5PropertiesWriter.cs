@@ -221,7 +221,7 @@ namespace MQTTnet.Formatter.V5
         {
             if (value)
             {
-                // Absence of the flag means it is supported! 
+                // Absence of the flag means it is supported!
                 return;
             }
 
@@ -230,10 +230,7 @@ namespace MQTTnet.Formatter.V5
 
         public void WriteTo(MqttBufferWriter target)
         {
-            if (target == null)
-            {
-                throw new ArgumentNullException(nameof(target));
-            }
+            ArgumentNullException.ThrowIfNull(target);
 
             target.WriteVariableByteInteger((uint)_bufferWriter.Length);
             target.Write(_bufferWriter);

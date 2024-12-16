@@ -145,7 +145,7 @@ namespace MQTTnet.Benchmarks
                 out SequencePosition observed,
                 out int bytesRead)
             {
-                if (formatter == null) throw new ArgumentNullException(nameof(formatter));
+                ArgumentNullException.ThrowIfNull(formatter);
 
                 packet = null;
                 consumed = input.Start;

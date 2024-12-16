@@ -19,8 +19,7 @@ namespace MQTTnet.Server.Internal
         {
             _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
 
-            if (logger == null)
-                throw new ArgumentNullException(nameof(logger));
+            ArgumentNullException.ThrowIfNull(logger);
 
             _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));
         }
@@ -53,10 +52,7 @@ namespace MQTTnet.Server.Internal
 
         public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)
         {
-            if (applicationMessage == null)
-            {
-                throw new ArgumentNullException(nameof(applicationMessage));
-            }
+            ArgumentNullException.ThrowIfNull(applicationMessage);
 
             try
             {

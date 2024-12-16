@@ -11,10 +11,7 @@ public static class MqttPubRelPacketFactory
 {
     public static MqttPubRelPacket Create(MqttPubRecPacket pubRecPacket, MqttApplicationMessageReceivedReasonCode reasonCode)
     {
-        if (pubRecPacket == null)
-        {
-            throw new ArgumentNullException(nameof(pubRecPacket));
-        }
+        ArgumentNullException.ThrowIfNull(pubRecPacket);
 
         return new MqttPubRelPacket
         {

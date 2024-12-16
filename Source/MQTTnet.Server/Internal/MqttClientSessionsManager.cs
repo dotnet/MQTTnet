@@ -19,29 +19,22 @@ namespace MQTTnet.Server.Internal;
 public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification, IDisposable
 {
     readonly Dictionary<string, MqttConnectedClient> _clients = new(4096);
-
     readonly AsyncLock _createConnectionSyncRoot = new();
-
     readonly MqttServerEventContainer _eventContainer;
     readonly MqttNetSourceLogger _logger;
     readonly MqttServerOptions _options;
-
     readonly MqttRetainedMessagesManager _retainedMessagesManager;
     readonly IMqttNetLogger _rootLogger;
-
     readonly ReaderWriterLockSlim _sessionsManagementLock = new();
 
     // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
     // See the MqttSubscription object for a detailed explanation.
     readonly MqttSessionsStorage _sessionsStorage = new();
-    readonly HashSet<MqttSession> _subscriberSessions = new();
+    readonly HashSet<MqttSession> _subscriberSessions = [];
 
     public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, MqttServerEventContainer eventContainer, IMqttNetLogger logger)
     {
-        if (logger == null)
-        {
-            throw new ArgumentNullException(nameof(logger));
-        }
+        ArgumentNullException.ThrowIfNull(logger);
 
         _logger = logger.WithSource(nameof(MqttClientSessionsManager));
         _rootLogger = logger;
@@ -53,10 +46,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task CloseAllConnections(MqttServerClientDisconnectOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         List<MqttConnectedClient> connections;
         lock (_clients)
@@ -111,7 +101,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         {
             if (_eventContainer.SessionDeletedEvent.HasHandlers && session != null)
             {
-                var eventArgs = new SessionDeletedEventArgs(clientId, session.Items);
+                var eventArgs = new SessionDeletedEventArgs(clientId, session.UserName, session.Items);
                 await _eventContainer.SessionDeletedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
             }
         }
@@ -127,6 +117,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task<DispatchApplicationMessageResult> DispatchApplicationMessage(
         string senderId,
+        string senderUserName,
         IDictionary senderSessionItems,
         MqttApplicationMessage applicationMessage,
         CancellationToken cancellationToken)
@@ -140,7 +131,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         // Allow the user to intercept application message...
         if (_eventContainer.InterceptingPublishEvent.HasHandlers)
         {
-            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderSessionItems);
+            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderUserName, senderSessionItems);
             if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
             {
                 // This can happen if a topic alias us used but the topic is
@@ -371,7 +362,11 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
             if (_eventContainer.ClientConnectedEvent.HasHandlers)
             {
-                var eventArgs = new ClientConnectedEventArgs(connectPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion, channelAdapter.Endpoint, connectedClient.Session.Items);
+                var eventArgs = new ClientConnectedEventArgs(
+                    connectPacket,
+                    channelAdapter.PacketFormatterAdapter.ProtocolVersion,
+                    channelAdapter.RemoteEndPoint,
+                    connectedClient.Session.Items);
 
                 await _eventContainer.ClientConnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
             }
@@ -409,12 +404,17 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     }
                 }
 
-                var endpoint = connectedClient.Endpoint;
+                var endpoint = connectedClient.RemoteEndPoint;
 
                 if (connectedClient.Id != null && !connectedClient.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
                     var disconnectType = connectedClient.DisconnectPacket != null ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
-                    var eventArgs = new ClientDisconnectedEventArgs(connectedClient.Id, connectedClient.DisconnectPacket, disconnectType, endpoint, connectedClient.Session.Items);
+                    var eventArgs = new ClientDisconnectedEventArgs(
+                        connectedClient.ConnectPacket,
+                        connectedClient.DisconnectPacket,
+                        disconnectType,
+                        endpoint,
+                        connectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
@@ -481,15 +481,8 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task SubscribeAsync(string clientId, ICollection<MqttTopicFilter> topicFilters)
     {
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topicFilters == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilters));
-        }
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topicFilters);
 
         var fakeSubscribePacket = new MqttSubscribePacket();
         fakeSubscribePacket.TopicFilters.AddRange(topicFilters);
@@ -510,15 +503,8 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public Task UnsubscribeAsync(string clientId, ICollection<string> topicFilters)
     {
-        if (clientId == null)
-        {
-            throw new ArgumentNullException(nameof(clientId));
-        }
-
-        if (topicFilters == null)
-        {
-            throw new ArgumentNullException(nameof(topicFilters));
-        }
+        ArgumentNullException.ThrowIfNull(clientId);
+        ArgumentNullException.ThrowIfNull(topicFilters);
 
         var fakeUnsubscribePacket = new MqttUnsubscribePacket();
         fakeUnsubscribePacket.TopicFilters.AddRange(topicFilters);
@@ -611,7 +597,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
                 if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
-                    var eventArgs = new ClientDisconnectedEventArgs(oldConnectedClient.Id, null, MqttClientDisconnectType.Takeover, oldConnectedClient.Endpoint, oldConnectedClient.Session.Items);
+                    var eventArgs = new ClientDisconnectedEventArgs(
+                        oldConnectedClient.ConnectPacket,
+                        null,
+                        MqttClientDisconnectType.Takeover,
+                        oldConnectedClient.RemoteEndPoint,
+                        oldConnectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
                 }
@@ -675,14 +666,14 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
         catch (OperationCanceledException)
         {
-            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.RemoteEndPoint);
         }
         catch (MqttCommunicationTimedOutException)
         {
-            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.Endpoint);
+            _logger.Warning("Client '{0}': Connected but did not sent a CONNECT packet.", channelAdapter.RemoteEndPoint);
         }
 
-        _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.Endpoint);
+        _logger.Warning("Client '{0}': First received packet was no 'CONNECT' packet [MQTT-3.1.0-1].", channelAdapter.RemoteEndPoint);
         return null;
     }
 

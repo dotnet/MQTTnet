@@ -38,10 +38,7 @@ public sealed class MqttClientTlsOptionsBuilder
 
     public MqttClientTlsOptionsBuilder WithCertificateValidationHandler(Func<MqttClientCertificateValidationEventArgs, bool> certificateValidationHandler)
     {
-        if (certificateValidationHandler == null)
-        {
-            throw new ArgumentNullException(nameof(certificateValidationHandler));
-        }
+        ArgumentNullException.ThrowIfNull(certificateValidationHandler);
 
         _tlsOptions.CertificateValidationHandler = certificateValidationHandler;
         return this;
@@ -49,10 +46,7 @@ public sealed class MqttClientTlsOptionsBuilder
 
     public MqttClientTlsOptionsBuilder WithCertificateSelectionHandler(Func<MqttClientCertificateSelectionEventArgs, X509Certificate> certificateSelectionHandler)
     {
-        if (certificateSelectionHandler == null)
-        {
-            throw new ArgumentNullException(nameof(certificateSelectionHandler));
-        }
+        ArgumentNullException.ThrowIfNull(certificateSelectionHandler);
 
         _tlsOptions.CertificateSelectionHandler = certificateSelectionHandler;
         return this;
@@ -60,10 +54,7 @@ public sealed class MqttClientTlsOptionsBuilder
 
     public MqttClientTlsOptionsBuilder WithClientCertificates(IEnumerable<X509Certificate2> certificates)
     {
-        if (certificates == null)
-        {
-            throw new ArgumentNullException(nameof(certificates));
-        }
+        ArgumentNullException.ThrowIfNull(certificates);
 
         _tlsOptions.ClientCertificatesProvider = new DefaultMqttCertificatesProvider(certificates);
         return this;
@@ -71,10 +62,7 @@ public sealed class MqttClientTlsOptionsBuilder
 
     public MqttClientTlsOptionsBuilder WithClientCertificates(X509Certificate2Collection certificates)
     {
-        if (certificates == null)
-        {
-            throw new ArgumentNullException(nameof(certificates));
-        }
+        ArgumentNullException.ThrowIfNull(certificates);
 
         _tlsOptions.ClientCertificatesProvider = new DefaultMqttCertificatesProvider(certificates);
         return this;

@@ -11,17 +11,14 @@ namespace MQTTnet.Tests.Helpers
     {
         public static object GetFieldValue(this object source, string fieldName)
         {
-            if (source == null)
-            {
-                throw new ArgumentNullException(nameof(source));
-            }
+            ArgumentNullException.ThrowIfNull(source);
 
             var field = source.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             if (field == null)
             {
                 throw new ArgumentException($"Field {fieldName} not found.");
             }
-            
+
             return field.GetValue(source);
         }
     }

@@ -15,21 +15,18 @@ namespace MQTTnet.Server
             _options.DefaultClientDisconnectOptions = value;
             return this;
         }
-        
+
         public MqttServerStopOptionsBuilder WithDefaultClientDisconnectOptions(Action<MqttServerClientDisconnectOptionsBuilder> builder)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
+            ArgumentNullException.ThrowIfNull(builder);
 
             var optionsBuilder = new MqttServerClientDisconnectOptionsBuilder();
             builder.Invoke(optionsBuilder);
-            
+
             _options.DefaultClientDisconnectOptions = optionsBuilder.Build();
             return this;
         }
-        
+
         public MqttServerStopOptions Build()
         {
             return _options;

@@ -20,15 +20,8 @@ namespace MQTTnet.Extensions.Rpc
 
         public static IMqttRpcClient CreateMqttRpcClient(this MqttClientFactory _, IMqttClient mqttClient, MqttRpcClientOptions rpcClientOptions)
         {
-            if (mqttClient == null)
-            {
-                throw new ArgumentNullException(nameof(mqttClient));
-            }
-
-            if (rpcClientOptions == null)
-            {
-                throw new ArgumentNullException(nameof(rpcClientOptions));
-            }
+            ArgumentNullException.ThrowIfNull(mqttClient);
+            ArgumentNullException.ThrowIfNull(rpcClientOptions);
 
             return new MqttRpcClient(mqttClient, rpcClientOptions);
         }

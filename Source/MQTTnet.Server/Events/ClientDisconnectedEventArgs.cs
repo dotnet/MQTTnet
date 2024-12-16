@@ -5,6 +5,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
+using System.Text;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -12,20 +14,21 @@ namespace MQTTnet.Server
 {
     public sealed class ClientDisconnectedEventArgs : EventArgs
     {
+        readonly MqttConnectPacket _connectPacket;
         readonly MqttDisconnectPacket _disconnectPacket;
 
         public ClientDisconnectedEventArgs(
-            string clientId,
+            MqttConnectPacket connectPacket,
             MqttDisconnectPacket disconnectPacket,
             MqttClientDisconnectType disconnectType,
-            string endpoint,
+            EndPoint remoteEndPoint,
             IDictionary sessionItems)
         {
-            ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));
             DisconnectType = disconnectType;
-            Endpoint = endpoint;
+            RemoteEndPoint = remoteEndPoint;
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
 
+            _connectPacket = connectPacket;
             // The DISCONNECT packet can be null in case of a non clean disconnect or session takeover.
             _disconnectPacket = disconnectPacket;
         }
@@ -34,11 +37,24 @@ namespace MQTTnet.Server
         ///     Gets the client identifier.
         ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
         /// </summary>
-        public string ClientId { get; }
+        public string ClientId => _connectPacket.ClientId;
+
+        /// <summary>
+        ///     Gets the user name of the client.
+        /// </summary>
+        public string UserName => _connectPacket.Username;
+
+        /// <summary>
+        ///     Gets the password of the client.
+        /// </summary>
+        public string Password => Encoding.UTF8.GetString(_connectPacket.Password.AsSpan());
 
         public MqttClientDisconnectType DisconnectType { get; }
 
-        public string Endpoint { get; }
+        public EndPoint RemoteEndPoint { get; }
+
+        [Obsolete("Use RemoteEndPoint instead.")]
+        public string Endpoint => RemoteEndPoint?.ToString();
 
         /// <summary>
         ///     Gets the reason code sent by the client.

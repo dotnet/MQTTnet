@@ -11,10 +11,7 @@ public static class MqttPubRecPacketFactory
 {
     public static MqttPacket Create(MqttPublishPacket publishPacket, DispatchApplicationMessageResult dispatchApplicationMessageResult)
     {
-        if (publishPacket == null)
-        {
-            throw new ArgumentNullException(nameof(publishPacket));
-        }
+        ArgumentNullException.ThrowIfNull(publishPacket);
 
         var pubRecPacket = new MqttPubRecPacket
         {

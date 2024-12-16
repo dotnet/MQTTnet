@@ -102,10 +102,7 @@ public static class Server_Retained_Messages_Samples
 
         public static MqttRetainedMessageModel Create(MqttApplicationMessage message)
         {
-            if (message == null)
-            {
-                throw new ArgumentNullException(nameof(message));
-            }
+            ArgumentNullException.ThrowIfNull(message);
 
             return new MqttRetainedMessageModel
             {

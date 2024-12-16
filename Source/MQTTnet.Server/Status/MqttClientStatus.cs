@@ -4,6 +4,7 @@
 
 using MQTTnet.Formatter;
 using MQTTnet.Server.Internal;
+using System.Net;
 
 namespace MQTTnet.Server;
 
@@ -22,7 +23,10 @@ public sealed class MqttClientStatus
 
     public DateTime ConnectedTimestamp => _client.Statistics.ConnectedTimestamp;
 
-    public string Endpoint => _client.Endpoint;
+    public EndPoint RemoteEndPoint => _client.RemoteEndPoint;
+
+    [Obsolete("Use RemoteEndPoint instead.")]
+    public string Endpoint => RemoteEndPoint?.ToString();
 
     /// <summary>
     ///     Gets or sets the client identifier.
@@ -50,10 +54,7 @@ public sealed class MqttClientStatus
 
     public Task DisconnectAsync(MqttServerClientDisconnectOptions options)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         return _client.StopAsync(options);
     }

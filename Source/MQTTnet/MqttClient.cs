@@ -1018,10 +1018,10 @@ public sealed class MqttClient : Disposable, IMqttClient
 
                 if (timeWithoutPacketSent > keepAlivePeriod)
                 {
-                    using (var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                    using (var keepAliveCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                     {
-                        timeoutCancellationTokenSource.CancelAfter(Options.Timeout);
-                        await PingAsync(timeoutCancellationTokenSource.Token).ConfigureAwait(false);
+                        keepAliveCancellationTokenSource.CancelAfter(keepAlivePeriod);
+                        await PingAsync(keepAliveCancellationTokenSource.Token).ConfigureAwait(false);
                     }
                 }
 

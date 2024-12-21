@@ -13,10 +13,11 @@ namespace MQTTnet.Tests
     public abstract class BaseTestClass
     {
         public TestContext TestContext { get; set; }
-        
-        protected TestEnvironment CreateTestEnvironment(MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+
+        protected TestEnvironment CreateTestEnvironment(
+            MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, bool trackUnobservedTaskException = true)
         {
-            return new TestEnvironment(TestContext, protocolVersion);
+            return new TestEnvironment(TestContext, protocolVersion, trackUnobservedTaskException);
         }
 
         protected Task LongTestDelay()

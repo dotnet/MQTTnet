@@ -361,9 +361,9 @@ public sealed class MqttClientOptionsBuilder
     ///     Not all brokers support this feature so it may be necessary to set it to false if your bridge does not connect
     ///     properly.
     /// </summary>
-    public MqttClientOptionsBuilder WithTryPrivate(bool tryPrivate = true)
+    public MqttClientOptionsBuilder WithTryPrivate(bool value = true)
     {
-        _options.TryPrivate = true;
+        _options.TryPrivate = value;
         return this;
     }
 

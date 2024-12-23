@@ -152,7 +152,7 @@ m/XriWr/Cq4h/JfB7NTsezVslgkBaoU=
             .WithTcpServer("localhost")
             .WithProtocolVersion(MqttProtocolVersion.V500)
             .WithEnhancedAuthenticationHandler(kerberosAuthenticationHandler)
-            .WithAuthentication("GS2-KRB5")
+            .WithEnhancedAuthentication("GS2-KRB5")
             .Build();
 
         var client = mqttClientFactory.CreateMqttClient();

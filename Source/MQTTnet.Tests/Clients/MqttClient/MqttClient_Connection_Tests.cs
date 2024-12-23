@@ -216,7 +216,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
             // Use Kerberos sample from the MQTT RFC.
             var kerberosAuthenticationHandler = new TestClientKerberosAuthenticationHandler();
 
-            var clientOptions = testEnvironment.CreateDefaultClientOptionsBuilder().WithAuthentication("GS2-KRB5").WithEnhancedAuthenticationHandler(kerberosAuthenticationHandler);
+            var clientOptions = testEnvironment.CreateDefaultClientOptionsBuilder().WithEnhancedAuthentication("GS2-KRB5").WithEnhancedAuthenticationHandler(kerberosAuthenticationHandler);
             var client = await testEnvironment.ConnectClient(clientOptions);
 
             Assert.IsTrue(client.IsConnected);

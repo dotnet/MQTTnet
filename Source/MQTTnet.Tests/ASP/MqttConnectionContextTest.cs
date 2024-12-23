@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.AspNetCore;
 using MQTTnet.Exceptions;
@@ -30,14 +31,14 @@ namespace MQTTnet.Tests.ASP
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
-            var ctx = new MqttConnectionContext(serializer, connection);
+            var ctx = new MqttServerChannelAdapter(serializer, connection, connection.GetHttpContext());
 
             await pipe.Receive.Writer.WriteAsync(writer.AddMqttHeader(MqttControlPacketType.Connect, Array.Empty<byte>()));
 
             await Assert.ThrowsExceptionAsync<MqttProtocolViolationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
 
             // the first exception should complete the pipes so if someone tries to use the connection after that it should throw immidiatly
-            await Assert.ThrowsExceptionAsync<InvalidOperationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
+            await Assert.ThrowsExceptionAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(CancellationToken.None));
         }
 
         // TODO: Fix test
@@ -98,7 +99,7 @@ namespace MQTTnet.Tests.ASP
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
-            var ctx = new MqttConnectionContext(serializer, connection);
+            var ctx = new MqttServerChannelAdapter(serializer, connection, connection.GetHttpContext());
 
             await ctx.SendPacketAsync(new MqttPublishPacket { PayloadSegment = new byte[20_000] }, CancellationToken.None).ConfigureAwait(false);
 
@@ -113,7 +114,7 @@ namespace MQTTnet.Tests.ASP
             var pipe = new DuplexPipeMockup();
             var connection = new DefaultConnectionContext();
             connection.Transport = pipe;
-            var ctx = new MqttConnectionContext(serializer, connection);
+            var ctx = new MqttServerChannelAdapter(serializer, connection, connection.GetHttpContext());
 
             pipe.Receive.Writer.Complete();
 

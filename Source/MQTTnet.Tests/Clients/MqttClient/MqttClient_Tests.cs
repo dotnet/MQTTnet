@@ -36,7 +36,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
             long concurrency = 0;
             var success = false;
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var publisher = await testEnvironment.ConnectClient();
@@ -74,7 +75,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Connect_Disconnect_Connect()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -91,7 +93,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [ExpectedException(typeof(InvalidOperationException))]
         public async Task Connect_Multiple_Times_Should_Fail()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -136,7 +139,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Ensure_Queue_Drain()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectLowLevelClient();
@@ -177,7 +181,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Fire_Disconnected_Event_On_Server_Shutdown()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -200,7 +205,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Frequent_Connects()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -268,7 +274,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task No_Payload()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -304,7 +311,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task NoConnectedHandler_Connect_DoesNotThrowException()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -317,7 +325,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task NoDisconnectedHandler_Disconnect_DoesNotThrowException()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -332,7 +341,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task PacketIdentifier_In_Publish_Result()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -365,7 +375,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
             // is an issue).
             const int MessagesCount = 50;
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -410,7 +421,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
             // is an issue).
             const int MessagesCount = 50;
 
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -454,7 +466,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Publish_QoS_0_Over_Period_Exceeding_KeepAlive()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 const int KeepAlivePeriodSecs = 3;
 
@@ -486,7 +499,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Publish_QoS_1_In_ApplicationMessageReceiveHandler()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -530,7 +544,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Publish_With_Correct_Retain_Flag()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -563,7 +578,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Reconnect()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -586,7 +602,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Reconnect_From_Disconnected_Event()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -627,7 +644,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Reconnect_While_Server_Offline()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 testEnvironment.IgnoreClientLogErrors = true;
 
@@ -665,7 +683,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Send_Manual_Ping()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -677,7 +696,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Send_Reply_For_Any_Received_Message()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -723,7 +743,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Send_Reply_In_Message_Handler()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client1 = await testEnvironment.ConnectClient();
@@ -770,7 +791,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Send_Reply_In_Message_Handler_For_Same_Client()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -806,7 +828,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Set_ClientWasConnected_On_ClientDisconnect()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -826,7 +849,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Set_ClientWasConnected_On_ServerDisconnect()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
                 var client = await testEnvironment.ConnectClient();
@@ -847,7 +871,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Subscribe_In_Callback_Events()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -887,7 +912,8 @@ namespace MQTTnet.Tests.Clients.MqttClient
         [TestMethod]
         public async Task Subscribe_With_QoS2()
         {
-            using (var testEnvironment = new TestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var client1 = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));

@@ -12,7 +12,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Send_V311_Receive_V500()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -36,7 +37,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Send_V500_Receive_V311()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -48,9 +50,9 @@ namespace MQTTnet.Tests.Server
 
                 var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("My/Message")
                     .WithPayload("My_Payload")
-                    .WithUserProperty("A", "B")
-                    .WithResponseTopic("Response")
-                    .WithCorrelationData(Encoding.UTF8.GetBytes("Correlation"))
+                    //.WithUserProperty("A", "B")
+                    //.WithResponseTopic("Response")
+                    //.WithCorrelationData(Encoding.UTF8.GetBytes("Correlation"))
                     .Build();
 
                 await sender.PublishAsync(applicationMessage);

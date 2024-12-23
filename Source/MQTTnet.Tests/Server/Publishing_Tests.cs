@@ -19,7 +19,8 @@ namespace MQTTnet.Tests.Server
         [ExpectedException(typeof(MqttClientDisconnectedException))]
         public async Task Disconnect_While_Publishing()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -34,7 +35,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Return_NoMatchingSubscribers_When_Not_Subscribed()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -55,7 +57,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Return_Success_When_Subscribed()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -76,7 +79,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Client_Enqueue()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 
@@ -110,7 +114,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Intercept_Client_Enqueue_Multiple_Clients_Subscribed_Messages_Are_Filtered()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var server = await testEnvironment.StartServer();
 

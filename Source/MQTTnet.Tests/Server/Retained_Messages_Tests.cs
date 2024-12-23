@@ -17,7 +17,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Clear_Retained_Message_With_Empty_Payload()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -42,7 +43,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Clear_Retained_Message_With_Null_Payload()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -67,7 +69,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Downgrade_QoS_Level()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -97,7 +100,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task No_Upgrade_QoS_Level()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -127,7 +131,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Receive_No_Retained_Message_After_Subscribe()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -148,7 +153,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Receive_Retained_Message_After_Subscribe()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -171,7 +177,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Receive_Retained_Messages_From_Higher_Qos_Level()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -202,7 +209,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Retained_Messages_Flow()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 var retainedMessage = new MqttApplicationMessageBuilder().WithTopic("r").WithPayload("r").WithRetainFlag().Build();
 
@@ -234,7 +242,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Server_Reports_Retained_Messages_Supported_V3()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -253,7 +262,8 @@ namespace MQTTnet.Tests.Server
         [TestMethod]
         public async Task Server_Reports_Retained_Messages_Supported_V5()
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            using var testEnvironments = CreateMixedTestEnvironment(MqttProtocolVersion.V500);
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 

@@ -5,6 +5,7 @@
 using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.Http.Connections;
 using MQTTnet.Adapter;
 using MQTTnet.AspNetCore;
 using MQTTnet.Diagnostics.Logger;
@@ -16,7 +17,7 @@ namespace MQTTnet.Tests.ASP.Mockups;
 public sealed class ConnectionHandlerMockup : IMqttServerAdapter
 {
     public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
-    public TaskCompletionSource<MqttConnectionContext> Context { get; } = new();
+    TaskCompletionSource<MqttServerChannelAdapter> Context { get; } = new();
 
     public void Dispose()
     {
@@ -27,7 +28,7 @@ public sealed class ConnectionHandlerMockup : IMqttServerAdapter
         try
         {
             var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
-            var context = new MqttConnectionContext(formatter, connection);
+            var context = new MqttServerChannelAdapter(formatter, connection, connection.GetHttpContext());
             Context.TrySetResult(context);
 
             await ClientHandler(context);

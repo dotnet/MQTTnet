@@ -28,7 +28,8 @@ namespace MQTTnet.Tests.Server
 
         async Task Connect_With_Client_Id(string expectedClientId, string expectedReturnedClientId, string usedClientId, string assignedClientId)
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 string serverConnectedClientId = null;
                 string serverDisconnectedClientId = null;

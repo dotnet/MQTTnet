@@ -2,14 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using MQTTnet.Implementations;
 using System;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Implementations;
 
 namespace MQTTnet.Tests.Internal
 {
@@ -19,19 +24,47 @@ namespace MQTTnet.Tests.Internal
         [TestMethod]
         public async Task Connect_Send_Receive()
         {
-            var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
-            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 80), CancellationToken.None);
+            var serverPort = GetServerPort();
+            var responseContent = "Connect_Send_Receive";
 
-            var requestBuffer = Encoding.UTF8.GetBytes("GET / HTTP/1.1\r\nHost: www.google.de\r\n\r\n");
-            await crossPlatformSocket.SendAsync(new ArraySegment<byte>(requestBuffer), System.Net.Sockets.SocketFlags.None);
+            // create a localhost web server.
+            var builder = WebApplication.CreateSlimBuilder();
+            builder.WebHost.UseKestrel(k => k.ListenLocalhost(serverPort));
+
+            await using var webApp = builder.Build();
+            var webAppStartedSource = new TaskCompletionSource();
+            webApp.Lifetime.ApplicationStarted.Register(() => webAppStartedSource.TrySetResult());
+            webApp.Use(next => context => context.Response.WriteAsync(responseContent));
+            await webApp.StartAsync();
+            await webAppStartedSource.Task;
+
+
+            var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
+            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("localhost", serverPort), CancellationToken.None);
+
+            var requestBuffer = Encoding.UTF8.GetBytes($"GET /test/path HTTP/1.1\r\nHost: localhost:{serverPort}\r\n\r\n");
+            await crossPlatformSocket.SendAsync(new ArraySegment<byte>(requestBuffer), SocketFlags.None);
 
             var buffer = new byte[1024];
-            var length = await crossPlatformSocket.ReceiveAsync(new ArraySegment<byte>(buffer), System.Net.Sockets.SocketFlags.None);
+            var length = await crossPlatformSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
             crossPlatformSocket.Dispose();
 
             var responseText = Encoding.UTF8.GetString(buffer, 0, length);
 
-            Assert.IsTrue(responseText.Contains("HTTP/1.1 200 OK"));
+            Assert.IsTrue(responseText.Contains(responseContent));
+
+
+            static int GetServerPort(int defaultPort = 9999)
+            {
+                var listeners = IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners();
+                var portSet = listeners.Select(i => i.Port).ToHashSet();
+
+                while (!portSet.Add(defaultPort))
+                {
+                    defaultPort += 1;
+                }
+                return defaultPort;
+            }
         }
 
         [TestMethod]

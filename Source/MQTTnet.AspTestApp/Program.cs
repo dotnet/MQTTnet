@@ -11,11 +11,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 // Setup MQTT stuff.
-builder.Services.AddMqttServer();
-builder.Services.AddConnections();
+builder.Services.AddMqttServer(s => s.WithDefaultEndpoint().WithDefaultEndpointPort(5000));
+
+// ListenMqtt 
+builder.WebHost.UseKestrel(kestrel =>
+{
+    kestrel.ListenMqtt(MqttProtocols.WebSocket);
+});
 
 var app = builder.Build();
-
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
@@ -29,7 +33,7 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 
-// Setup MQTT stuff.
+// mqtt over websocket
 app.MapMqtt("/mqtt");
 
 app.UseMqttServer(server =>

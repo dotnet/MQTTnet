@@ -22,7 +22,8 @@ namespace MQTTnet.Tests.Extensions
         [TestMethod]
         public async Task Execute_Success_MQTT_V5_Mixed_Clients()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var responseSender = await testEnvironment.ConnectClient();
@@ -54,7 +55,8 @@ namespace MQTTnet.Tests.Extensions
                 { TestParametersTopicGenerationStrategy.ExpectedParamName, "123" }
             };
 
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -132,7 +134,8 @@ namespace MQTTnet.Tests.Extensions
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         public async Task Execute_Timeout()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -147,7 +150,8 @@ namespace MQTTnet.Tests.Extensions
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         public async Task Execute_Timeout_MQTT_V5_Mixed_Clients()
         {
-            using (var testEnvironment = new TestEnvironment(TestContext))
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var responseSender = await testEnvironment.ConnectClient();
@@ -172,7 +176,8 @@ namespace MQTTnet.Tests.Extensions
         [ExpectedException(typeof(MqttCommunicationTimedOutException))]
         public async Task Execute_With_Custom_Topic_Names()
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
 
@@ -196,7 +201,8 @@ namespace MQTTnet.Tests.Extensions
 
         async Task Execute_Success(MqttQualityOfServiceLevel qosLevel, MqttProtocolVersion protocolVersion)
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var responseSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(protocolVersion));
@@ -217,7 +223,8 @@ namespace MQTTnet.Tests.Extensions
 
         async Task Execute_Success_MQTT_V5(MqttQualityOfServiceLevel qosLevel)
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            using var testEnvironments = CreateMixedTestEnvironment();
+            foreach (var testEnvironment in testEnvironments)
             {
                 await testEnvironment.StartServer();
                 var responseSender = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithProtocolVersion(MqttProtocolVersion.V500));

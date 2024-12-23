@@ -14,13 +14,16 @@ namespace MQTTnet.Tests.Mockups
 {
     public sealed class TestApplicationMessageReceivedHandler
     {
-        readonly List<MqttApplicationMessageReceivedEventArgs> _receivedEventArgs = new List<MqttApplicationMessageReceivedEventArgs>();
+        readonly IMqttClient _mqttClient;
+        readonly List<MqttApplicationMessageReceived> _receivedEventArgs = new();
+
 
         public TestApplicationMessageReceivedHandler(IMqttClient mqttClient)
         {
             ArgumentNullException.ThrowIfNull(mqttClient);
 
             mqttClient.ApplicationMessageReceivedAsync += OnApplicationMessageReceivedAsync;
+            _mqttClient = mqttClient;
         }
 
         public int Count
@@ -34,7 +37,7 @@ namespace MQTTnet.Tests.Mockups
             }
         }
 
-        public List<MqttApplicationMessageReceivedEventArgs> ReceivedEventArgs
+        public List<MqttApplicationMessageReceived> ReceivedEventArgs
         {
             get
             {
@@ -72,7 +75,11 @@ namespace MQTTnet.Tests.Mockups
         {
             lock (_receivedEventArgs)
             {
-                _receivedEventArgs.Add(eventArgs);
+                var applicationMessage = _mqttClient.Options.ReceivedApplicationMessageQueueable
+                    ? eventArgs.ApplicationMessage
+                    : eventArgs.ApplicationMessage.Clone();
+
+                _receivedEventArgs.Add(new MqttApplicationMessageReceived(eventArgs.ClientId, applicationMessage));
             }
 
             return CompletedTask.Instance;

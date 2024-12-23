@@ -16,43 +16,41 @@ namespace MQTTnet;
 public class MqttEnhancedAuthenticationEventArgs : EventArgs
 {
     readonly IMqttChannelAdapter _channelAdapter;
+    readonly MqttAuthPacket _initialAuthPacket;
 
-    public MqttEnhancedAuthenticationEventArgs(MqttAuthPacket initialAuthPacket, IMqttChannelAdapter channelAdapter)
+    public MqttEnhancedAuthenticationEventArgs(MqttAuthPacket initialAuthPacket, IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
     {
-        ArgumentNullException.ThrowIfNull(initialAuthPacket);
-
+        _initialAuthPacket = initialAuthPacket ?? throw new ArgumentNullException(nameof(initialAuthPacket));
         _channelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
 
-        ReasonCode = initialAuthPacket.ReasonCode;
-        ReasonString = initialAuthPacket.ReasonString;
-        AuthenticationMethod = initialAuthPacket.AuthenticationMethod;
-        AuthenticationData = initialAuthPacket.AuthenticationData;
-        UserProperties = initialAuthPacket.UserProperties;
+        CancellationToken = cancellationToken;
     }
 
     /// <summary>
     ///     Gets the authentication data.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public byte[] AuthenticationData { get; }
+    public byte[] AuthenticationData => _initialAuthPacket.AuthenticationData;
 
     /// <summary>
     ///     Gets the authentication method.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public string AuthenticationMethod { get; }
+    public string AuthenticationMethod => _initialAuthPacket.AuthenticationMethod;
+
+    public CancellationToken CancellationToken { get; }
 
     /// <summary>
     ///     Gets the reason code.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public MqttAuthenticateReasonCode ReasonCode { get; }
+    public MqttAuthenticateReasonCode ReasonCode => _initialAuthPacket.ReasonCode;
 
     /// <summary>
     ///     Gets the reason string.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public string ReasonString { get; }
+    public string ReasonString => _initialAuthPacket.ReasonString;
 
     /// <summary>
     ///     Gets the user properties.
@@ -63,18 +61,25 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
     ///     The feature is very similar to the HTTP header concept.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; }
+    public List<MqttUserProperty> UserProperties => _initialAuthPacket.UserProperties;
 
-    public async Task<MqttAuthPacket> ReceiveAsync(CancellationToken cancellationToken = default)
+    public async Task<ReceiveMqttEnhancedAuthenticationDataResult> ReceiveAsync(CancellationToken cancellationToken = default)
     {
         var receivedPacket = await _channelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
 
         if (receivedPacket is MqttAuthPacket authPacket)
         {
-            return authPacket;
+            return new ReceiveMqttEnhancedAuthenticationDataResult
+            {
+                AuthenticationData = authPacket.AuthenticationData,
+                AuthenticationMethod = authPacket.AuthenticationMethod,
+                ReasonString = authPacket.ReasonString,
+                ReasonCode = authPacket.ReasonCode,
+                UserProperties = authPacket.UserProperties
+            };
         }
 
-        if (receivedPacket is MqttConnAckPacket connAckPacket)
+        if (receivedPacket is MqttConnAckPacket)
         {
             throw new InvalidOperationException("The enhanced authentication handler must not wait for the CONNACK packet.");
         }
@@ -82,15 +87,22 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
         throw new MqttProtocolViolationException("Received other packet than AUTH while authenticating.");
     }
 
-    public Task SendAsync(byte[] authenticationData, CancellationToken cancellationToken = default)
+    public Task SendAsync(SendMqttEnhancedAuthenticationDataOptions options, CancellationToken cancellationToken = default)
     {
-        return _channelAdapter.SendPacketAsync(
-            new MqttAuthPacket
-            {
-                ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
-                AuthenticationMethod = AuthenticationMethod,
-                AuthenticationData = authenticationData
-            },
-            cancellationToken);
+        if (options == null)
+        {
+            throw new ArgumentNullException(nameof(options));
+        }
+
+        var authPacket = new MqttAuthPacket
+        {
+            ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
+            AuthenticationMethod = AuthenticationMethod,
+            AuthenticationData = options.Data,
+            UserProperties = options.UserProperties,
+            ReasonString = options.ReasonString
+        };
+
+        return _channelAdapter.SendPacketAsync(authPacket, cancellationToken);
     }
 }

@@ -445,7 +445,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
                 if (receivedPacket is MqttAuthPacket authPacket)
                 {
-                    await HandleEnhancedAuthentication(authPacket);
+                    await HandleEnhancedAuthentication(authPacket, cancellationToken);
                     continue;
                 }
 
@@ -473,9 +473,9 @@ public sealed class MqttClient : Disposable, IMqttClient
         return result;
     }
 
-    async Task HandleEnhancedAuthentication(MqttAuthPacket authPacket)
+    async Task HandleEnhancedAuthentication(MqttAuthPacket authPacket, CancellationToken cancellationToken)
     {
-        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter);
+        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter, cancellationToken);
         await Options.EnhancedAuthenticationHandler.HandleEnhancedAuthenticationAsync(eventArgs);
     }
 
@@ -655,7 +655,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         return _events.ConnectedEvent.InvokeAsync(eventArgs);
     }
 
-    Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket)
+    Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket, CancellationToken cancellationToken)
     {
         if (Options.EnhancedAuthenticationHandler == null)
         {
@@ -667,12 +667,13 @@ public sealed class MqttClient : Disposable, IMqttClient
             {
                 Reason = MqttClientDisconnectOptionsReason.ImplementationSpecificError,
                 ReasonString = "Unable to handle AUTH packet"
-            });
+            },
+            cancellationToken);
 
             return CompletedTask.Instance;
         }
 
-        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter);
+        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter, cancellationToken);
         return Options.EnhancedAuthenticationHandler.HandleEnhancedAuthenticationAsync(eventArgs);
     }
 
@@ -981,7 +982,7 @@ public sealed class MqttClient : Disposable, IMqttClient
                     await ProcessReceivedDisconnectPacket(disconnectPacket).ConfigureAwait(false);
                     break;
                 case MqttAuthPacket authPacket:
-                    await ProcessReceivedAuthPacket(authPacket).ConfigureAwait(false);
+                    await ProcessReceivedAuthPacket(authPacket, cancellationToken).ConfigureAwait(false);
                     break;
                 case MqttPingRespPacket _:
                     _packetDispatcher.TryDispatch(packet);

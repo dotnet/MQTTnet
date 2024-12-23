@@ -54,7 +54,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
             var disconnectHandlerCalled = false;
             try
             {
-                client.DisconnectedAsync += args =>
+                client.DisconnectedAsync += _ =>
                 {
                     disconnectHandlerCalled = true;
                     return CompletedTask.Instance;
@@ -164,14 +164,24 @@ namespace MQTTnet.Tests.Clients.MqttClient
                     throw new InvalidOperationException("Wrong authentication method");
                 }
 
-                await eventArgs.SendAsync("initial context token"u8.ToArray());
+                var sendOptions = new SendMqttEnhancedAuthenticationDataOptions
+                {
+                    Data = "initial context token"u8.ToArray()
+                };
 
-                var response = await eventArgs.ReceiveAsync(CancellationToken.None);
+                await eventArgs.SendAsync(sendOptions, eventArgs.CancellationToken);
+
+                var response = await eventArgs.ReceiveAsync(eventArgs.CancellationToken);
 
                 Assert.AreEqual(Encoding.UTF8.GetString(response.AuthenticationData), "reply context token");
 
                 // No further data is required, but we have to fulfil the exchange.
-                await eventArgs.SendAsync([], CancellationToken.None);
+                sendOptions = new SendMqttEnhancedAuthenticationDataOptions
+                {
+                    Data = []
+                };
+
+                await eventArgs.SendAsync(sendOptions, eventArgs.CancellationToken);
             }
         }
 
@@ -248,10 +258,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
 
             server.ValidatingConnectionAsync += args =>
             {
-                args.ResponseUserProperties = new List<MqttUserProperty>
-                {
-                    new MqttUserProperty("Property", "Value")
-                };
+                args.ResponseUserProperties = [new("Property", "Value")];
 
                 args.ReasonCode = MqttConnectReasonCode.QuotaExceeded;
 

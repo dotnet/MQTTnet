@@ -498,14 +498,24 @@ m/XriWr/Cq4h/JfB7NTsezVslgkBaoU=
                 throw new InvalidOperationException("Wrong authentication method");
             }
 
-            await eventArgs.SendAsync("initial context token"u8.ToArray());
+            var sendOptions = new SendMqttEnhancedAuthenticationDataOptions
+            {
+                Data = "initial context token"u8.ToArray()
+            };
+
+            await eventArgs.SendAsync(sendOptions);
 
             var response = await eventArgs.ReceiveAsync(CancellationToken.None);
 
             Console.WriteLine($"Received AUTH data from server: {Encoding.UTF8.GetString(response.AuthenticationData)}");
 
             // No further data is required, but we have to fulfil the exchange.
-            await eventArgs.SendAsync([], CancellationToken.None);
+            sendOptions = new SendMqttEnhancedAuthenticationDataOptions
+            {
+                Data = []
+            };
+
+            await eventArgs.SendAsync(sendOptions, CancellationToken.None);
         }
     }
 }

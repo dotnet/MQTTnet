@@ -2,17 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Buffers;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
+using System;
+using System.Buffers;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Extensions.Rpc
 {
@@ -21,7 +20,7 @@ namespace MQTTnet.Extensions.Rpc
         readonly IMqttClient _mqttClient;
         readonly MqttRpcClientOptions _options;
 
-        readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>>();
+        readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<ReadOnlySequence<byte>>> _waitingCalls = new();
 
         public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
         {
@@ -43,27 +42,7 @@ namespace MQTTnet.Extensions.Rpc
             _waitingCalls.Clear();
         }
 
-        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
-        {
-            using (var timeoutToken = new CancellationTokenSource(timeout))
-            {
-                try
-                {
-                    return await ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, timeoutToken.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException exception)
-                {
-                    if (timeoutToken.IsCancellationRequested)
-                    {
-                        throw new MqttCommunicationTimedOutException(exception);
-                    }
-
-                    throw;
-                }
-            }
-        }
-
-        public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
+        public async Task<ReadOnlySequence<byte>> ExecuteAsync(string methodName, ReadOnlySequence<byte> payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(methodName);
 
@@ -94,7 +73,7 @@ namespace MQTTnet.Extensions.Rpc
 
             try
             {
-                var awaitable = new AsyncTaskCompletionSource<byte[]>();
+                var awaitable = new AsyncTaskCompletionSource<ReadOnlySequence<byte>>();
 
                 if (!_waitingCalls.TryAdd(responseTopic, awaitable))
                 {
@@ -106,11 +85,7 @@ namespace MQTTnet.Extensions.Rpc
                 await _mqttClient.SubscribeAsync(subscribeOptions, cancellationToken).ConfigureAwait(false);
                 await _mqttClient.PublishAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
-                using (cancellationToken.Register(
-                           () =>
-                           {
-                               awaitable.TrySetCanceled();
-                           }))
+                using (cancellationToken.Register(awaitable.TrySetCanceled))
                 {
                     return await awaitable.Task.ConfigureAwait(false);
                 }
@@ -129,8 +104,8 @@ namespace MQTTnet.Extensions.Rpc
                 return CompletedTask.Instance;
             }
 
-            var payloadBuffer = eventArgs.ApplicationMessage.Payload.ToArray();
-            awaitable.TrySetResult(payloadBuffer);
+            var payload = eventArgs.ApplicationMessage.Payload;
+            awaitable.TrySetResult(payload);
 
             // Set this message to handled to that other code can avoid execution etc.
             eventArgs.IsHandled = true;

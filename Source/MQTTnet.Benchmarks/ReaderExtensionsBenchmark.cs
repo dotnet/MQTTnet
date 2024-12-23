@@ -35,7 +35,7 @@ namespace MQTTnet.Benchmarks
 
             var buffer = mqttPacketFormatter.Encode(packet);
             stream = new MemoryStream();
-            stream.Write(buffer.Packet);
+            stream.Write(buffer.Packet.Span);
             stream.Write(buffer.Payload.ToArray());
             mqttPacketFormatter.Cleanup();
         }
@@ -170,9 +170,7 @@ namespace MQTTnet.Benchmarks
                 }
 
                 var bodySlice = copy.Slice(0, bodyLength);
-                var buffer = GetMemory(bodySlice).ToArray();
-
-                var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, new ArraySegment<byte>(buffer, 0, buffer.Length), buffer.Length + 2);
+                var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySlice, (int)bodySlice.Length + 2);
 
                 if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
                 {

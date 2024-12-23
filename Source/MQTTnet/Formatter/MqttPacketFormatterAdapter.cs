@@ -82,7 +82,7 @@ namespace MQTTnet.Formatter
 
         MqttProtocolVersion ParseProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
         {
-            if (receivedMqttPacket.Body.Count < 7)
+            if (receivedMqttPacket.Body.Length < 7)
             {
                 // 2 byte protocol name length
                 // at least 4 byte protocol name
@@ -90,7 +90,7 @@ namespace MQTTnet.Formatter
                 throw new MqttProtocolViolationException("CONNECT packet must have at least 7 bytes.");
             }
 
-            _bufferReader.SetBuffer(receivedMqttPacket.Body.Array, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
+            _bufferReader.SetBuffer(receivedMqttPacket.Body);
 
             var protocolName = _bufferReader.ReadString();
             var protocolLevel = _bufferReader.ReadByte();

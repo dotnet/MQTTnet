@@ -59,7 +59,7 @@ public static class MqttClientOptionsValidator
 
         // Authentication relevant properties.
 
-        if (options.AuthenticationData?.Any() == true)
+        if (options.AuthenticationData.Length > 0)
         {
             Throw(nameof(options.AuthenticationData));
         }
@@ -81,7 +81,7 @@ public static class MqttClientOptionsValidator
             Throw(nameof(options.WillContentType));
         }
 
-        if (options.WillCorrelationData?.Any() == true)
+        if (options.WillCorrelationData.Length > 0)
         {
             Throw(nameof(options.WillCorrelationData));
         }

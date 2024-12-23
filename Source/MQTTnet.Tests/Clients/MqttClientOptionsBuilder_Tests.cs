@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -19,7 +20,7 @@ namespace MQTTnet.Tests.Clients
                 .Build();
 
             Assert.AreEqual("user", options.Credentials.GetUserName(null));
-            Assert.IsTrue(Encoding.UTF8.GetBytes("password").SequenceEqual(options.Credentials.GetPassword(null)));
+            Assert.IsTrue(Encoding.UTF8.GetBytes("password").AsSpan().SequenceEqual(options.Credentials.GetPassword(null)));
         }
     }
 }

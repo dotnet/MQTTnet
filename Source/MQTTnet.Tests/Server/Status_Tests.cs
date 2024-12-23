@@ -158,7 +158,7 @@ public sealed class Status_Tests : BaseTestClass
 
             for (var i = 1; i < 25; i++)
             {
-                await c1.PublishStringAsync("a");
+                await c1.PublishStringAsync("a",null);
                 await Task.Delay(50);
 
                 var clientStatus = await server.GetClientsAsync();

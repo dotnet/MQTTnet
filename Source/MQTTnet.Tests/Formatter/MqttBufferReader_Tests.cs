@@ -2,12 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
 namespace MQTTnet.Tests.Formatter
 {
@@ -22,7 +22,7 @@ namespace MQTTnet.Tests.Formatter
 
             var reader = new MqttBufferReader();
 
-            reader.SetBuffer(buffer, 0, 3);
+            reader.SetBuffer(buffer.AsMemory(0, 3));
 
             // 1 byte is missing.
             reader.ReadFourByteInteger();
@@ -36,7 +36,7 @@ namespace MQTTnet.Tests.Formatter
 
             var reader = new MqttBufferReader();
 
-            reader.SetBuffer(buffer, 0, 3);
+            reader.SetBuffer(buffer.AsMemory(0, 3));
 
             // 1 byte is missing.
             reader.ReadFourByteInteger();
@@ -59,7 +59,7 @@ namespace MQTTnet.Tests.Formatter
             var reader = new MqttBufferReader();
 
             // The used buffer contains more data than used!
-            reader.SetBuffer(buffer, 0, 5);
+            reader.SetBuffer(buffer.AsMemory(0, 5));
 
             // This should only read 5 bytes even if more data is in the buffer
             // due to custom bounds.
@@ -127,29 +127,28 @@ namespace MQTTnet.Tests.Formatter
                                 elementBytes = BitConverter.GetBytes(uintValue);
                                 break;
                             case ElementReference.BufferElementType.VariableSizeInt:
-                            {
-                                elementNumberValue = (uint)i;
-                                var writer = new MqttBufferWriter(4, 4);
-                                writer.WriteVariableByteInteger(elementNumberValue);
-                                elementSize = writer.Length;
-                                elementBytes = new byte[elementSize];
-                                var buffer = writer.GetBuffer();
-                                Array.Copy(buffer, elementBytes, elementSize);
-                                alreadyBigEndian = true; // nothing to swap
-                            }
+                                {
+                                    elementNumberValue = (uint)i;
+                                    var writer = new MqttBufferWriter(4, 4);
+                                    writer.WriteVariableByteInteger(elementNumberValue);
+                                    elementSize = writer.Length;
+                                    elementBytes = new byte[elementSize];
+                                    writer.GetWrittenSpan().CopyTo(elementBytes);
+
+                                    alreadyBigEndian = true; // nothing to swap
+                                }
                                 break;
                             case ElementReference.BufferElementType.String:
-                            {
-                                var stringLen = rnd.Next(TestString.Length);
-                                elementStringValue = TestString.Substring(0, stringLen); // could be empty
-                                var writer = new MqttBufferWriter(stringLen + 1, stringLen + 1);
-                                writer.WriteString(elementStringValue);
-                                elementSize = writer.Length;
-                                elementBytes = new byte[elementSize];
-                                var buffer = writer.GetBuffer();
-                                Array.Copy(buffer, elementBytes, elementSize);
-                                alreadyBigEndian = true; // nothing to swap
-                            }
+                                {
+                                    var stringLen = rnd.Next(TestString.Length);
+                                    elementStringValue = TestString.Substring(0, stringLen); // could be empty
+                                    var writer = new MqttBufferWriter(stringLen + 1, stringLen + 1);
+                                    writer.WriteString(elementStringValue);
+                                    elementSize = writer.Length;
+                                    elementBytes = new byte[elementSize];
+                                    writer.GetWrittenSpan().CopyTo(elementBytes);
+                                    alreadyBigEndian = true; // nothing to swap
+                                }
                                 break;
                         }
 
@@ -180,7 +179,7 @@ namespace MQTTnet.Tests.Formatter
                 var segmentLength = segmentEndPosition - segmentStartPosition;
 
                 var reader = new MqttBufferReader();
-                reader.SetBuffer(elementBuffer, segmentStartPosition, segmentLength);
+                reader.SetBuffer(elementBuffer.AsMemory(segmentStartPosition, segmentLength));
 
                 // read all elements in the buffer segment; values should be as expected              
                 for (var n = 0; n < elementCount; n++)
@@ -195,29 +194,29 @@ namespace MQTTnet.Tests.Formatter
                     switch (element.Type)
                     {
                         case ElementReference.BufferElementType.Byte:
-                        {
-                            elementNumberValue = reader.ReadByte();
-                        }
+                            {
+                                elementNumberValue = reader.ReadByte();
+                            }
                             break;
                         case ElementReference.BufferElementType.TwoByteInt:
-                        {
-                            elementNumberValue = reader.ReadTwoByteInteger();
-                        }
+                            {
+                                elementNumberValue = reader.ReadTwoByteInteger();
+                            }
                             break;
                         case ElementReference.BufferElementType.FourByteInt:
-                        {
-                            elementNumberValue = reader.ReadFourByteInteger();
-                        }
+                            {
+                                elementNumberValue = reader.ReadFourByteInteger();
+                            }
                             break;
                         case ElementReference.BufferElementType.VariableSizeInt:
-                        {
-                            elementNumberValue = reader.ReadVariableByteInteger();
-                        }
+                            {
+                                elementNumberValue = reader.ReadVariableByteInteger();
+                            }
                             break;
                         case ElementReference.BufferElementType.String:
-                        {
-                            elementStringValue = reader.ReadString();
-                        }
+                            {
+                                elementStringValue = reader.ReadString();
+                            }
                             break;
                     }
 
@@ -243,7 +242,7 @@ namespace MQTTnet.Tests.Formatter
             var buffer = new byte[] { 5, 6, 7, 8, 9 };
 
             var reader = new MqttBufferReader();
-            reader.SetBuffer(buffer, 0, 5);
+            reader.SetBuffer(buffer.AsMemory(0, 5));
 
             Assert.IsFalse(reader.EndOfStream);
             Assert.AreEqual(5, reader.BytesLeft);
@@ -257,7 +256,7 @@ namespace MQTTnet.Tests.Formatter
             var reader = new MqttBufferReader();
 
             // The used buffer contains more data than used!
-            reader.SetBuffer(buffer, 5, 5);
+            reader.SetBuffer(buffer.AsMemory(5, 5));
 
             Assert.IsFalse(reader.EndOfStream);
             Assert.AreEqual(5, reader.BytesLeft);
@@ -271,7 +270,7 @@ namespace MQTTnet.Tests.Formatter
             var reader = new MqttBufferReader();
 
             // The used buffer contains more data than used!
-            reader.SetBuffer(buffer, 0, 5);
+            reader.SetBuffer(buffer.AsMemory(0, 5));
 
             Assert.IsFalse(reader.EndOfStream);
             Assert.AreEqual(5, reader.BytesLeft);

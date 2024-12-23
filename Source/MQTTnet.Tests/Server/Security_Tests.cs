@@ -58,7 +58,7 @@ namespace MQTTnet.Tests.Server
                             .WithClientId("CLIENT")
                             .Build());
 
-                    await validClient.PublishStringAsync("HELLO 1");
+                    await validClient.PublishStringAsync("HELLO 1", null);
 
                     // The following code tries to connect a new client with the same client ID but invalid
                     // credentials. This should block the second client but keep the first one up and running.
@@ -81,11 +81,11 @@ namespace MQTTnet.Tests.Server
 
                     await LongTestDelay();
 
-                    await validClient.PublishStringAsync("HELLO 2");
+                    await validClient.PublishStringAsync("HELLO 2", null);
 
                     await LongTestDelay();
 
-                    await validClient.PublishStringAsync("HELLO 3");
+                    await validClient.PublishStringAsync("HELLO 3", null);
 
                     await LongTestDelay();
 

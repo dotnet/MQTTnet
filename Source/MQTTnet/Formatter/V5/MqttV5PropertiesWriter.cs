@@ -2,10 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using System;
+using System.Buffers.Binary;
+using System.Collections.Generic;
 
 namespace MQTTnet.Formatter.V5
 {
@@ -31,7 +32,7 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.AssignedClientIdentifier, value);
         }
 
-        public void WriteAuthenticationData(byte[] value)
+        public void WriteAuthenticationData(ReadOnlySpan<byte> value)
         {
             Write(MqttPropertyId.AuthenticationData, value);
         }
@@ -46,7 +47,7 @@ namespace MQTTnet.Formatter.V5
             Write(MqttPropertyId.ContentType, value);
         }
 
-        public void WriteCorrelationData(byte[] value)
+        public void WriteCorrelationData(ReadOnlySpan<byte> value)
         {
             Write(MqttPropertyId.CorrelationData, value);
         }
@@ -88,7 +89,7 @@ namespace MQTTnet.Formatter.V5
             {
                 return;
             }
-            
+
             WriteAsFourByteInteger(MqttPropertyId.MessageExpiryInterval, value);
         }
 
@@ -297,20 +298,31 @@ namespace MQTTnet.Formatter.V5
 
         void Write(MqttPropertyId id, bool value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteByte(value ? (byte)0x1 : (byte)0x0);
+            Write(id, value ? (byte)0x1 : default);
         }
 
         void Write(MqttPropertyId id, byte value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteByte(value);
+            const int size = 2;
+            var bufferWriter = _bufferWriter.AsLowLevelBufferWriter();
+            var span = bufferWriter.GetSpan(size);
+
+            span[0] = (byte)id;
+            span[1] = value;
+
+            bufferWriter.Advance(size);
         }
 
         void Write(MqttPropertyId id, ushort value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteTwoByteInteger(value);
+            const int size = 3;
+            var bufferWriter = _bufferWriter.AsLowLevelBufferWriter();
+            var span = bufferWriter.GetSpan(size);
+
+            span[0] = (byte)id;
+            BinaryPrimitives.WriteUInt16BigEndian(span[1..], value);
+
+            bufferWriter.Advance(size);
         }
 
         void Write(MqttPropertyId id, string value)
@@ -324,9 +336,9 @@ namespace MQTTnet.Formatter.V5
             _bufferWriter.WriteString(value);
         }
 
-        void Write(MqttPropertyId id, byte[] value)
+        void Write(MqttPropertyId id, ReadOnlySpan<byte> value)
         {
-            if (value == null)
+            if (value.IsEmpty)
             {
                 return;
             }
@@ -337,11 +349,14 @@ namespace MQTTnet.Formatter.V5
 
         void WriteAsFourByteInteger(MqttPropertyId id, uint value)
         {
-            _bufferWriter.WriteByte((byte)id);
-            _bufferWriter.WriteByte((byte)(value >> 24));
-            _bufferWriter.WriteByte((byte)(value >> 16));
-            _bufferWriter.WriteByte((byte)(value >> 8));
-            _bufferWriter.WriteByte((byte)value);
+            const int size = 5;
+            var bufferWriter = _bufferWriter.AsLowLevelBufferWriter();
+            var span = bufferWriter.GetSpan(size);
+
+            span[0] = (byte)id;
+            BinaryPrimitives.WriteUInt32BigEndian(span[1..], value);
+
+            bufferWriter.Advance(size);
         }
 
         void WriteAsVariableByteInteger(MqttPropertyId id, uint value)

@@ -28,7 +28,7 @@ public class MqttExtendedAuthenticationExchangeContext
     ///     Gets the authentication data.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public byte[] AuthenticationData { get; }
+    public ReadOnlyMemory<byte> AuthenticationData { get; }
 
     /// <summary>
     ///     Gets the authentication method.

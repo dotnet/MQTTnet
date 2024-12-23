@@ -24,7 +24,7 @@ namespace MQTTnet.Server
             SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
         }
 
-        public byte[] AuthenticationData => _connectPacket.AuthenticationData;
+        public ReadOnlyMemory<byte> AuthenticationData => _connectPacket.AuthenticationData;
 
         public string AuthenticationMethod => _connectPacket.AuthenticationMethod;
 

@@ -98,7 +98,7 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
+    public MqttClientOptionsBuilder WithAuthentication(string method, ReadOnlyMemory<byte> data)
     {
         _options.AuthenticationMethod = method;
         _options.AuthenticationData = data;
@@ -191,17 +191,12 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithCredentials(string username, string password)
     {
-        byte[] passwordBuffer = null;
-
-        if (password != null)
-        {
-            passwordBuffer = Encoding.UTF8.GetBytes(password);
-        }
-
-        return WithCredentials(username, passwordBuffer);
+        return password == null
+            ? WithCredentials(username, default(byte[]))
+            : WithCredentials(username, Encoding.UTF8.GetBytes(password));
     }
 
-    public MqttClientOptionsBuilder WithCredentials(string username, byte[] password = null)
+    public MqttClientOptionsBuilder WithCredentials(string username, byte[] password = default)
     {
         return WithCredentials(new MqttClientCredentials(username, password));
     }
@@ -395,7 +390,7 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithWillCorrelationData(byte[] willCorrelationData)
+    public MqttClientOptionsBuilder WithWillCorrelationData(ReadOnlyMemory<byte> willCorrelationData)
     {
         _options.WillCorrelationData = willCorrelationData;
         return this;
@@ -413,33 +408,15 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithWillPayload(byte[] willPayload)
+    public MqttClientOptionsBuilder WithWillPayload(ReadOnlyMemory<byte> willPayload)
     {
         _options.WillPayload = willPayload;
         return this;
     }
 
-    public MqttClientOptionsBuilder WithWillPayload(ArraySegment<byte> willPayload)
-    {
-        if (willPayload.Count == 0)
-        {
-            _options.WillPayload = null;
-            return this;
-        }
-
-        _options.WillPayload = willPayload.ToArray();
-        return this;
-    }
-
     public MqttClientOptionsBuilder WithWillPayload(string willPayload)
     {
-        if (string.IsNullOrEmpty(willPayload))
-        {
-            return WithWillPayload((byte[])null);
-        }
-
-        _options.WillPayload = Encoding.UTF8.GetBytes(willPayload);
-        return this;
+        return string.IsNullOrEmpty(willPayload) ? this : WithWillPayload(Encoding.UTF8.GetBytes(willPayload));
     }
 
     public MqttClientOptionsBuilder WithWillPayloadFormatIndicator(MqttPayloadFormatIndicator willPayloadFormatIndicator)

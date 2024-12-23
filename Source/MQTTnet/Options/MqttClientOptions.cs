@@ -24,7 +24,7 @@ public sealed class MqttClientOptions
     ///     Gets or sets the authentication data.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public byte[] AuthenticationData { get; set; }
+    public ReadOnlyMemory<byte> AuthenticationData { get; set; }
 
     /// <summary>
     ///     Gets or sets the authentication method.
@@ -159,7 +159,7 @@ public sealed class MqttClientOptions
     ///     Gets or sets the correlation data of the will message.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public byte[] WillCorrelationData { get; set; }
+    public ReadOnlyMemory<byte> WillCorrelationData { get; set; }
 
     /// <summary>
     ///     Gets or sets the will delay interval.
@@ -177,7 +177,7 @@ public sealed class MqttClientOptions
     /// <summary>
     ///     Gets or sets the payload of the will message.
     /// </summary>
-    public byte[] WillPayload { get; set; }
+    public ReadOnlyMemory<byte> WillPayload { get; set; }
 
     /// <summary>
     ///     Gets or sets the payload format indicator of the will message.

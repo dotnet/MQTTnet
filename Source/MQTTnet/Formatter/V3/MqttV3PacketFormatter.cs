@@ -2,15 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Adapter;
+using MQTTnet.Exceptions;
+using MQTTnet.Internal;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using MQTTnet.Adapter;
-using MQTTnet.Exceptions;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V3
 {
@@ -115,18 +116,18 @@ namespace MQTTnet.Formatter.V3
             _bufferWriter.WriteByte(fixedHeader);
             _bufferWriter.WriteVariableByteInteger(remainingLength);
 
-            var firstSegment = new ArraySegment<byte>(_bufferWriter.GetBuffer(), headerOffset, _bufferWriter.Length - headerOffset);
+            var firstSegment = _bufferWriter.GetWrittenMemory()[headerOffset..];
 
             return payload.Length == 0
                 ? new MqttPacketBuffer(firstSegment)
                 : new MqttPacketBuffer(firstSegment, payload);
         }
 
-        MqttPacket DecodeConnAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodeConnAckPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             var packet = new MqttConnAckPacket();
 
@@ -136,11 +137,11 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        MqttPacket DecodeConnAckPacketV311(ArraySegment<byte> body)
+        MqttPacket DecodeConnAckPacketV311(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             var packet = new MqttConnAckPacket();
 
@@ -152,11 +153,11 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        MqttPacket DecodeConnectPacket(ArraySegment<byte> body)
+        MqttPacket DecodeConnectPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             var protocolName = _bufferReader.ReadString();
             var protocolVersion = _bufferReader.ReadByte();
@@ -203,7 +204,7 @@ namespace MQTTnet.Formatter.V3
                 packet.WillRetain = willRetain;
 
                 packet.WillTopic = _bufferReader.ReadString();
-                packet.WillMessage = _bufferReader.ReadBinaryData();
+                packet.WillMessage = _bufferReader.ReadBinaryData().Join();
             }
 
             if (usernameFlag)
@@ -213,18 +214,18 @@ namespace MQTTnet.Formatter.V3
 
             if (passwordFlag)
             {
-                packet.Password = _bufferReader.ReadBinaryData();
+                packet.Password = _bufferReader.ReadBinaryData().ToArray();
             }
 
             ValidateConnectPacket(packet);
             return packet;
         }
 
-        MqttPacket DecodePubAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubAckPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             return new MqttPubAckPacket
             {
@@ -232,11 +233,11 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        MqttPacket DecodePubCompPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubCompPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             return new MqttPubCompPacket
             {
@@ -246,9 +247,9 @@ namespace MQTTnet.Formatter.V3
 
         MqttPacket DecodePublishPacket(ReceivedMqttPacket receivedMqttPacket)
         {
-            ThrowIfBodyIsEmpty(receivedMqttPacket.Body);
+            ThrowIfBodyIsEmpty(receivedMqttPacket.Body.Length);
 
-            _bufferReader.SetBuffer(receivedMqttPacket.Body.Array, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
+            _bufferReader.SetBuffer(receivedMqttPacket.Body);
 
             var retain = (receivedMqttPacket.FixedHeader & 0x1) > 0;
             var qualityOfServiceLevel = (MqttQualityOfServiceLevel)((receivedMqttPacket.FixedHeader >> 1) & 0x3);
@@ -273,17 +274,17 @@ namespace MQTTnet.Formatter.V3
 
             if (!_bufferReader.EndOfStream)
             {
-                packet.PayloadSegment = new ArraySegment<byte>(_bufferReader.ReadRemainingData());
+                packet.Payload = _bufferReader.ReadRemainingData();
             }
 
             return packet;
         }
 
-        MqttPacket DecodePubRecPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubRecPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             return new MqttPubRecPacket
             {
@@ -291,11 +292,11 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        MqttPacket DecodePubRelPacket(ArraySegment<byte> body)
+        MqttPacket DecodePubRelPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             return new MqttPubRelPacket
             {
@@ -303,16 +304,16 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        MqttPacket DecodeSubAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodeSubAckPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             var packet = new MqttSubAckPacket
             {
                 PacketIdentifier = _bufferReader.ReadTwoByteInteger(),
-                ReasonCodes = new List<MqttSubscribeReasonCode>(_bufferReader.BytesLeft)
+                ReasonCodes = new List<MqttSubscribeReasonCode>((int)_bufferReader.BytesLeft)
             };
 
             while (!_bufferReader.EndOfStream)
@@ -323,11 +324,11 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        MqttPacket DecodeSubscribePacket(ArraySegment<byte> body)
+        MqttPacket DecodeSubscribePacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             var packet = new MqttSubscribePacket
             {
@@ -348,11 +349,11 @@ namespace MQTTnet.Formatter.V3
             return packet;
         }
 
-        MqttPacket DecodeUnsubAckPacket(ArraySegment<byte> body)
+        MqttPacket DecodeUnsubAckPacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             return new MqttUnsubAckPacket
             {
@@ -360,11 +361,11 @@ namespace MQTTnet.Formatter.V3
             };
         }
 
-        MqttPacket DecodeUnsubscribePacket(ArraySegment<byte> body)
+        MqttPacket DecodeUnsubscribePacket(ReadOnlySequence<byte> body)
         {
-            ThrowIfBodyIsEmpty(body);
+            ThrowIfBodyIsEmpty(body.Length);
 
-            _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+            _bufferReader.SetBuffer(body);
 
             var packet = new MqttUnsubscribePacket
             {
@@ -454,7 +455,7 @@ namespace MQTTnet.Formatter.V3
             if (packet.WillFlag)
             {
                 bufferWriter.WriteString(packet.WillTopic);
-                bufferWriter.WriteBinary(packet.WillMessage);
+                bufferWriter.WriteBinary(packet.WillMessage.Span);
             }
 
             if (packet.Username != null)
@@ -525,7 +526,7 @@ namespace MQTTnet.Formatter.V3
             if (packet.WillFlag)
             {
                 bufferWriter.WriteString(packet.WillTopic);
-                bufferWriter.WriteBinary(packet.WillMessage);
+                bufferWriter.WriteBinary(packet.WillMessage.Span);
             }
 
             if (packet.Username != null)
@@ -783,9 +784,9 @@ namespace MQTTnet.Formatter.V3
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void ThrowIfBodyIsEmpty(ArraySegment<byte> body)
+        static void ThrowIfBodyIsEmpty(long bodyLength)
         {
-            if (body.Count == 0)
+            if (bodyLength == 0)
             {
                 throw new MqttProtocolViolationException("Data from the body is required but not present.");
             }

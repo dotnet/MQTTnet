@@ -6,6 +6,21 @@ namespace MQTTnet.Internal
 {
     public static class MqttMemoryHelper
     {
+        public static ReadOnlyMemory<byte> Join(this ReadOnlySequence<byte> buffer)
+        {
+            if (buffer.IsEmpty)
+            {
+                return default;
+            }
+
+            if (buffer.IsSingleSegment)
+            {
+                return buffer.First;
+            }
+
+            return buffer.ToArray();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Copy(byte[] source, int sourceIndex, byte[] destination, int destinationIndex, int length)
         {

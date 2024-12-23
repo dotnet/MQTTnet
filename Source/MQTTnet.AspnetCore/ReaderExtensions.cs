@@ -48,9 +48,7 @@ public static class ReaderExtensions
         }
 
         var bodySlice = copy.Slice(0, bodyLength);
-        var bodySegment = GetArraySegment(ref bodySlice);
-
-        var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySegment, headerLength + bodyLength);
+        var receivedMqttPacket = new ReceivedMqttPacket(fixedHeader, bodySlice, headerLength + bodyLength);
         if (formatter.ProtocolVersion == MqttProtocolVersion.Unknown)
         {
             formatter.DetectProtocolVersion(receivedMqttPacket);
@@ -62,19 +60,7 @@ public static class ReaderExtensions
         bytesRead = headerLength + bodyLength;
         return true;
     }
-
-    static ArraySegment<byte> GetArraySegment(ref ReadOnlySequence<byte> input)
-    {
-        if (input.IsSingleSegment && MemoryMarshal.TryGetArray(input.First, out var segment))
-        {
-            return segment;
-        }
-
-        // Should be rare
-        var array = input.ToArray();
-        return new ArraySegment<byte>(array);
-    }
-
+     
 
     static void ThrowProtocolViolationException(ReadOnlySpan<byte> valueSpan, int index)
     {

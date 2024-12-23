@@ -25,7 +25,7 @@ namespace MQTTnet.Benchmarks
     public class SerializerBenchmark : BaseBenchmark
     {
         MqttPacket _packet;
-        ArraySegment<byte> _serializedPacket;
+        ReadOnlyMemory<byte> _serializedPacket;
         IMqttPacketFormatter _serializer;
         MqttBufferWriter _bufferWriter;
 
@@ -68,13 +68,13 @@ namespace MQTTnet.Benchmarks
 
         class BenchmarkMqttChannel : IMqttChannel
         {
-            readonly ArraySegment<byte> _buffer;
+            readonly ReadOnlyMemory<byte> _buffer;
             int _position;
 
-            public BenchmarkMqttChannel(ArraySegment<byte> buffer)
+            public BenchmarkMqttChannel(ReadOnlyMemory<byte> buffer)
             {
                 _buffer = buffer;
-                _position = _buffer.Offset;
+                _position = 0;
             }
 
             public EndPoint RemoteEndPoint { get; set; }
@@ -85,7 +85,7 @@ namespace MQTTnet.Benchmarks
 
             public void Reset()
             {
-                _position = _buffer.Offset;
+                _position = 0;
             }
 
             public Task ConnectAsync(CancellationToken cancellationToken)
@@ -100,7 +100,8 @@ namespace MQTTnet.Benchmarks
 
             public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                Array.Copy(_buffer.Array, _position, buffer, offset, count);
+                _buffer.Slice(_position).Span.CopyTo(buffer.AsSpan(offset, count));
+
                 _position += count;
 
                 return Task.FromResult(count);

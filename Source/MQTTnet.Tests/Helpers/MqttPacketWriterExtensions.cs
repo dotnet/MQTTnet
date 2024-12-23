@@ -4,6 +4,7 @@
 
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
+using System;
 
 namespace MQTTnet.Tests.Helpers
 {
@@ -13,8 +14,8 @@ namespace MQTTnet.Tests.Helpers
         {
             writer.WriteByte(MqttBufferWriter.BuildFixedHeader(header));
             writer.WriteVariableByteInteger((uint)body.Length);
-            writer.WriteBinary(body, 0, body.Length);
-            return writer.GetBuffer();
+            writer.Write(body);
+            return writer.GetWrittenMemory().ToArray();
         }
     }
 }

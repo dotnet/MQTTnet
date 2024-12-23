@@ -5,44 +5,52 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Server;
+using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks;
 
-[SimpleJob(RuntimeMoniker.Net60)]
+[SimpleJob(RuntimeMoniker.Net80)]
 [RPlotExporter]
 [RankColumn]
 [MemoryDiagnoser]
 public class MessageProcessingBenchmark : BaseBenchmark
 {
-    MqttApplicationMessage _message;
     IMqttClient _mqttClient;
     MqttServer _mqttServer;
+    string _payload = string.Empty;
+
+    [Params(1 * 1024, 4 * 1024, 8 * 1024)]
+    public int PayloadSize { get; set; }
 
     [Benchmark]
-    public void Send_10000_Messages()
+    public async Task Send_1000_Messages()
     {
-        for (var i = 0; i < 10000; i++)
+        for (var i = 0; i < 1000; i++)
         {
-            _mqttClient.PublishAsync(_message).GetAwaiter().GetResult();
+            await _mqttClient.PublishStringAsync("A", _payload);
         }
     }
 
     [GlobalSetup]
-    public void Setup()
+    public async Task Setup()
     {
-        var serverOptions = new MqttServerOptionsBuilder().Build();
-
         var serverFactory = new MqttServerFactory();
+        var serverOptions = new MqttServerOptionsBuilder()
+            .WithDefaultEndpoint()
+            .Build();
+       
         _mqttServer = serverFactory.CreateMqttServer(serverOptions);
+        await _mqttServer.StartAsync();
+
         var clientFactory = new MqttClientFactory();
         _mqttClient = clientFactory.CreateMqttClient();
 
-        _mqttServer.StartAsync().GetAwaiter().GetResult();
+        var clientOptions = new MqttClientOptionsBuilder()
+            .WithTcpServer("localhost")
+            .Build();
 
-        var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
+        await _mqttClient.ConnectAsync(clientOptions);
 
-        _mqttClient.ConnectAsync(clientOptions).GetAwaiter().GetResult();
-
-        _message = new MqttApplicationMessageBuilder().WithTopic("A").Build();
+        _payload = string.Empty.PadLeft(PayloadSize, '0');
     }
 }

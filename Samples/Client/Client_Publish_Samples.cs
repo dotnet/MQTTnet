@@ -31,12 +31,10 @@ public static class Client_Publish_Samples
 
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            var applicationMessage = new MqttApplicationMessageBuilder()
-                .WithTopic("samples/temperature/living_room")
-                .WithPayload("19.5")
-                .Build();
-
-            await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+            await mqttClient.PublishStringAsync(
+                topic: "samples/temperature/living_room",
+                payload: "19.5",
+                cancellationToken: CancellationToken.None);
 
             await mqttClient.DisconnectAsync();
 
@@ -61,27 +59,21 @@ public static class Client_Publish_Samples
                 .Build();
 
             await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+             
+            await mqttClient.PublishStringAsync(
+                topic: "samples/temperature/living_room",
+                payload: "19.5",
+                cancellationToken: CancellationToken.None);
 
-            var applicationMessage = new MqttApplicationMessageBuilder()
-                .WithTopic("samples/temperature/living_room")
-                .WithPayload("19.5")
-                .Build();
+            await mqttClient.PublishStringAsync(
+                topic: "samples/temperature/living_room",
+                payload: "20.0",
+                cancellationToken: CancellationToken.None);
 
-            await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-
-            applicationMessage = new MqttApplicationMessageBuilder()
-                .WithTopic("samples/temperature/living_room")
-                .WithPayload("20.0")
-                .Build();
-
-            await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
-
-            applicationMessage = new MqttApplicationMessageBuilder()
-                .WithTopic("samples/temperature/living_room")
-                .WithPayload("21.0")
-                .Build();
-
-            await mqttClient.PublishAsync(applicationMessage, CancellationToken.None);
+            await mqttClient.PublishStringAsync(
+                topic: "samples/temperature/living_room",
+                payload: "21.0",
+                cancellationToken: CancellationToken.None);
 
             await mqttClient.DisconnectAsync();
 

@@ -2,104 +2,102 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Exceptions;
 using System;
+using System.Buffers;
 using System.Runtime.CompilerServices;
 using System.Text;
-using MQTTnet.Exceptions;
-using MQTTnet.Internal;
-using System.Buffers.Binary;
 
 
 namespace MQTTnet.Formatter
 {
     public sealed class MqttBufferReader
     {
-        byte[] _buffer = EmptyBuffer.Array;
-        int _maxPosition;
-        int _offset;
-        int _position;
+        long _position = default;
+        ReadOnlySequence<byte> _buffer = default;
 
-        public int BytesLeft => _maxPosition - _position;
 
-        public bool EndOfStream => BytesLeft == 0;
+        public long BytesLeft => _buffer.Length - _position;
 
-        public int Position => _position - _offset;
+        public bool EndOfStream => _buffer.Length <= _position;
 
-        public byte[] ReadBinaryData()
+        public long Position => _position;
+
+        public ReadOnlySequence<byte> ReadBinaryData()
         {
             var length = ReadTwoByteInteger();
-
             if (length == 0)
             {
-                return EmptyBuffer.Array;
+                return ReadOnlySequence<byte>.Empty;
             }
 
             ValidateReceiveBuffer(length);
+            var buffer = _buffer.Slice(_position, length);
 
-            var result = GC.AllocateUninitializedArray<byte>(length);
-            MqttMemoryHelper.Copy(_buffer, _position, result, 0, length);
             _position += length;
-
-            return result;
+            return buffer;
         }
 
         public byte ReadByte()
         {
             ValidateReceiveBuffer(1);
-            return _buffer[_position++];
-        }
 
-        public uint ReadFourByteInteger()
-        {
-            ValidateReceiveBuffer(4);
+            var reader = new SequenceReader<byte>(_buffer);
+            reader.Advance(_position);
+            reader.TryRead(out byte value);
 
-            var value = BinaryPrimitives.ReadUInt32BigEndian(_buffer.AsSpan(_position));
-
-            _position += 4;
+            _position += 1;
             return value;
-        }
-
-        public byte[] ReadRemainingData()
-        {
-            var bufferLength = BytesLeft;
-            if (bufferLength == 0)
-            {
-                return EmptyBuffer.Array;
-            }
-
-            var buffer = GC.AllocateUninitializedArray<byte>(bufferLength);
-            MqttMemoryHelper.Copy(_buffer, _position, buffer, 0, bufferLength);
-            _position += bufferLength;
-
-            return buffer;
-        }
-
-        public string ReadString()
-        {
-            var length = ReadTwoByteInteger();
-
-            if (length == 0)
-            {
-                return string.Empty;
-            }
-
-            ValidateReceiveBuffer(length);
-
-            // AsSpan() version is slightly faster. Not much but at least a little bit.
-            var result = Encoding.UTF8.GetString(_buffer.AsSpan(_position, length));
-
-            _position += length;
-            return result;
         }
 
         public ushort ReadTwoByteInteger()
         {
             ValidateReceiveBuffer(2);
 
-            var value = BinaryPrimitives.ReadUInt16BigEndian(_buffer.AsSpan(_position));
+            var reader = new SequenceReader<byte>(_buffer);
+            reader.Advance(_position);
+            reader.TryReadBigEndian(out short value);
 
             _position += 2;
-            return value;
+            return Unsafe.As<short, ushort>(ref value);
+        }
+
+
+        public uint ReadFourByteInteger()
+        {
+            ValidateReceiveBuffer(4);
+
+            var reader = new SequenceReader<byte>(_buffer);
+            reader.Advance(_position);
+            reader.TryReadBigEndian(out int value);
+
+            _position += 4;
+            return Unsafe.As<int, uint>(ref value);
+        }
+
+
+        public ReadOnlySequence<byte> ReadRemainingData()
+        {
+            var buffer = _buffer.Slice(_position);
+            _position = _buffer.Length;
+            return buffer;
+        }
+
+
+        public string ReadString()
+        {
+            var length = ReadTwoByteInteger();
+            if (length == 0)
+            {
+                return string.Empty;
+            }
+
+            ValidateReceiveBuffer(length);
+            var buffer = _buffer.Slice(_position, length);
+            var result = Encoding.UTF8.GetString(buffer);
+
+            _position += length;
+            return result;
         }
 
         public uint ReadVariableByteInteger()
@@ -124,31 +122,26 @@ namespace MQTTnet.Formatter
             return value;
         }
 
-        public void Seek(int position)
+        public void SetBuffer(ReadOnlyMemory<byte> buffer)
         {
-            _position = _offset + position;
+            SetBuffer(new ReadOnlySequence<byte>(buffer));
         }
 
-        public void SetBuffer(ArraySegment<byte> buffer)
+        public void SetBuffer(ReadOnlySequence<byte> buffer)
         {
-            SetBuffer(buffer.Array, buffer.Offset, buffer.Count);
+            _buffer = buffer;
+            _position = 0;
         }
 
-        public void SetBuffer(byte[] buffer, int offset, int length)
-        {
-            _buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
-            _offset = offset;
-            _position = offset;
-            _maxPosition = offset + length;
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ValidateReceiveBuffer(int length)
         {
+            var bufferLength = _buffer.Length;
             var newPosition = _position + length;
-            if (_maxPosition < newPosition)
+            if (bufferLength < newPosition)
             {
-                throw new MqttProtocolViolationException($"Expected at least {newPosition} bytes but there are only {_maxPosition} bytes");
+                throw new MqttProtocolViolationException($"Expected at least {newPosition} bytes but there are only {bufferLength} bytes");
             }
         }
     }

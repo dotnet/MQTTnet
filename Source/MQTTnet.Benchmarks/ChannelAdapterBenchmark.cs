@@ -76,12 +76,12 @@ namespace MQTTnet.Benchmarks
             _channelAdapter = new MqttChannelAdapter(channel, serializer, new MqttNetEventLogger());
         }
 
-        static byte[] Join(params ArraySegment<byte>[] chunks)
+        static byte[] Join(params ReadOnlyMemory<byte>[] chunks)
         {
             var buffer = new MemoryStream();
             foreach (var chunk in chunks)
             {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
+                buffer.Write(chunk.Span);
             }
 
             return buffer.ToArray();

@@ -17,7 +17,7 @@ public static class MqttConnectPacketFactory
         {
             ClientId = clientOptions.ClientId,
             Username = clientOptions.Credentials?.GetUserName(clientOptions),
-            Password = clientOptions.Credentials?.GetPassword(clientOptions),
+            Password = clientOptions.Credentials == null ? default : clientOptions.Credentials.GetPassword(clientOptions),
             CleanSession = clientOptions.CleanSession,
             KeepAlivePeriod = (ushort)clientOptions.KeepAlivePeriod.TotalSeconds,
             AuthenticationMethod = clientOptions.AuthenticationMethod,

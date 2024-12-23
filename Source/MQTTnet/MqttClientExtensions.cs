@@ -2,14 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using MQTTnet.Internal;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Pipelines;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization.Metadata;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 
 namespace MQTTnet;
 
@@ -36,26 +41,6 @@ public static class MqttClientExtensions
         return client.DisconnectAsync(disconnectOptions, cancellationToken);
     }
 
-    public static Task<MqttClientPublishResult> PublishBinaryAsync(
-        this IMqttClient mqttClient,
-        string topic,
-        IEnumerable<byte> payload = null,
-        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
-        bool retain = false,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(mqttClient);
-        ArgumentNullException.ThrowIfNull(topic);
-
-        var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topic)
-            .WithPayload(payload)
-            .WithRetainFlag(retain)
-            .WithQualityOfServiceLevel(qualityOfServiceLevel)
-            .Build();
-
-        return mqttClient.PublishAsync(applicationMessage, cancellationToken);
-    }
-
     public static Task<MqttClientPublishResult> PublishSequenceAsync(
         this IMqttClient mqttClient,
         string topic,
@@ -67,33 +52,134 @@ public static class MqttClientExtensions
         ArgumentNullException.ThrowIfNull(mqttClient);
         ArgumentNullException.ThrowIfNull(topic);
 
-        var applicationMessage = new MqttApplicationMessageBuilder().WithTopic(topic)
-            .WithPayload(payload)
-            .WithRetainFlag(retain)
-            .WithQualityOfServiceLevel(qualityOfServiceLevel)
-            .Build();
+        var applicationMessage = new MqttApplicationMessage
+        {
+            Topic = topic,
+            Payload = payload,
+            Retain = retain,
+            QualityOfServiceLevel = qualityOfServiceLevel
+        };
 
         return mqttClient.PublishAsync(applicationMessage, cancellationToken);
+    }
+
+    public static async Task<MqttClientPublishResult> PublishSequenceAsync(
+        this IMqttClient mqttClient,
+        string topic,
+        Func<PipeWriter, ValueTask> payloadFactory,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(payloadFactory);
+
+        await using var payloadOwner = await MqttPayloadOwnerFactory.CreateMultipleSegmentAsync(payloadFactory, cancellationToken).ConfigureAwait(false);
+        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken).ConfigureAwait(false);
+    }
+
+    public static Task<MqttClientPublishResult> PublishBinaryAsync(
+        this IMqttClient mqttClient,
+        string topic,
+        ReadOnlyMemory<byte> payload,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        return mqttClient.PublishSequenceAsync(topic, new ReadOnlySequence<byte>(payload), qualityOfServiceLevel, retain, cancellationToken);
+    }
+
+    public static async Task<MqttClientPublishResult> PublishBinaryAsync(
+       this IMqttClient mqttClient,
+       string topic,
+       int payloadSize,
+       Action<Memory<byte>> payloadFactory,
+       MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+       bool retain = false,
+       CancellationToken cancellationToken = default)
+    {
+        await using var payloadOwner = MqttPayloadOwnerFactory.CreateSingleSegment(payloadSize, payloadFactory);
+        return await mqttClient.PublishSequenceAsync(topic, payloadOwner.Payload, qualityOfServiceLevel, retain, cancellationToken).ConfigureAwait(false);
     }
 
     public static Task<MqttClientPublishResult> PublishStringAsync(
         this IMqttClient mqttClient,
         string topic,
-        string payload = null,
+        string payload,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)
     {
-        var payloadBuffer = Encoding.UTF8.GetBytes(payload ?? string.Empty);
-        return mqttClient.PublishBinaryAsync(topic, payloadBuffer, qualityOfServiceLevel, retain, cancellationToken);
+        return string.IsNullOrEmpty(payload)
+            ? mqttClient.PublishSequenceAsync(topic, ReadOnlySequence<byte>.Empty, qualityOfServiceLevel, retain, cancellationToken)
+            : mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            Encoding.UTF8.GetBytes(payload, writer);
+            await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+        }
     }
+
+    public static Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
+        this IMqttClient mqttClient,
+        string topic,
+        TValue payload,
+        JsonSerializerOptions jsonSerializerOptions = default,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        return mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            var stream = writer.AsStream(leaveOpen: true);
+            await JsonSerializer.SerializeAsync(stream, payload, jsonSerializerOptions, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public static Task<MqttClientPublishResult> PublishJsonAsync<TValue>(
+        this IMqttClient mqttClient,
+        string topic,
+        TValue payload,
+        JsonTypeInfo<TValue> jsonTypeInfo,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(jsonTypeInfo);
+        return mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            var stream = writer.AsStream(leaveOpen: true);
+            await JsonSerializer.SerializeAsync(stream, payload, jsonTypeInfo, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
+    public static Task<MqttClientPublishResult> PublishStreamAsync(
+        this IMqttClient mqttClient,
+        string topic,
+        Stream payload,
+        MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
+        bool retain = false,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(payload);
+        return mqttClient.PublishSequenceAsync(topic, WritePayloadAsync, qualityOfServiceLevel, retain, cancellationToken);
+
+        async ValueTask WritePayloadAsync(PipeWriter writer)
+        {
+            await payload.CopyToAsync(writer, cancellationToken).ConfigureAwait(false);
+        }
+    }
+
 
     public static Task ReconnectAsync(this IMqttClient client, CancellationToken cancellationToken = default)
     {
         if (client.Options == null)
         {
-            throw new InvalidOperationException(
-                "The MQTT client was not connected before. A reconnect is only permitted when the client was already connected or at least tried to.");
+            throw new InvalidOperationException("The MQTT client was not connected before. A reconnect is only permitted when the client was already connected or at least tried to.");
         }
 
         return client.ConnectAsync(client.Options, cancellationToken);

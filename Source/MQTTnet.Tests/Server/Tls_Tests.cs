@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Linq;
 using System.Net;
 using System.Security.Authentication;
@@ -99,7 +100,7 @@ namespace MQTTnet.Tests.Server
                 new MqttApplicationMessage
                 {
                     Topic = "TestTopic1",
-                    PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
+                    Payload = new ReadOnlySequence<byte>(new byte[] { 1, 2, 3, 4 })
                 });
 
             await testEnvironment.Server.InjectApplicationMessage(
@@ -107,7 +108,7 @@ namespace MQTTnet.Tests.Server
                     new MqttApplicationMessage
                     {
                         Topic = "TestTopic1",
-                        PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
+                        Payload = new ReadOnlySequence<byte>(new byte[] { 1, 2, 3, 4 })
                     }));
 
             certificateProvider.CurrentCertificate = CreateCertificate(secondOid);
@@ -135,7 +136,7 @@ namespace MQTTnet.Tests.Server
                 new MqttApplicationMessage
                 {
                     Topic = "TestTopic2",
-                    PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
+                    Payload = new ReadOnlySequence<byte>([1, 2, 3, 4])
                 });
 
             await testEnvironment.Server.InjectApplicationMessage(
@@ -143,7 +144,7 @@ namespace MQTTnet.Tests.Server
                     new MqttApplicationMessage
                     {
                         Topic = "TestTopic2",
-                        PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
+                        Payload = new ReadOnlySequence<byte>(new byte[] { 1, 2, 3, 4 })
                     }));
 
             // Ensure first client still works
@@ -151,7 +152,7 @@ namespace MQTTnet.Tests.Server
                 new MqttApplicationMessage
                 {
                     Topic = "TestTopic1",
-                    PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
+                    Payload = new ReadOnlySequence<byte>(new byte[] { 1, 2, 3, 4 })
                 });
 
             await testEnvironment.Server.InjectApplicationMessage(
@@ -159,7 +160,7 @@ namespace MQTTnet.Tests.Server
                     new MqttApplicationMessage
                     {
                         Topic = "TestTopic1",
-                        PayloadSegment = new ArraySegment<byte>(new byte[] { 1, 2, 3, 4 })
+                        Payload = new ReadOnlySequence<byte>(new byte[] { 1, 2, 3, 4 })
                     }));
 
             await Task.Delay(1000);

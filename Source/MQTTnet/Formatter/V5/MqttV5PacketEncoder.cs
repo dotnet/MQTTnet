@@ -56,16 +56,17 @@ public sealed class MqttV5PacketEncoder
         _bufferWriter.WriteByte(fixedHeader);
         _bufferWriter.WriteVariableByteInteger(remainingLength);
 
-        var buffer = _bufferWriter.GetBuffer();
-        var firstSegment = new ArraySegment<byte>(buffer, headerOffset, _bufferWriter.Length - headerOffset);
+        var firstSegment = _bufferWriter.GetWrittenMemory()[headerOffset..];
 
-        return publishPacket == null ? new MqttPacketBuffer(firstSegment) : new MqttPacketBuffer(firstSegment, publishPacket.Payload);
+        return publishPacket == null
+            ? new MqttPacketBuffer(firstSegment)
+            : new MqttPacketBuffer(firstSegment, publishPacket.Payload);
     }
 
     byte EncodeAuthPacket(MqttAuthPacket packet)
     {
         _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData.Span);
         _propertiesWriter.WriteReasonString(packet.ReasonString);
         _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
@@ -97,7 +98,7 @@ public sealed class MqttV5PacketEncoder
 
         _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
         _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData.Span);
         _propertiesWriter.WriteRetainAvailable(packet.RetainAvailable);
         _propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
         _propertiesWriter.WriteMaximumQoS(packet.MaximumQoS);
@@ -166,7 +167,7 @@ public sealed class MqttV5PacketEncoder
 
         _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
         _propertiesWriter.WriteAuthenticationMethod(packet.AuthenticationMethod);
-        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData);
+        _propertiesWriter.WriteAuthenticationData(packet.AuthenticationData.Span);
         _propertiesWriter.WriteRequestProblemInformation(packet.RequestProblemInformation);
         _propertiesWriter.WriteRequestResponseInformation(packet.RequestResponseInformation);
         _propertiesWriter.WriteReceiveMaximum(packet.ReceiveMaximum);
@@ -184,7 +185,7 @@ public sealed class MqttV5PacketEncoder
             _propertiesWriter.WritePayloadFormatIndicator(packet.WillPayloadFormatIndicator);
             _propertiesWriter.WriteMessageExpiryInterval(packet.WillMessageExpiryInterval);
             _propertiesWriter.WriteResponseTopic(packet.WillResponseTopic);
-            _propertiesWriter.WriteCorrelationData(packet.WillCorrelationData);
+            _propertiesWriter.WriteCorrelationData(packet.WillCorrelationData.Span);
             _propertiesWriter.WriteContentType(packet.WillContentType);
             _propertiesWriter.WriteUserProperties(packet.WillUserProperties);
             _propertiesWriter.WriteWillDelayInterval(packet.WillDelayInterval);
@@ -193,7 +194,7 @@ public sealed class MqttV5PacketEncoder
             _propertiesWriter.Reset();
 
             _bufferWriter.WriteString(packet.WillTopic);
-            _bufferWriter.WriteBinary(packet.WillMessage);
+            _bufferWriter.WriteBinary(packet.WillMessage.Span);
         }
 
         if (packet.Username != null)
@@ -342,7 +343,7 @@ public sealed class MqttV5PacketEncoder
         }
 
         _propertiesWriter.WriteContentType(packet.ContentType);
-        _propertiesWriter.WriteCorrelationData(packet.CorrelationData);
+        _propertiesWriter.WriteCorrelationData(packet.CorrelationData.Span);
         _propertiesWriter.WriteMessageExpiryInterval(packet.MessageExpiryInterval);
         _propertiesWriter.WritePayloadFormatIndicator(packet.PayloadFormatIndicator);
         _propertiesWriter.WriteResponseTopic(packet.ResponseTopic);

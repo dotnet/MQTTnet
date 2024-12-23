@@ -100,7 +100,7 @@ namespace MQTTnet.Tests.ASP
             connection.Transport = pipe;
             var ctx = new MqttConnectionContext(serializer, connection);
 
-            await ctx.SendPacketAsync(new MqttPublishPacket { PayloadSegment = new byte[20_000] }, CancellationToken.None).ConfigureAwait(false);
+            await ctx.SendPacketAsync(new MqttPublishPacket { Payload = new ReadOnlySequence<byte>(new byte[20_000]) }, CancellationToken.None).ConfigureAwait(false);
 
             var readResult = await pipe.Send.Reader.ReadAsync();
             Assert.IsTrue(readResult.Buffer.Length > 20000);

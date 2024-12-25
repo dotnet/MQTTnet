@@ -182,7 +182,7 @@ namespace MQTTnet.Tests.Server
             }
         }
 
-        [DataTestMethod]
+        [TestMethod]
         [DataRow(MqttQualityOfServiceLevel.ExactlyOnce)]
         [DataRow(MqttQualityOfServiceLevel.AtLeastOnce)]
         public async Task Retry_If_Not_PubAck(MqttQualityOfServiceLevel qos)

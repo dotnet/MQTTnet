@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Server.EnhancedAuthentication;
 using MQTTnet.Server.Internal.Adapter;
 
 namespace MQTTnet.Server;
@@ -30,6 +31,11 @@ public sealed class MqttServerFactory
     public MqttApplicationMessageBuilder CreateApplicationMessageBuilder()
     {
         return new MqttApplicationMessageBuilder();
+    }
+
+    public ExchangeEnhancedAuthenticationOptionsFactory CreateExchangeExtendedAuthenticationOptionsBuilder()
+    {
+        return new ExchangeEnhancedAuthenticationOptionsFactory();
     }
 
     public MqttServer CreateMqttServer(MqttServerOptions options)

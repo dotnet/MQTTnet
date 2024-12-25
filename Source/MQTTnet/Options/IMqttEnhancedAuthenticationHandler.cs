@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MQTTnet;
 
-public interface IMqttExtendedAuthenticationExchangeHandler
+public interface IMqttEnhancedAuthenticationHandler
 {
-    Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context);
+    Task HandleEnhancedAuthenticationAsync(MqttEnhancedAuthenticationEventArgs eventArgs);
 }

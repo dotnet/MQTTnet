@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,9 +10,9 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
-using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Server.EnhancedAuthentication;
 
 namespace MQTTnet.Tests.Clients.MqttClient
 {
@@ -195,7 +194,7 @@ namespace MQTTnet.Tests.Clients.MqttClient
             {
                 if (args.AuthenticationMethod == "GS2-KRB5")
                 {
-                    var result = await args.ExchangeEnhancedAuthenticationAsync(null, args.CancellationToken);
+                    var result = await args.ExchangeEnhancedAuthenticationAsync(new ExchangeEnhancedAuthenticationOptions(), args.CancellationToken);
 
                     Assert.AreEqual(Encoding.UTF8.GetString(result.AuthenticationData), "initial context token");
 

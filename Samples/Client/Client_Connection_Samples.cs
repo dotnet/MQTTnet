@@ -13,6 +13,7 @@ using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 using MQTTnet.Samples.Helpers;
 using MQTTnet.Server;
+using MQTTnet.Server.EnhancedAuthentication;
 
 namespace MQTTnet.Samples.Client;
 
@@ -116,7 +117,7 @@ m/XriWr/Cq4h/JfB7NTsezVslgkBaoU=
         {
             if (args.AuthenticationMethod == "GS2-KRB5")
             {
-                var result = await args.ExchangeEnhancedAuthenticationAsync(null, args.CancellationToken);
+                var result = await args.ExchangeEnhancedAuthenticationAsync(new ExchangeEnhancedAuthenticationOptions(), args.CancellationToken);
 
                 Console.WriteLine($"Received AUTH data from client: {Encoding.UTF8.GetString(result.AuthenticationData)}");
 

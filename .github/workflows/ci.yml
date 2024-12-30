@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 env:
   VERSION: "5.0.0.${{github.run_number}}"
-  PACKAGE_SUFFIX: "-RC"
+  PACKAGE_SUFFIX: ""
 
 jobs:
   build:

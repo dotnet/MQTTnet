@@ -141,14 +141,6 @@ namespace MQTTnet.Internal
             }
         }
 
-        public int ItemsCount(MqttPacketBusPartition partition)
-        {
-            lock (_syncRoot)
-            {
-                return _partitions[(int)partition].Count;
-            }
-        }
-
         public int PartitionItemsCount(MqttPacketBusPartition partition)
         {
             lock (_syncRoot)

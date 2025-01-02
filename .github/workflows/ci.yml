@@ -3,8 +3,8 @@ name: CI
 on: [push, pull_request]
 
 env:
-  VERSION: "5.0.0.${{github.run_number}}"
-  PACKAGE_SUFFIX: "-RC"
+  VERSION: "5.0.1.${{github.run_number}}"
+  PACKAGE_SUFFIX: ""
 
 jobs:
   build:

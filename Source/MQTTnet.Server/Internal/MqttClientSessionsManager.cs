@@ -311,6 +311,25 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         return Task.FromResult((IList<MqttClientStatus>)result);
     }
 
+    public Task<MqttSessionStatus> GetSessionStatus(string id)
+    {
+        _sessionsManagementLock.EnterReadLock();
+        try
+        {
+            if (!_sessionsStorage.TryGetSession(id, out var session))
+            {
+                throw new InvalidOperationException($"Session with ID '{id}' not found.");
+            }
+
+            var sessionStatus = new MqttSessionStatus(session);
+            return Task.FromResult(sessionStatus);
+        }
+        finally
+        {
+            _sessionsManagementLock.ExitReadLock();
+        }
+    }
+
     public Task<IList<MqttSessionStatus>> GetSessionsStatus()
     {
         var result = new List<MqttSessionStatus>();
@@ -345,7 +364,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 return;
             }
 
-            var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
+            var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter, cancellationToken).ConfigureAwait(false);
             var connAckPacket = MqttConnAckPacketFactory.Create(validatingConnectionEventArgs);
 
             if (validatingConnectionEventArgs.ReasonCode != MqttConnectReasonCode.Success)
@@ -721,11 +740,11 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
     }
 
-    async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
+    async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
     {
         // TODO: Load session items from persisted sessions in the future.
         var sessionItems = new ConcurrentDictionary<object, object>();
-        var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter, sessionItems);
+        var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter, sessionItems, cancellationToken);
         await _eventContainer.ValidatingConnectionEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
         // Check the client ID and set a random one if supported.

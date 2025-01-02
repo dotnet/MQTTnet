@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <Target Name="ImportReleaseNotes" BeforeTargets="GenerateNuspec">
-        <ReadLinesFromFile File="..\workflows\ReleaseNotes.md">
+        <ReadLinesFromFile File="../ReleaseNotes.md">
             <Output TaskParameter="Lines" ItemName="ReleaseNotes"/>
         </ReadLinesFromFile>
         <PropertyGroup>

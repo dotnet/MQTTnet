@@ -13,6 +13,9 @@ using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Server;
 
+/// <summary>
+/// MqttServer
+/// </summary>
 public class MqttServer : Disposable
 {
     readonly ICollection<IMqttServerAdapter> _adapters;

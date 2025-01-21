@@ -30,6 +30,9 @@ namespace MQTTnet.Server.Internal
 
         public AsyncEvent<InterceptingPacketEventArgs> InterceptingOutboundPacketEvent { get; } = new AsyncEvent<InterceptingPacketEventArgs>();
 
+        /// <summary>
+        /// 拦截发布事件：客户端、服务器均会被拦截
+        /// </summary>
         public AsyncEvent<InterceptingPublishEventArgs> InterceptingPublishEvent { get; } = new AsyncEvent<InterceptingPublishEventArgs>();
 
         public AsyncEvent<InterceptingSubscriptionEventArgs> InterceptingSubscriptionEvent { get; } = new AsyncEvent<InterceptingSubscriptionEventArgs>();

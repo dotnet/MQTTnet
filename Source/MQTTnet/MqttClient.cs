@@ -32,6 +32,9 @@ public sealed class MqttClient : Disposable, IMqttClient
     IMqttChannelAdapter _adapter;
 
     bool _cleanDisconnectInitiated;
+    /// <summary>
+    /// 客户端连接状态标识
+    /// </summary>
     volatile int _connectionStatus;
 
     // The value for this field can be set from two different enums.
@@ -87,6 +90,9 @@ public sealed class MqttClient : Disposable, IMqttClient
         remove => _events.InspectPacketEvent.RemoveHandler(value);
     }
 
+    /// <summary>
+    /// 是否已连接
+    /// </summary>
     public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
     public MqttClientOptions Options { get; private set; }
@@ -192,7 +198,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
         var clientWasConnected = IsConnected;
 
-        if (DisconnectIsPendingOrFinished())
+        if (DisconnectIsPendingOrFinished())//断开进行中或已完成
         {
             return;
         }
@@ -504,8 +510,15 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
     }
 
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="value">相等被替换的值</param>
+    /// <param name="comparand">用于比较的值</param>
+    /// <returns></returns>
     MqttClientConnectionStatus CompareExchangeConnectionStatus(MqttClientConnectionStatus value, MqttClientConnectionStatus comparand)
     {
+        //比较 _connectionStatus 和 comparand 相等则将 _connectionStatus替换为 value，发挥原来的 _connectionStatus 的值
         return (MqttClientConnectionStatus)Interlocked.CompareExchange(ref _connectionStatus, (int)value, (int)comparand);
     }
 

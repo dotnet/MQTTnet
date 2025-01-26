@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 env:
-  VERSION: "4.3.7.${{github.run_number}}"
+  VERSION: "4.3.8.${{github.run_number}}"
 
 jobs:
   build:
@@ -12,7 +12,7 @@ jobs:
 
     steps:
       - name: Setup Windows SDK
-        uses: GuillaumeFalourd/setup-windows10-sdk-action@v1
+        uses: GuillaumeFalourd/setup-windows10-sdk-action@v2.4
         with:
           sdk-version: 18362
 

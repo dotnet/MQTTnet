@@ -1051,10 +1051,13 @@ namespace MQTTnet.Client
 
                     if (timeWithoutPacketSent > keepAlivePeriod)
                     {
-                        using (var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
+                        using (var pingTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
                         {
-                            timeoutCancellationTokenSource.CancelAfter(Options.Timeout);
-                            await PingAsync(timeoutCancellationTokenSource.Token).ConfigureAwait(false);
+                            // We already reached the keep alive timeout. Due to the RFC part [MQTT-3.1.2-24] the server will wait another
+                            // 1/2 of the keep alive time. So we can also use this value as the timeout.
+                            pingTimeout.CancelAfter((int)(keepAlivePeriod.TotalMilliseconds / 2));
+
+                            await PingAsync(pingTimeout.Token).ConfigureAwait(false);
                         }
                     }
 

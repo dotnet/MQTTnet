@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
+    
+        <OutputType>Exe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
         <IsPackable>false</IsPackable>
         <EnableNETAnalyzers>false</EnableNETAnalyzers>
@@ -16,9 +18,9 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-        <PackageReference Include="MSTest.TestAdapter" Version="3.6.3" />
-        <PackageReference Include="MSTest.TestFramework" Version="3.6.3" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.8.2" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.8.2" />
+        
 
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>

@@ -1,10 +1,5 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <!--TODO: remove before close https://github.com/dotnet/MQTTnet/pull/2102 WIP: Fix ignored exceptions in MqttHostedServer startup #2102 -->
-    <PropertyGroup>
-        <DefineConstants>$(DefineConstants);HOSTEDSERVER_WITHOUT_STARTUP_YIELD</DefineConstants>
-    </PropertyGroup>
-    
     <PropertyGroup>
         <TargetFramework>net8.0</TargetFramework>
         <AssemblyName>MQTTnet.AspNetCore</AssemblyName>

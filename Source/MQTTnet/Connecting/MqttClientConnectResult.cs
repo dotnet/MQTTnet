@@ -30,7 +30,6 @@ public sealed class MqttClientConnectResult
 
     /// <summary>
     ///     Gets a value indicating whether a session was already available or not.
-    ///     MQTTv5 only.
     /// </summary>
     public bool IsSessionPresent { get; internal set; }
 
@@ -58,7 +57,6 @@ public sealed class MqttClientConnectResult
 
     /// <summary>
     ///     Gets the result code.
-    ///     MQTTv5 only.
     /// </summary>
     public MqttClientConnectResultCode ResultCode { get; internal set; }
 

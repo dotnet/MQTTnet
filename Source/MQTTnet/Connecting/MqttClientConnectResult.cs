@@ -57,7 +57,6 @@ public sealed class MqttClientConnectResult
 
     /// <summary>
     ///     Gets the result code.
-    ///     MQTTv5 only.
     /// </summary>
     public MqttClientConnectResultCode ResultCode { get; internal set; }
 

@@ -19,7 +19,7 @@ namespace MQTTnet.Server.Internal;
 public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification, IDisposable
 {
     readonly Dictionary<string, MqttConnectedClient> _clients = new(4096);
-    readonly AsyncLock _createConnectionSyncRoot = new();
+    readonly SemaphoreSlim _createConnectionSyncRoot = new(1, 1);
     readonly MqttServerEventContainer _eventContainer;
     readonly MqttNetSourceLogger _logger;
     readonly MqttServerOptions _options;
@@ -544,7 +544,9 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     {
         MqttConnectedClient connectedClient;
 
-        using (await _createConnectionSyncRoot.EnterAsync().ConfigureAwait(false))
+        await _createConnectionSyncRoot.WaitAsync().ConfigureAwait(false);
+
+        try
         {
             MqttSession oldSession;
             MqttConnectedClient oldConnectedClient;
@@ -628,6 +630,10 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             }
 
             oldSession?.Dispose();
+        }
+        finally
+        {
+            _createConnectionSyncRoot.Release();
         }
 
         return connectedClient;

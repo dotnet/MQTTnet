@@ -23,7 +23,7 @@ namespace MQTTnet.AspNetCore;
 public sealed class MqttConnectionContext : IMqttChannelAdapter
 {
     readonly ConnectionContext _connection;
-    readonly AsyncLock _writerLock = new();
+    readonly SemaphoreSlim _writerLock = new(1, 1);
 
     PipeReader _input;
     PipeWriter _output;
@@ -197,30 +197,29 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
 
     public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
     {
-        using (await _writerLock.EnterAsync(cancellationToken).ConfigureAwait(false))
+        await _writerLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
         {
-            try
-            {
-                var buffer = PacketFormatterAdapter.Encode(packet);
+            var buffer = PacketFormatterAdapter.Encode(packet);
 
-                if (buffer.Payload.Length == 0)
-                {
-                    // zero copy
-                    // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
-                    await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    WritePacketBuffer(_output, buffer);
-                    await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
-                }
-
-                BytesSent += buffer.Length;
-            }
-            finally
+            if (buffer.Payload.Length == 0)
             {
-                PacketFormatterAdapter.Cleanup();
+                // zero copy
+                // https://github.com/dotnet/runtime/blob/e31ddfdc4f574b26231233dc10c9a9c402f40590/src/libraries/System.IO.Pipelines/src/System/IO/Pipelines/StreamPipeWriter.cs#L279
+                await _output.WriteAsync(buffer.Packet, cancellationToken).ConfigureAwait(false);
             }
+            else
+            {
+                WritePacketBuffer(_output, buffer);
+                await _output.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            BytesSent += buffer.Length;
+        }
+        finally
+        {
+            _writerLock.Release();
+            PacketFormatterAdapter.Cleanup();
         }
     }
 

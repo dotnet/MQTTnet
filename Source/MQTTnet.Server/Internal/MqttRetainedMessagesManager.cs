@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Collections.ObjectModel;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Internal;
 
@@ -11,7 +10,7 @@ namespace MQTTnet.Server.Internal
     public sealed class MqttRetainedMessagesManager
     {
         readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
-        readonly AsyncLock _storageAccessLock = new AsyncLock();
+        readonly SemaphoreSlim _storageAccessLock = new(1, 1);
 
         readonly MqttServerEventContainer _eventContainer;
         readonly MqttNetSourceLogger _logger;
@@ -98,10 +97,16 @@ namespace MQTTnet.Server.Internal
 
                 if (saveIsRequired)
                 {
-                    using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
+                    await _storageAccessLock.WaitAsync().ConfigureAwait(false);
+
+                    try
                     {
                         var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
                         await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    }
+                    finally
+                    {
+                        _storageAccessLock.Release();
                     }
                 }
             }
@@ -140,9 +145,14 @@ namespace MQTTnet.Server.Internal
                 _messages.Clear();
             }
 
-            using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
+            await _storageAccessLock.WaitAsync().ConfigureAwait(false);
+            try
             {
                 await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
+            }
+            finally
+            {
+                _storageAccessLock.Release();
             }
         }
     }

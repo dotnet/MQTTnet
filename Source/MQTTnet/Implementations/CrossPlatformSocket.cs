@@ -193,7 +193,12 @@ public sealed class CrossPlatformSocket : IDisposable
         return _socket.ReceiveAsync(buffer, socketFlags);
     }
 
-    public Task SendAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
+    public Task<int> SendAsync(ArraySegment<byte> buffer, SocketFlags socketFlags)
+    {
+        return _socket.SendAsync(buffer, socketFlags);
+    }
+
+    public ValueTask<int> SendAsync(ReadOnlyMemory<byte> buffer, SocketFlags socketFlags)
     {
         return _socket.SendAsync(buffer, socketFlags);
     }

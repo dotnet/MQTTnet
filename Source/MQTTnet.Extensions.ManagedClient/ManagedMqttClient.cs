@@ -249,17 +249,6 @@ namespace MQTTnet.Extensions.ManagedClient
 
             Options = options;
 
-            if (options.Storage != null)
-            {
-                _storageManager = new ManagedMqttClientStorageManager(options.Storage);
-                var messages = await _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false);
-
-                foreach (var message in messages)
-                {
-                    _messageQueue.Enqueue(message);
-                }
-            }
-
             var cancellationTokenSource = new CancellationTokenSource();
             var cancellationToken = cancellationTokenSource.Token;
             _connectionCancellationToken = cancellationTokenSource;
@@ -441,6 +430,48 @@ namespace MQTTnet.Extensions.ManagedClient
                     _subscriptions.Clear();
                     _unsubscriptions.Clear();
                 }
+            }
+        }
+
+        async Task PublishStoredMessagesAsync(CancellationToken cancellationToken)
+        {
+
+
+            try
+            {
+                _storageManager = new ManagedMqttClientStorageManager(Options.Storage);
+
+                while (!cancellationToken.IsCancellationRequested && InternalClient.IsConnected)
+                {
+
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    if (Options.Storage != null)
+                    {
+
+                        await foreach (var msg in _storageManager.LoadQueuedMessagesAsync().ConfigureAwait(false))
+                        {
+
+                            await EnqueueAsync(msg);
+
+                            cancellationToken.ThrowIfCancellationRequested();
+
+                            await TryPublishQueuedMessageAsync(msg, cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception exception)
+            {
+                _logger.Error(exception, "Error while publishing stored application messages.");
+            }
+            finally
+            {
+                _logger.Verbose("Stopped publishing stored messages.");
             }
         }
 
@@ -665,7 +696,7 @@ namespace MQTTnet.Extensions.ManagedClient
             return new SendSubscribeUnsubscribeResult(subscribeResults, unsubscribeResults);
         }
 
-        void StartPublishing()
+        async Task StartPublishing()
         {
             StopPublishing();
 
@@ -673,6 +704,7 @@ namespace MQTTnet.Extensions.ManagedClient
             var cancellationToken = cancellationTokenSource.Token;
             _publishingCancellationToken = cancellationTokenSource;
 
+            await PublishStoredMessagesAsync(cancellationToken);
             Task.Run(() => PublishQueuedMessagesAsync(cancellationToken), cancellationToken).RunInBackground(_logger);
         }
 
@@ -717,11 +749,11 @@ namespace MQTTnet.Extensions.ManagedClient
                 else if (connectionState == ReconnectionResult.Reconnected)
                 {
                     await PublishReconnectSubscriptionsAsync(cancellationToken).ConfigureAwait(false);
-                    StartPublishing();
+                    await StartPublishing();
                 }
                 else if (connectionState == ReconnectionResult.Recovered)
                 {
-                    StartPublishing();
+                    await StartPublishing();
                 }
                 else if (connectionState == ReconnectionResult.StillConnected)
                 {

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Internal;
@@ -22,12 +23,13 @@ namespace MQTTnet.Extensions.ManagedClient
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public async Task<List<ManagedMqttApplicationMessage>> LoadQueuedMessagesAsync()
+        public async IAsyncEnumerable<ManagedMqttApplicationMessage> LoadQueuedMessagesAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            var loadedMessages = await _storage.LoadQueuedMessagesAsync().ConfigureAwait(false);
-            _messages.AddRange(loadedMessages);
-
-            return _messages;
+            await foreach (var message in _storage.LoadQueuedMessagesAsync(cancellationToken).ConfigureAwait(false))
+            {
+                _messages.Add(message);
+                yield return message;
+            }
         }
 
         public async Task AddAsync(ManagedMqttApplicationMessage applicationMessage)

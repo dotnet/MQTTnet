@@ -18,7 +18,7 @@ namespace MQTTnet.Implementations
     {
         readonly MqttClientWebSocketOptions _options;
 
-        AsyncLock _sendLock = new AsyncLock();
+        SemaphoreSlim _sendLock = new(1, 1);
         WebSocket _webSocket;
 
         public MqttWebSocketChannel(MqttClientWebSocketOptions options)

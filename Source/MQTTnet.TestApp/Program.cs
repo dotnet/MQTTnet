@@ -83,10 +83,6 @@ public static class Program
         {
             Task.Run(new MessageThroughputTest().Run);
         }
-        else if (pressedKey.KeyChar == 'f')
-        {
-            Task.Run(new AsyncLockTest().Run);
-        }
 
         Thread.Sleep(Timeout.Infinite);
     }

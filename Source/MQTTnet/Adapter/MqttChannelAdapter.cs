@@ -29,7 +29,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
     readonly byte[] _fixedHeaderBuffer = new byte[2];
     readonly MqttNetSourceLogger _logger;
     readonly byte[] _singleByteBuffer = new byte[1];
-    readonly AsyncLock _syncRoot = new();
+    readonly SemaphoreSlim _syncRoot = new(1, 1);
 
     Statistics _statistics; // mutable struct, don't make readonly!
 
@@ -210,58 +210,60 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         // This lock makes sure that multiple threads can send packets at the same time.
         // This is required when a disconnect is sent from another thread while the
         // worker thread is still sending publish packets etc.
-        using (await _syncRoot.EnterAsync(cancellationToken).ConfigureAwait(false))
+
+        await _syncRoot.WaitAsync(cancellationToken).ConfigureAwait(false);
+
+        try
         {
             // Check for cancellation here again because "WaitAsync" might take some time.
             cancellationToken.ThrowIfCancellationRequested();
 
-            try
+            var packetBuffer = PacketFormatterAdapter.Encode(packet);
+
+            var localPacketInspector = PacketInspector;
+            if (localPacketInspector != null)
             {
-                var packetBuffer = PacketFormatterAdapter.Encode(packet);
-
-                var localPacketInspector = PacketInspector;
-                if (localPacketInspector != null)
-                {
-                    await localPacketInspector.BeginSendPacket(packetBuffer).ConfigureAwait(false);
-                }
-
-                _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
-
-                if (packetBuffer.Payload.Length == 0 || !AllowPacketFragmentation)
-                {
-                    await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.Join()), true, cancellationToken).ConfigureAwait(false);
-                }
-                else
-                {
-                    await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.Packet), false, cancellationToken).ConfigureAwait(false);
-                    await _channel.WriteAsync(packetBuffer.Payload, true, cancellationToken).ConfigureAwait(false);
-                }
-
-                Interlocked.Add(ref _statistics._bytesReceived, packetBuffer.Length);
+                await localPacketInspector.BeginSendPacket(packetBuffer).ConfigureAwait(false);
             }
-            catch (Exception exception)
+
+            _logger.Verbose("TX ({0} bytes) >>> {1}", packetBuffer.Length, packet);
+
+            if (packetBuffer.Payload.Length == 0 || !AllowPacketFragmentation)
             {
-                if (!WrapAndThrowException(exception))
-                {
-                    throw;
-                }
+                await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.Join()), true, cancellationToken).ConfigureAwait(false);
             }
-            finally
+            else
             {
-                PacketFormatterAdapter.Cleanup();
+                await _channel.WriteAsync(new ReadOnlySequence<byte>(packetBuffer.Packet), false, cancellationToken).ConfigureAwait(false);
+                await _channel.WriteAsync(packetBuffer.Payload, true, cancellationToken).ConfigureAwait(false);
             }
+
+            Interlocked.Add(ref _statistics._bytesReceived, packetBuffer.Length);
+        }
+        catch (Exception exception)
+        {
+            if (!WrapAndThrowException(exception))
+            {
+                throw;
+            }
+        }
+        finally
+        {
+            _syncRoot.Release();
+
+            PacketFormatterAdapter.Cleanup();
         }
     }
 
     protected override void Dispose(bool disposing)
     {
+        base.Dispose(disposing);
+
         if (disposing)
         {
             _channel.Dispose();
             _syncRoot.Dispose();
         }
-
-        base.Dispose(disposing);
     }
 
     async Task<int> ReadBodyLengthAsync(byte initialEncodedByte, CancellationToken cancellationToken)
@@ -474,14 +476,14 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
     }
 
     struct Statistics
-    {
-        public long _bytesReceived;
-        public long _bytesSent;
+{
+    public long _bytesReceived;
+    public long _bytesSent;
 
-        public void Reset()
-        {
-            Volatile.Write(ref _bytesReceived, 0);
-            Volatile.Write(ref _bytesSent, 0);
-        }
+    public void Reset()
+    {
+        Volatile.Write(ref _bytesReceived, 0);
+        Volatile.Write(ref _bytesSent, 0);
     }
+}
 }

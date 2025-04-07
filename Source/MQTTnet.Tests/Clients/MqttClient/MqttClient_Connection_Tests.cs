@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -164,6 +165,91 @@ namespace MQTTnet.Tests.Clients.MqttClient
                 Assert.AreEqual(1, eventArgs.UserProperties.Count);
                 Assert.AreEqual("test_name", eventArgs.UserProperties[0].Name);
                 Assert.AreEqual("test_value", eventArgs.UserProperties[0].Value);
+            }
+        }
+
+        class TestClientKerberosAuthenticationHandler : IMqttExtendedAuthenticationExchangeHandler
+        {
+            public static IReadOnlyList<string> ServerTokens { get; } = new List<string>()
+            {
+                string.Empty,
+                "reply context token"
+            };
+
+            public static IReadOnlyList<string> ClientTokens { get; } = new List<string>()
+            {
+                string.Empty,
+                "initial context token",
+                string.Empty
+            };
+
+            int tokenCursor;
+
+            public async Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context)
+            {
+                if (context.AuthenticationMethod != "GS2-KRB5")
+                {
+                    throw new InvalidOperationException("Wrong authentication method");
+                }
+
+                Assert.IsTrue(tokenCursor < ServerTokens.Count, "No more server tokens were expected.");
+                var expectedToken = ServerTokens[tokenCursor++];
+                Assert.AreEqual(expectedToken, Encoding.UTF8.GetString(context.AuthenticationData));
+
+                var sendOptions = new MqttExtendedAuthenticationExchangeData
+                {
+                    AuthenticationData = Encoding.UTF8.GetBytes(ClientTokens[tokenCursor])
+                };
+
+                await context.Client.SendExtendedAuthenticationExchangeDataAsync(sendOptions, context.CancellationToken);
+            }
+        }
+
+        [TestMethod]
+        public async Task Use_Extended_Authentication()
+        {
+            // Use Kerberos sample from the MQTT RFC.
+            var kerberosAuthenticationHandler = new TestClientKerberosAuthenticationHandler();
+
+            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            {
+                var server = await testEnvironment.StartServer();
+
+                server.ValidatingConnectionAsync += async args =>
+                {
+                    if (args.AuthenticationMethod == "GS2-KRB5")
+                    {
+                        var authenticationData = args.AuthenticationData;
+                        string expectedToken;
+                        int tokenCursor;
+                        for (tokenCursor = 0; tokenCursor < TestClientKerberosAuthenticationHandler.ServerTokens.Count; tokenCursor++)
+                        {
+                            expectedToken = TestClientKerberosAuthenticationHandler.ClientTokens[tokenCursor];
+                            Assert.AreEqual(expectedToken, Encoding.UTF8.GetString(authenticationData), "The received client token is not correct.");
+
+                            var serverToken = TestClientKerberosAuthenticationHandler.ServerTokens[tokenCursor];
+                            var authOptions = testEnvironment.Factory.CreateMqttExtendedAuthenticationExchangeOptionsBuilder().WithAuthenticationData(serverToken).Build();
+                            var result = await args.SendExtendedAuthenticationExchangeDataAsync(authOptions);
+
+                            authenticationData = result.AuthenticationData;
+                        }
+
+                        expectedToken = TestClientKerberosAuthenticationHandler.ClientTokens[tokenCursor];
+                        Assert.AreEqual(expectedToken, Encoding.UTF8.GetString(authenticationData), "The received client token is not correct.");
+                        args.ResponseAuthenticationData = Encoding.UTF8.GetBytes("outcome of authentication");
+                        args.ReasonCode = MqttConnectReasonCode.Success;
+                        args.ReasonString = "Authentication successful";
+                    }
+                    else
+                    {
+                        args.ReasonCode = MqttConnectReasonCode.BadAuthenticationMethod;
+                    }
+                };
+
+                var clientOptions = testEnvironment.CreateDefaultClientOptionsBuilder().WithAuthentication("GS2-KRB5", new byte[0]).WithExtendedAuthenticationExchangeHandler(kerberosAuthenticationHandler);
+                var client = await testEnvironment.ConnectClient(clientOptions);
+
+                Assert.IsTrue(client.IsConnected);
             }
         }
 

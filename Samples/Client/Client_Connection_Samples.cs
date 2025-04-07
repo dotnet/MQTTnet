@@ -8,10 +8,13 @@
 
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using MQTTnet.Client;
 using MQTTnet.Extensions.WebSocket4Net;
 using MQTTnet.Formatter;
+using MQTTnet.Protocol;
 using MQTTnet.Samples.Helpers;
+using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Client;
 
@@ -97,6 +100,105 @@ public static class Client_Connection_Samples
             {
                 Console.WriteLine("Timeout while connecting.");
             }
+        }
+    }
+
+    public static async Task Connect_Using_Extended_Authentication()
+    {
+        /*
+         * This sample uses enhanced (aka extended) authentication (Kerberos) when creating the connection.
+         */
+
+        /*
+         * Server part...
+         */
+
+        var mqttFactory = new MqttFactory();
+
+        var serverOptions = mqttFactory.CreateServerOptionsBuilder().WithDefaultEndpoint().Build();
+        var server = mqttFactory.CreateMqttServer(serverOptions);
+
+        server.ValidatingConnectionAsync += async args =>
+        {
+            if (args.AuthenticationMethod == "GS2-KRB5")
+            {
+                var result = await args.SendExtendedAuthenticationExchangeDataAsync(new MqttExtendedAuthenticationExchangeOptions());
+
+                Console.WriteLine($"Received AUTH data from client: {Encoding.UTF8.GetString(result.AuthenticationData)}");
+
+                var authOptions = mqttFactory.CreateMqttExtendedAuthenticationExchangeOptionsBuilder().WithAuthenticationData("reply context token").Build();
+
+                result = await args.SendExtendedAuthenticationExchangeDataAsync(authOptions);
+
+                Console.WriteLine($"Received AUTH data from client: {Encoding.UTF8.GetString(result.AuthenticationData)}");
+
+                args.ResponseAuthenticationData = "outcome of authentication"u8.ToArray();
+
+                // Authentication DONE!
+                args.ReasonCode = MqttConnectReasonCode.Success; // Also the default!
+            }
+            else
+            {
+                args.ReasonCode = MqttConnectReasonCode.BadAuthenticationMethod;
+            }
+        };
+
+        await server.StartAsync();
+
+        /*
+         * Client part...
+         */
+
+        var mqttClientFactory = new MqttFactory();
+
+        // Use Kerberos sample from the MQTT RFC.
+        var kerberosAuthenticationHandler = new SampleClientKerberosAuthenticationHandler();
+
+        var clientOptions = mqttClientFactory.CreateClientOptionsBuilder()
+            .WithTcpServer("localhost")
+            .WithProtocolVersion(MqttProtocolVersion.V500)
+            .WithExtendedAuthenticationExchangeHandler(kerberosAuthenticationHandler)
+            .WithAuthentication("GS2-KRB5", Array.Empty<byte>())
+            .Build();
+
+        var client = mqttClientFactory.CreateMqttClient();
+
+        var result = await client.ConnectAsync(clientOptions);
+
+        Console.WriteLine($"Client connect result: {result.ResultCode}");
+    }
+
+    class SampleClientKerberosAuthenticationHandler : IMqttExtendedAuthenticationExchangeHandler
+    {
+        private readonly Queue<byte[]> clientTokens = new Queue<byte[]>();
+
+        public SampleClientKerberosAuthenticationHandler()
+        {
+            // The Kerberos sample from the MQTT RFC sends two client tokens after the initial empty token.
+            clientTokens.Enqueue(Encoding.UTF8.GetBytes("initial context token"));
+            clientTokens.Enqueue(Array.Empty<byte>());
+        }
+
+        public async Task HandleRequestAsync(MqttExtendedAuthenticationExchangeContext context)
+        {
+            if (context.AuthenticationMethod != "GS2-KRB5")
+            {
+                throw new InvalidOperationException("Wrong authentication method");
+            }
+
+            Console.WriteLine($"Received AUTH data from server: {Encoding.UTF8.GetString(context.AuthenticationData)}");
+
+            if (!clientTokens.TryDequeue(out var clientToken))
+            {
+                throw new InvalidOperationException("No more client tokens available");
+            }
+
+            var sendOptions = new MqttExtendedAuthenticationExchangeData
+            {
+                AuthenticationData = clientToken
+            };
+
+            await context.Client.SendExtendedAuthenticationExchangeDataAsync(sendOptions);
         }
     }
 

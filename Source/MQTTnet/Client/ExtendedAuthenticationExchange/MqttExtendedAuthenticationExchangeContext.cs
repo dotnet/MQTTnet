@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
@@ -11,7 +12,7 @@ namespace MQTTnet.Client
 {
     public class MqttExtendedAuthenticationExchangeContext
     {
-        public MqttExtendedAuthenticationExchangeContext(MqttAuthPacket authPacket, MqttClient client)
+        public MqttExtendedAuthenticationExchangeContext(MqttAuthPacket authPacket, MqttClient client, CancellationToken cancellationToken)
         {
             if (authPacket == null) throw new ArgumentNullException(nameof(authPacket));
 
@@ -22,6 +23,7 @@ namespace MQTTnet.Client
             UserProperties = authPacket.UserProperties;
 
             Client = client ?? throw new ArgumentNullException(nameof(client));
+            CancellationToken = cancellationToken;
         }
 
         /// <summary>
@@ -58,5 +60,10 @@ namespace MQTTnet.Client
         public List<MqttUserProperty> UserProperties { get; }
 
         public MqttClient Client { get; }
+
+        /// <summary>
+        /// The cancellation token passed to the operation being authenticated (e.g. ConnectAsync).
+        /// </summary>
+        public CancellationToken CancellationToken { get; }
     }
 }

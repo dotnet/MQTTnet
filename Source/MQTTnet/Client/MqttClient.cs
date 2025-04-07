@@ -89,6 +89,8 @@ namespace MQTTnet.Client
 
         public bool IsConnected => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connected;
 
+        bool IsConnecting => (MqttClientConnectionStatus)_connectionStatus == MqttClientConnectionStatus.Connecting;
+
         public MqttClientOptions Options { get; private set; }
 
         public async Task<MqttClientConnectResult> ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default)
@@ -304,7 +306,7 @@ namespace MQTTnet.Client
             }
 
             ThrowIfDisposed();
-            ThrowIfNotConnected();
+            ThrowIfNotConnectedOrConnecting();
 
             var authPacket = new MqttAuthPacket
             {
@@ -454,27 +456,30 @@ namespace MQTTnet.Client
                 var connectPacket = MqttPacketFactories.Connect.Create(options);
                 await Send(connectPacket, cancellationToken).ConfigureAwait(false);
 
-                var receivedPacket = await Receive(cancellationToken).ConfigureAwait(false);
-
-                switch (receivedPacket)
+                for (; ; )
                 {
-                    case MqttConnAckPacket connAckPacket:
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var receivedPacket = await Receive(cancellationToken).ConfigureAwait(false);
+
+                    if (receivedPacket is MqttAuthPacket authPacket)
+                    {
+                        await ProcessReceivedAuthPacket(authPacket, cancellationToken).ConfigureAwait(false);
+                        continue;
+                    }
+
+                    if (receivedPacket is MqttConnAckPacket connAckPacket)
                     {
                         result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
                         break;
                     }
-                    case MqttAuthPacket _:
+
+                    if (receivedPacket != null)
                     {
-                        throw new NotSupportedException("Extended authentication handler is not yet supported");
+                        throw new MqttProtocolViolationException($"Received other packet than CONNACK or AUTH while connecting ({receivedPacket}).");
                     }
-                    case null:
-                    {
-                        throw new MqttCommunicationException("Connection closed.");
-                    }
-                    default:
-                    {
-                        throw new InvalidOperationException($"Received an unexpected MQTT packet ({receivedPacket}).");
-                    }
+
+                    throw new MqttCommunicationException("Connection closed.");
                 }
             }
             catch (Exception exception)
@@ -678,10 +683,37 @@ namespace MQTTnet.Client
             return _events.ConnectedEvent.InvokeAsync(eventArgs);
         }
 
-        Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket)
+        Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket, CancellationToken cancellationToken)
         {
             var extendedAuthenticationExchangeHandler = Options.ExtendedAuthenticationExchangeHandler;
-            return extendedAuthenticationExchangeHandler != null ? extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this)) : CompletedTask.Instance;
+            if (extendedAuthenticationExchangeHandler == null)
+            {
+                // From RFC:
+                // The Client can close the connection at any point in this process. It MAY send a DISCONNECT packet before doing so.
+                // The Server can reject the authentication at any point in this process. It MAY send a CONNACK with a Reason Code of
+                // 0x80 or above as described in section 4.13, and MUST close the Network Connection [MQTT-4.12.0-4].
+                //
+                // If the re-authentication fails, the Client or Server SHOULD send DISCONNECT with an appropriate Reason Code
+                // as described in section 4.13, and MUST close the Network Connection [MQTT-4.12.1-2].
+                //
+                // Since we have no handler there is no chance to fulfil the initial authentication or re-authentication requests.
+
+                if (IsConnecting)
+                {
+                    throw new MqttCommunicationException("No handler was provided to handle the extended authentication exchange.");
+                }
+
+                _ = DisconnectAsync(new MqttClientDisconnectOptions
+                {
+                    Reason = MqttClientDisconnectOptionsReason.ImplementationSpecificError,
+                    ReasonString = "Unable to handle AUTH packet"
+                },
+                cancellationToken);
+
+                return CompletedTask.Instance;
+            }
+
+            return extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this, cancellationToken));
         }
 
         Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
@@ -935,6 +967,14 @@ namespace MQTTnet.Client
             }
         }
 
+        void ThrowIfNotConnectedOrConnecting()
+        {
+            if (!(IsConnected || IsConnecting))
+            {
+                ThrowNotConnectedOrConnecting();
+            }
+        }
+
         static void ThrowIfOptionsInvalid(MqttClientOptions options)
         {
             if (options == null)
@@ -956,6 +996,11 @@ namespace MQTTnet.Client
         static void ThrowNotConnected()
         {
             throw new MqttClientNotConnectedException();
+        }
+
+        static void ThrowNotConnectedOrConnecting()
+        {
+            throw new MqttCommunicationException("The MQTT client is not connected or connecting.");
         }
 
         void TryInitiateDisconnect()
@@ -992,7 +1037,7 @@ namespace MQTTnet.Client
                         await ProcessReceivedDisconnectPacket(disconnectPacket).ConfigureAwait(false);
                         break;
                     case MqttAuthPacket authPacket:
-                        await ProcessReceivedAuthPacket(authPacket).ConfigureAwait(false);
+                        await ProcessReceivedAuthPacket(authPacket, cancellationToken).ConfigureAwait(false);
                         break;
                     case MqttPingRespPacket _:
                         _packetDispatcher.TryDispatch(packet);

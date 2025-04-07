@@ -7,11 +7,14 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading.Tasks;
+using System.Threading;
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
+using MQTTnet.Exceptions;
 
 namespace MQTTnet.Server
 {
@@ -189,5 +192,54 @@ namespace MQTTnet.Server
         ///     A value of 0 indicates that the value is not used.
         /// </summary>
         public uint WillDelayInterval => _connectPacket.WillDelayInterval;
+
+
+        public async Task<MqttExtendedAuthenticationExchangeResult> SendExtendedAuthenticationExchangeDataAsync(
+            MqttExtendedAuthenticationExchangeOptions options,
+            CancellationToken cancellationToken = default)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var requestAuthPacket = new MqttAuthPacket
+            {
+                // From RFC: If the initial CONNECT packet included an Authentication Method property then all AUTH packets,
+                // and any successful CONNACK packet MUST include an Authentication Method Property with the same value as in the CONNECT packet [MQTT-4.12.0-5].
+                AuthenticationMethod = AuthenticationMethod,
+
+                // The reason code will stay at continue all the time when connecting. The server will respond with the
+                // CONNACK packet when authentication is done!
+                ReasonCode = MqttAuthenticateReasonCode.ContinueAuthentication,
+
+                AuthenticationData = options.AuthenticationData,
+                ReasonString = options.ReasonString,
+                UserProperties = options.UserProperties
+            };
+
+            await ChannelAdapter.SendPacketAsync(requestAuthPacket, cancellationToken).ConfigureAwait(false);
+
+            var responsePacket = await ChannelAdapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+
+            if (responsePacket == null)
+            {
+                throw new MqttCommunicationException("The client closed the connection.");
+            }
+
+            if (responsePacket is MqttAuthPacket responseAuthPacket)
+            {
+                if (!string.Equals(AuthenticationMethod, responseAuthPacket.AuthenticationMethod, StringComparison.Ordinal))
+                {
+                    throw new MqttProtocolViolationException("The authentication method cannot change while authenticating the client.");
+                }
+
+                return MqttExtendedAuthenticationExchangeResultFactory.Create(responseAuthPacket);
+            }
+
+            if (responsePacket is MqttDisconnectPacket disconnectPacket)
+            {
+                return MqttExtendedAuthenticationExchangeResultFactory.Create(disconnectPacket);
+            }
+
+            throw new MqttProtocolViolationException("Received other packet than AUTH while authenticating.");
+        }
     }
 }

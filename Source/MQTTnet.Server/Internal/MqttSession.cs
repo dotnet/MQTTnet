@@ -25,6 +25,7 @@ public sealed class MqttSession : IDisposable
 
     // Bookkeeping to know if this is a subscribing client; lazy initialize later.
     HashSet<string> _subscribedTopics;
+    HashSet<string> _subscribedSimpleTopics;
 
     public MqttSession(
         MqttConnectPacket connectPacket,
@@ -51,6 +52,8 @@ public sealed class MqttSession : IDisposable
     public uint ExpiryInterval => _connectPacket.SessionExpiryInterval;
 
     public bool HasSubscribedTopics => _subscribedTopics != null && _subscribedTopics.Count > 0;
+
+    public HashSet<string> GetSimpleSubscribedTopics => _subscribedSimpleTopics ?? [];
 
     public string Id => _connectPacket.ClientId;
 
@@ -79,14 +82,19 @@ public sealed class MqttSession : IDisposable
         return publishPacket;
     }
 
-    public void AddSubscribedTopic(string topic)
+    public void AddSubscribedTopic(string topic, bool isSimpleTopic)
     {
         if (_subscribedTopics == null)
         {
             _subscribedTopics = new HashSet<string>();
+            _subscribedSimpleTopics = new HashSet<string>();
         }
 
         _subscribedTopics.Add(topic);
+        if (isSimpleTopic)
+        {
+            _subscribedSimpleTopics.Add(topic);
+        }
     }
 
     public Task DeleteAsync()
@@ -209,6 +217,7 @@ public sealed class MqttSession : IDisposable
     public void RemoveSubscribedTopic(string topic)
     {
         _subscribedTopics?.Remove(topic);
+        _subscribedSimpleTopics?.Remove(topic);
     }
 
     public Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)

@@ -174,5 +174,19 @@ namespace MQTTnet
 
             return MqttTopicFilterCompareResult.NoMatch;
         }
+
+        public static bool ContainsWildcards(string topicFilter)
+        {
+            for (var i = 0; i < topicFilter.Length; i++)
+            {
+                var c = topicFilter[i];
+                if (c == MultiLevelWildcard || c == SingleLevelWildcard)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 }

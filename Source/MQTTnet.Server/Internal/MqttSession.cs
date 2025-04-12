@@ -54,7 +54,7 @@ public sealed class MqttSession : IDisposable
 
     public bool HasSubscribedTopics => _subscribedSimpleTopics.Count > 0 || _subscribedWildcardTopics.Count > 0;
 
-    public HashSet<string> GetSimpleSubscribedTopics => _subscribedSimpleTopics ?? [];
+    public HashSet<string> GetSimpleSubscribedTopics => _subscribedSimpleTopics;
 
     public string Id => _connectPacket.ClientId;
 

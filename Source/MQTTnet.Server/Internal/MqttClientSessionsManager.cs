@@ -30,7 +30,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     // The _sessions dictionary contains all session, the _subscriberSessions hash set contains subscriber sessions only.
     // See the MqttSubscription object for a detailed explanation.
     readonly MqttSessionsStorage _sessionsStorage = new();
-    readonly HashSet<MqttSession> _subscriberSessions = [];
+    readonly HashSet<MqttSession> _subscriberSessionsWithWildcards = [];
     readonly Dictionary<string, HashSet<MqttSession>> _simpleTopicsToSession = [];
 
     public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, MqttServerEventContainer eventContainer, IMqttNetLogger logger)
@@ -78,18 +78,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         {
             if (_sessionsStorage.TryRemoveSession(clientId, out session))
             {
-                _subscriberSessions.Remove(session);
-                foreach (var simpleTopic in session.GetSimpleSubscribedTopics)
-                {
-                    if (_simpleTopicsToSession.TryGetValue(simpleTopic, out var sessionsWithSimpleTopics))
-                    {
-                        sessionsWithSimpleTopics.Remove(session);
-                        if (sessionsWithSimpleTopics.Count == 0)
-                        {
-                            _simpleTopicsToSession.Remove(simpleTopic);
-                        }
-                    }
-                }
+                CleanupClientSessionUnsafe(session);
             }
         }
         finally
@@ -173,18 +162,29 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     await _retainedMessagesManager.UpdateMessage(senderId, applicationMessage).ConfigureAwait(false);
                 }
 
-                List<MqttSession> subscriberSessions;
+                HashSet<MqttSession> subscriberSessions;
                 _sessionsManagementLock.EnterReadLock();
                 try
                 {
                     if (_simpleTopicsToSession.TryGetValue(applicationMessage.Topic, out var sessionsWithSimpleTopics))
                     {
-                        subscriberSessions = sessionsWithSimpleTopics.ToList();
+                        // Create the initial subscriberSessions from whichever set is larger to take advantage 
+                        // of the internal ConstructFrom other HashSet optimizations 
+                        if(sessionsWithSimpleTopics.Count > _subscriberSessionsWithWildcards.Count)
+                        {
+                            subscriberSessions = new HashSet<MqttSession>(sessionsWithSimpleTopics);
+                            subscriberSessions.UnionWith(_subscriberSessionsWithWildcards);
+                        }
+                        else
+                        {
+                            subscriberSessions = new HashSet<MqttSession>(_subscriberSessionsWithWildcards);
+                            subscriberSessions.UnionWith(sessionsWithSimpleTopics);
+                        }
                     }
                     else
                     {
-                        // No simple topic match. Check all subscribers.
-                        subscriberSessions = _subscriberSessions.ToList();
+                        // Always include the sessions with wildcards. They need to be properly matched against the topic filter.
+                        subscriberSessions = new HashSet<MqttSession>(_subscriberSessionsWithWildcards);
                     }
                 }
                 finally
@@ -471,16 +471,17 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         _sessionsManagementLock.EnterWriteLock();
         try
         {
-            if (!clientSession.HasSubscribedTopics)
-            {
-                // first subscribed topic
-                _subscriberSessions.Add(clientSession);
-            }
-
             foreach (var topic in topics)
             {
-                bool isSimpleTopic = !MqttTopicFilterComparer.ContainsWildcards(topic);
-                if (isSimpleTopic)
+                bool hasWildcard = MqttTopicFilterComparer.ContainsWildcards(topic);
+                if (hasWildcard)
+                {
+                    if (!clientSession.HasSubscribedWildcardTopics)
+                    {
+                        _subscriberSessionsWithWildcards.Add(clientSession);
+                    }
+                }
+                else
                 {
                     if (_simpleTopicsToSession.TryGetValue(topic, out var sessionsWithSimpleTopics))
                     {
@@ -491,7 +492,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                         _simpleTopicsToSession[topic] = [clientSession];
                     }
                 }
-                clientSession.AddSubscribedTopic(topic, isSimpleTopic);
+                clientSession.AddSubscribedTopic(topic, hasWildcard);
             }
         }
         finally
@@ -518,10 +519,10 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 clientSession.RemoveSubscribedTopic(subscriptionTopic);
             }
 
-            if (!clientSession.HasSubscribedTopics)
+            if (!clientSession.HasSubscribedWildcardTopics)
             {
-                // last subscription removed
-                _subscriberSessions.Remove(clientSession);
+                // Last wildcard subscription removed
+                _subscriberSessionsWithWildcards.Remove(clientSession);
             }
         }
         finally
@@ -604,7 +605,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     if (connectPacket.CleanSession)
                     {
                         _logger.Verbose("Deleting existing session of client '{0}' due to clean start", connectPacket.ClientId);
-                        _subscriberSessions.Remove(oldSession);
+                        CleanupClientSessionUnsafe(oldSession);
                         session = CreateSession(connectPacket, validatingConnectionEventArgs);
                     }
                     else
@@ -706,6 +707,23 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         finally
         {
             _sessionsManagementLock.ExitReadLock();
+        }
+    }
+
+    //* Must be called with the _sessionsManagementLock held.
+    void CleanupClientSessionUnsafe(MqttSession session)
+    {
+        _subscriberSessionsWithWildcards.Remove(session);
+        foreach (var simpleTopic in session.GetSimpleSubscribedTopics)
+        {
+            if (_simpleTopicsToSession.TryGetValue(simpleTopic, out var sessionsWithSimpleTopics))
+            {
+                sessionsWithSimpleTopics.Remove(session);
+                if (sessionsWithSimpleTopics.Count == 0)
+                {
+                    _simpleTopicsToSession.Remove(simpleTopic);
+                }
+            }
         }
     }
 

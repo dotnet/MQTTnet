@@ -23,8 +23,8 @@ public sealed class MqttSession : IDisposable
     // Do not use a dictionary in order to keep the ordering of the messages.
     readonly List<MqttPublishPacket> _unacknowledgedPublishPackets = new();
 
-    HashSet<string> _subscribedSimpleTopics = [];
-    HashSet<string> _subscribedWildcardTopics = [];
+    readonly HashSet<string> _subscribedSimpleTopics = [];
+    readonly HashSet<string> _subscribedWildcardTopics = [];
 
     public MqttSession(
         MqttConnectPacket connectPacket,

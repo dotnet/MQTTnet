@@ -177,16 +177,12 @@ namespace MQTTnet
 
         public static bool ContainsWildcards(string topicFilter)
         {
-            for (var i = 0; i < topicFilter.Length; i++)
+            if (topicFilter[topicFilter.Length - 1] == MultiLevelWildcard)
             {
-                var c = topicFilter[i];
-                if (c == MultiLevelWildcard || c == SingleLevelWildcard)
-                {
-                    return true;
-                }
+                return true;
             }
 
-            return false;
+            return topicFilter.Contains(SingleLevelWildcard);
         }
     }
 }

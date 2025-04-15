@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MQTTnet.Server;
 using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Tests
@@ -145,6 +144,24 @@ namespace MQTTnet.Tests
             CompareAndAssert("/finance", "+/+", MqttTopicFilterCompareResult.IsMatch);
             CompareAndAssert("/finance", "/+", MqttTopicFilterCompareResult.IsMatch);
             CompareAndAssert("/finance", "+", MqttTopicFilterCompareResult.NoMatch);
+        }
+
+        [TestMethod]
+        public void CotainsWildcard_No()
+        {
+            Assert.IsFalse(MqttTopicFilterComparer.ContainsWildcards("A/B/C/D"));
+        }
+
+        [TestMethod]
+        public void CotainsWildcard_MultiLevel()
+        {
+            Assert.IsTrue(MqttTopicFilterComparer.ContainsWildcards("A/B/C/#"));
+        }
+
+        [TestMethod]
+        public void CotainsWildcard_SingleLevel()
+        {
+            Assert.IsTrue(MqttTopicFilterComparer.ContainsWildcards("A/B/+/D"));
         }
 
         static void CompareAndAssert(string topic, string filter, MqttTopicFilterCompareResult expectedResult)

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Buffers;
 using System.Linq;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -11,34 +10,29 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5;
 
-public sealed class MqttV5PacketEncoder
+public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
 {
     const int FixedHeaderSize = 1;
 
-    readonly MqttBufferWriter _bufferWriter;
+    readonly MqttBufferWriter _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
     readonly MqttV5PropertiesWriter _propertiesWriter = new(new MqttBufferWriter(1024, 4096));
-
-    public MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
-    {
-        _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
-    }
 
     public MqttPacketBuffer Encode(MqttPacket packet)
     {
         ArgumentNullException.ThrowIfNull(packet);
 
-        // Leave enough head space for max header size (fixed + 4 variable remaining length = 5 bytes)
-        const int ReservedHeaderSize = 5;
-        _bufferWriter.Reset(ReservedHeaderSize);
-        _bufferWriter.Seek(ReservedHeaderSize);
+        // Leave enough headspace for max header size (fixed + 4 variable remaining length = 5 bytes)
+        const int reservedHeaderSize = 5;
+
+        _bufferWriter.Reset(reservedHeaderSize);
+        _bufferWriter.Seek(reservedHeaderSize);
 
         var fixedHeader = EncodePacket(packet);
-        var remainingLength = (uint)_bufferWriter.Length - ReservedHeaderSize;
+        var remainingLength = (uint)_bufferWriter.Length - reservedHeaderSize;
 
-        ReadOnlySequence<byte> payload = default;
         if (packet is MqttPublishPacket publishPacket)
         {
-            payload = publishPacket.Payload;
+            var payload = publishPacket.Payload;
             remainingLength += (uint)payload.Length;
         }
         else
@@ -226,42 +220,25 @@ public sealed class MqttV5PacketEncoder
 
     byte EncodePacket(MqttPacket packet)
     {
-        switch (packet)
+        return packet switch
         {
-            case MqttConnectPacket connectPacket:
-                return EncodeConnectPacket(connectPacket);
-            case MqttConnAckPacket connAckPacket:
-                return EncodeConnAckPacket(connAckPacket);
-            case MqttDisconnectPacket disconnectPacket:
-                return EncodeDisconnectPacket(disconnectPacket);
-            case MqttPingReqPacket _:
-                return EncodePingReqPacket();
-            case MqttPingRespPacket _:
-                return EncodePingRespPacket();
-            case MqttPublishPacket publishPacket:
-                return EncodePublishPacket(publishPacket);
-            case MqttPubAckPacket pubAckPacket:
-                return EncodePubAckPacket(pubAckPacket);
-            case MqttPubRecPacket pubRecPacket:
-                return EncodePubRecPacket(pubRecPacket);
-            case MqttPubRelPacket pubRelPacket:
-                return EncodePubRelPacket(pubRelPacket);
-            case MqttPubCompPacket pubCompPacket:
-                return EncodePubCompPacket(pubCompPacket);
-            case MqttSubscribePacket subscribePacket:
-                return EncodeSubscribePacket(subscribePacket);
-            case MqttSubAckPacket subAckPacket:
-                return EncodeSubAckPacket(subAckPacket);
-            case MqttUnsubscribePacket unsubscribePacket:
-                return EncodeUnsubscribePacket(unsubscribePacket);
-            case MqttUnsubAckPacket unsubAckPacket:
-                return EncodeUnsubAckPacket(unsubAckPacket);
-            case MqttAuthPacket authPacket:
-                return EncodeAuthPacket(authPacket);
-
-            default:
-                throw new MqttProtocolViolationException("Packet type invalid.");
-        }
+            MqttConnectPacket connectPacket => EncodeConnectPacket(connectPacket),
+            MqttConnAckPacket connAckPacket => EncodeConnAckPacket(connAckPacket),
+            MqttDisconnectPacket disconnectPacket => EncodeDisconnectPacket(disconnectPacket),
+            MqttPingReqPacket _ => EncodePingReqPacket(),
+            MqttPingRespPacket _ => EncodePingRespPacket(),
+            MqttPublishPacket publishPacket => EncodePublishPacket(publishPacket),
+            MqttPubAckPacket pubAckPacket => EncodePubAckPacket(pubAckPacket),
+            MqttPubRecPacket pubRecPacket => EncodePubRecPacket(pubRecPacket),
+            MqttPubRelPacket pubRelPacket => EncodePubRelPacket(pubRelPacket),
+            MqttPubCompPacket pubCompPacket => EncodePubCompPacket(pubCompPacket),
+            MqttSubscribePacket subscribePacket => EncodeSubscribePacket(subscribePacket),
+            MqttSubAckPacket subAckPacket => EncodeSubAckPacket(subAckPacket),
+            MqttUnsubscribePacket unsubscribePacket => EncodeUnsubscribePacket(unsubscribePacket),
+            MqttUnsubAckPacket unsubAckPacket => EncodeUnsubAckPacket(unsubAckPacket),
+            MqttAuthPacket authPacket => EncodeAuthPacket(authPacket),
+            _ => throw new MqttProtocolViolationException("Packet type invalid.")
+        };
     }
 
     static byte EncodePingReqPacket()

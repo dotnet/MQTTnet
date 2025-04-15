@@ -5,23 +5,22 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server.Internal;
+
+public sealed class SubscribeResult
 {
-    public sealed class SubscribeResult
+    public SubscribeResult(int topicsCount)
     {
-        public SubscribeResult(int topicsCount)
-        {
-            ReasonCodes = new List<MqttSubscribeReasonCode>(topicsCount);
-        }
-        
-        public bool CloseConnection { get; set; }
-        
-        public List<MqttSubscribeReasonCode> ReasonCodes { get; set; }
-
-        public string ReasonString { get; set; }
-
-        public List<MqttRetainedMessageMatch> RetainedMessages { get; set; }
-
-        public List<MqttUserProperty> UserProperties { get; set; }
+        ReasonCodes = new List<MqttSubscribeReasonCode>(topicsCount);
     }
+
+    public bool CloseConnection { get; set; }
+
+    public List<MqttSubscribeReasonCode> ReasonCodes { get; set; }
+
+    public string ReasonString { get; set; }
+
+    public List<MqttRetainedMessageMatch> RetainedMessages { get; set; }
+
+    public List<MqttUserProperty> UserProperties { get; set; }
 }

@@ -7,103 +7,102 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public sealed class AsyncQueue<TItem> : IDisposable
 {
-    public sealed class AsyncQueue<TItem> : IDisposable
+    readonly AsyncSignal _signal = new();
+    readonly object _syncRoot = new();
+
+    readonly ConcurrentQueue<TItem> _queue = [];
+
+    bool _isDisposed;
+
+    public int Count => _queue.Count;
+
+    public void Clear()
     {
-        readonly AsyncSignal _signal = new AsyncSignal();
-        readonly object _syncRoot = new object();
+        _queue.Clear();
+    }
 
-        ConcurrentQueue<TItem> _queue = new ConcurrentQueue<TItem>();
-
-        bool _isDisposed;
-
-        public int Count => _queue.Count;
-
-        public void Clear()
+    public void Dispose()
+    {
+        lock (_syncRoot)
         {
-            _queue.Clear();
-        }
+            _signal.Dispose();
 
-        public void Dispose()
-        {
-            lock (_syncRoot)
+            _isDisposed = true;
+
+            if (typeof(IDisposable).IsAssignableFrom(typeof(TItem)))
             {
-                _signal.Dispose();
-
-                _isDisposed = true;
-
-                if (typeof(IDisposable).IsAssignableFrom(typeof(TItem)))
+                while (_queue.TryDequeue(out var item))
                 {
-                    while (_queue.TryDequeue(out TItem item))
-                    {
-                        (item as IDisposable).Dispose();
-                    }
+                    (item as IDisposable)?.Dispose();
                 }
             }
         }
+    }
 
-        public void Enqueue(TItem item)
+    public void Enqueue(TItem item)
+    {
+        lock (_syncRoot)
         {
-            lock (_syncRoot)
-            {
-                _queue.Enqueue(item);
-                _signal.Set();
-            }
+            _queue.Enqueue(item);
+            _signal.Set();
+        }
+    }
+
+    public AsyncQueueDequeueResult<TItem> TryDequeue()
+    {
+        if (_queue.TryDequeue(out var item))
+        {
+            return AsyncQueueDequeueResult<TItem>.Success(item);
         }
 
-        public AsyncQueueDequeueResult<TItem> TryDequeue()
-        {
-            if (_queue.TryDequeue(out var item))
-            {
-                return AsyncQueueDequeueResult<TItem>.Success(item);
-            }
+        return AsyncQueueDequeueResult<TItem>.NonSuccess;
+    }
 
-            return AsyncQueueDequeueResult<TItem>.NonSuccess;
-        }
-
-        public async Task<AsyncQueueDequeueResult<TItem>> TryDequeueAsync(CancellationToken cancellationToken)
+    public async Task<AsyncQueueDequeueResult<TItem>> TryDequeueAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                try
+                Task task = null;
+                lock (_syncRoot)
                 {
-                    Task task = null;
-                    lock (_syncRoot)
-                    {
-                        if (_isDisposed)
-                        {
-                            return AsyncQueueDequeueResult<TItem>.NonSuccess;
-                        }
-
-                        if (_queue.IsEmpty)
-                        {
-                            task = _signal.WaitAsync(cancellationToken);
-                        }
-                    }
-
-                    if (task != null)
-                    {
-                        await task.ConfigureAwait(false);
-                    }
-
-                    if (cancellationToken.IsCancellationRequested)
+                    if (_isDisposed)
                     {
                         return AsyncQueueDequeueResult<TItem>.NonSuccess;
                     }
 
-                    if (_queue.TryDequeue(out var item))
+                    if (_queue.IsEmpty)
                     {
-                        return AsyncQueueDequeueResult<TItem>.Success(item);
+                        task = _signal.WaitAsync(cancellationToken);
                     }
                 }
-                catch (OperationCanceledException)
+
+                if (task != null)
+                {
+                    await task.ConfigureAwait(false);
+                }
+
+                if (cancellationToken.IsCancellationRequested)
                 {
                     return AsyncQueueDequeueResult<TItem>.NonSuccess;
                 }
-            }
 
-            return AsyncQueueDequeueResult<TItem>.NonSuccess;
+                if (_queue.TryDequeue(out var item))
+                {
+                    return AsyncQueueDequeueResult<TItem>.Success(item);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return AsyncQueueDequeueResult<TItem>.NonSuccess;
+            }
         }
+
+        return AsyncQueueDequeueResult<TItem>.NonSuccess;
     }
 }

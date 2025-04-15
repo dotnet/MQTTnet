@@ -2,25 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public sealed class AsyncQueueDequeueResult<TItem>(bool isSuccess, TItem item)
 {
-    public sealed class AsyncQueueDequeueResult<TItem>
+    public static readonly AsyncQueueDequeueResult<TItem> NonSuccess = new(false, default);
+
+    public bool IsSuccess { get; } = isSuccess;
+
+    public TItem Item { get; } = item;
+
+    public static AsyncQueueDequeueResult<TItem> Success(TItem item)
     {
-        public static readonly AsyncQueueDequeueResult<TItem> NonSuccess = new AsyncQueueDequeueResult<TItem>(false, default);
-
-        public AsyncQueueDequeueResult(bool isSuccess, TItem item)
-        {
-            IsSuccess = isSuccess;
-            Item = item;
-        }
-
-        public bool IsSuccess { get; }
-
-        public TItem Item { get; }
-
-        public static AsyncQueueDequeueResult<TItem> Success(TItem item)
-        {
-            return new AsyncQueueDequeueResult<TItem>(true, item);
-        }
+        return new AsyncQueueDequeueResult<TItem>(true, item);
     }
 }

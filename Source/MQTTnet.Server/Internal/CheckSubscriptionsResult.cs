@@ -4,18 +4,17 @@
 
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server.Internal;
+
+public sealed class CheckSubscriptionsResult
 {
-    public sealed class CheckSubscriptionsResult
-    {
-        public static CheckSubscriptionsResult NotSubscribed { get; } = new CheckSubscriptionsResult();
+    public static CheckSubscriptionsResult NotSubscribed { get; } = new CheckSubscriptionsResult();
 
-        public bool IsSubscribed { get; set; }
+    public bool IsSubscribed { get; set; }
 
-        public bool RetainAsPublished { get; set; }
-        
-        public List<uint> SubscriptionIdentifiers { get; set; }
-        
-        public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
-    }
+    public bool RetainAsPublished { get; set; }
+
+    public List<uint> SubscriptionIdentifiers { get; set; }
+
+    public MqttQualityOfServiceLevel QualityOfServiceLevel { get; set; }
 }

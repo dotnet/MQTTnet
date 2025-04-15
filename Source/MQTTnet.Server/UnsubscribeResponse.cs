@@ -17,5 +17,5 @@ public sealed class UnsubscribeResponse
 
     public string ReasonString { get; set; }
 
-    public List<MqttUserProperty> UserProperties { get; } = new();
+    public List<MqttUserProperty> UserProperties { get; } = [];
 }

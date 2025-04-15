@@ -4,19 +4,18 @@
 
 using System.Buffers;
 
-namespace MQTTnet.Tests.ASP.Mockups
+namespace MQTTnet.Tests.ASP.Mockups;
+
+public sealed class LimitedMemoryPool : MemoryPool<byte>
 {
-    public sealed class LimitedMemoryPool : MemoryPool<byte>
+    protected override void Dispose(bool disposing)
     {
-        protected override void Dispose(bool disposing)
-        {
-        }
-
-        public override IMemoryOwner<byte> Rent(int minBufferSize = -1)
-        {
-            return new MemoryOwner(minBufferSize);
-        }
-
-        public override int MaxBufferSize { get; }
     }
+
+    public override IMemoryOwner<byte> Rent(int minBufferSize = -1)
+    {
+        return new MemoryOwner(minBufferSize);
+    }
+
+    public override int MaxBufferSize { get; } = 1;
 }

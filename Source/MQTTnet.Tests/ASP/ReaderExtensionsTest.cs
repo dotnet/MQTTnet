@@ -22,25 +22,20 @@ public sealed class ReaderExtensionsTest
 
         var sequence = new ReadOnlySequence<byte>(buffer.Array, buffer.Offset, buffer.Count);
 
-        var part = sequence;
-        var consumed = part.Start;
-        var observed = part.Start;
-        var read = 0;
-
-        part = sequence.Slice(sequence.Start, 0); // empty message should fail
-        var result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        var part = sequence.Slice(sequence.Start, 0); // empty message should fail
+        var result = serializer.TryDecode(part, out _, out _, out _, out _);
         Assert.IsFalse(result);
 
         part = sequence.Slice(sequence.Start, 1); // partial fixed header should fail
-        result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        result = serializer.TryDecode(part, out _, out _, out _, out _);
         Assert.IsFalse(result);
 
         part = sequence.Slice(sequence.Start, 4); // partial body should fail
-        result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        result = serializer.TryDecode(part, out _, out _, out _, out _);
         Assert.IsFalse(result);
 
         part = sequence; // complete msg should work
-        result = serializer.TryDecode(part, out _, out consumed, out observed, out read);
+        result = serializer.TryDecode(part, out _, out _, out _, out _);
         Assert.IsTrue(result);
     }
 }

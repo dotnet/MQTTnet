@@ -11,6 +11,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests.Formatter;
 
+// ReSharper disable InconsistentNaming
 [TestClass]
 public sealed class MqttPacketSerialization_V5_Tests
 {

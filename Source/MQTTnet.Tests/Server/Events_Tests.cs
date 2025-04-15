@@ -10,194 +10,180 @@ using MQTTnet.Internal;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests.Server;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class Events_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class Events_Tests : BaseTestClass
+    [TestMethod]
+    public async Task Fire_Client_Connected_Event()
     {
-        [TestMethod]
-        public async Task Fire_Client_Connected_Event()
+        using var testEnvironment = CreateTestEnvironment();
+        var server = await testEnvironment.StartServer();
+
+        ClientConnectedEventArgs eventArgs = null;
+        server.ClientConnectedAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                ClientConnectedEventArgs eventArgs = null;
-                server.ClientConnectedAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
 
-                await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
 
-                Assert.IsNotNull(eventArgs);
+        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Connected_Event)));
+        Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
+        Assert.AreEqual(MqttProtocolVersion.V311, eventArgs.ProtocolVersion);
+        Assert.AreEqual("TheUser", eventArgs.UserName);
+        Assert.AreEqual("ThePassword", eventArgs.Password);
+    }
 
-                Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Connected_Event)));
-                Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
-                Assert.AreEqual(MqttProtocolVersion.V311, eventArgs.ProtocolVersion);
-                Assert.AreEqual("TheUser", eventArgs.UserName);
-                Assert.AreEqual("ThePassword", eventArgs.Password);
-            }
-        }
+    [TestMethod]
+    public async Task Fire_Client_Disconnected_Event()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        var server = await testEnvironment.StartServer();
 
-        [TestMethod]
-        public async Task Fire_Client_Disconnected_Event()
+        ClientDisconnectedEventArgs eventArgs = null;
+        server.ClientDisconnectedAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                ClientDisconnectedEventArgs eventArgs = null;
-                server.ClientDisconnectedAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
+        await client.DisconnectAsync();
 
-                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser", "ThePassword"));
-                await client.DisconnectAsync();
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
 
-                Assert.IsNotNull(eventArgs);
+        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Disconnected_Event)));
+        Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
+        Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
 
-                Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Disconnected_Event)));
-                Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
-                Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
+        Assert.AreEqual("TheUser", eventArgs.UserName);
+        Assert.AreEqual("ThePassword", eventArgs.Password);
+    }
 
-                Assert.AreEqual("TheUser", eventArgs.UserName);
-                Assert.AreEqual("ThePassword", eventArgs.Password);
-            }
-        }
+    [TestMethod]
+    public async Task Fire_Client_Subscribed_Event()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        var server = await testEnvironment.StartServer();
 
-        [TestMethod]
-        public async Task Fire_Client_Subscribed_Event()
+        ClientSubscribedTopicEventArgs eventArgs = null;
+        server.ClientSubscribedTopicAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                ClientSubscribedTopicEventArgs eventArgs = null;
-                server.ClientSubscribedTopicAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
+        await client.SubscribeAsync("The/Topic", MqttQualityOfServiceLevel.AtLeastOnce);
 
-                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
-                await client.SubscribeAsync("The/Topic", MqttQualityOfServiceLevel.AtLeastOnce);
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
 
-                Assert.IsNotNull(eventArgs);
+        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Subscribed_Event)));
+        Assert.AreEqual("The/Topic", eventArgs.TopicFilter.Topic);
+        Assert.AreEqual(MqttQualityOfServiceLevel.AtLeastOnce, eventArgs.TopicFilter.QualityOfServiceLevel);
+        Assert.AreEqual("TheUser", eventArgs.UserName);
+    }
 
-                Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Subscribed_Event)));
-                Assert.AreEqual("The/Topic", eventArgs.TopicFilter.Topic);
-                Assert.AreEqual(MqttQualityOfServiceLevel.AtLeastOnce, eventArgs.TopicFilter.QualityOfServiceLevel);
-                Assert.AreEqual("TheUser", eventArgs.UserName);
-            }
-        }
+    [TestMethod]
+    public async Task Fire_Client_Unsubscribed_Event()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        var server = await testEnvironment.StartServer();
 
-        [TestMethod]
-        public async Task Fire_Client_Unsubscribed_Event()
+        ClientUnsubscribedTopicEventArgs eventArgs = null;
+        server.ClientUnsubscribedTopicAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                ClientUnsubscribedTopicEventArgs eventArgs = null;
-                server.ClientUnsubscribedTopicAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
+        await client.UnsubscribeAsync("The/Topic");
 
-                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
-                await client.UnsubscribeAsync("The/Topic");
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
 
-                Assert.IsNotNull(eventArgs);
+        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Unsubscribed_Event)));
+        Assert.AreEqual("The/Topic", eventArgs.TopicFilter);
+        Assert.AreEqual("TheUser", eventArgs.UserName);
+    }
 
-                Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Unsubscribed_Event)));
-                Assert.AreEqual("The/Topic", eventArgs.TopicFilter);
-                Assert.AreEqual("TheUser", eventArgs.UserName);
-            }
-        }
+    [TestMethod]
+    public async Task Fire_Application_Message_Received_Event()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        var server = await testEnvironment.StartServer();
 
-        [TestMethod]
-        public async Task Fire_Application_Message_Received_Event()
+        InterceptingPublishEventArgs eventArgs = null;
+        server.InterceptingPublishAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                InterceptingPublishEventArgs eventArgs = null;
-                server.InterceptingPublishAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
+        await client.PublishStringAsync("The_Topic", "The_Payload");
 
-                var client = await testEnvironment.ConnectClient(o => o.WithCredentials("TheUser"));
-                await client.PublishStringAsync("The_Topic", "The_Payload");
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
 
-                Assert.IsNotNull(eventArgs);
+        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Application_Message_Received_Event)));
+        Assert.AreEqual("The_Topic", eventArgs.ApplicationMessage.Topic);
+        Assert.AreEqual("The_Payload", eventArgs.ApplicationMessage.ConvertPayloadToString());
+        Assert.AreEqual("TheUser", eventArgs.UserName);
+    }
 
-                Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Application_Message_Received_Event)));
-                Assert.AreEqual("The_Topic", eventArgs.ApplicationMessage.Topic);
-                Assert.AreEqual("The_Payload", eventArgs.ApplicationMessage.ConvertPayloadToString());
-                Assert.AreEqual("TheUser", eventArgs.UserName);
-            }
-        }
+    [TestMethod]
+    public async Task Fire_Started_Event()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        var server = testEnvironment.CreateServer(new MqttServerOptions());
 
-        [TestMethod]
-        public async Task Fire_Started_Event()
+        EventArgs eventArgs = null;
+        server.StartedAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = testEnvironment.CreateServer(new MqttServerOptions());
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                EventArgs eventArgs = null;
-                server.StartedAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        await server.StartAsync();
 
-                await server.StartAsync();
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
+    }
 
-                Assert.IsNotNull(eventArgs);
-            }
-        }
+    [TestMethod]
+    public async Task Fire_Stopped_Event()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        var server = await testEnvironment.StartServer();
 
-        [TestMethod]
-        public async Task Fire_Stopped_Event()
+        EventArgs eventArgs = null;
+        server.StoppedAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                EventArgs eventArgs = null;
-                server.StoppedAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        await server.StopAsync();
 
-                await server.StopAsync();
+        await LongTestDelay();
 
-                await LongTestDelay();
-
-                Assert.IsNotNull(eventArgs);
-            }
-        }
+        Assert.IsNotNull(eventArgs);
     }
 }

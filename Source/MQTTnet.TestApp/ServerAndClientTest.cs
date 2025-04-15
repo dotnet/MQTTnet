@@ -7,26 +7,25 @@ using System.Threading.Tasks;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Server;
 
-namespace MQTTnet.TestApp
+namespace MQTTnet.TestApp;
+
+public static class ServerAndClientTest
 {
-    public static class ServerAndClientTest
+    public static async Task RunAsync()
     {
-        public static async Task RunAsync()
-        {
-            var logger = new MqttNetEventLogger();
-            MqttNetConsoleLogger.ForwardToConsole(logger);
+        var logger = new MqttNetEventLogger();
+        MqttNetConsoleLogger.ForwardToConsole(logger);
 
-            var mqttServerFactory = new MqttServerFactory();
-            var mqttClientFactory = new MqttClientFactory(logger);
-            var server = mqttServerFactory.CreateMqttServer( new MqttServerOptionsBuilder().Build());
-            var client = mqttClientFactory.CreateMqttClient();
+        var mqttServerFactory = new MqttServerFactory();
+        var mqttClientFactory = new MqttClientFactory(logger);
+        var server = mqttServerFactory.CreateMqttServer( new MqttServerOptionsBuilder().Build());
+        var client = mqttClientFactory.CreateMqttClient();
 
-            await server.StartAsync();
+        await server.StartAsync();
 
-            var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
-            await client.ConnectAsync(clientOptions);
+        var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
+        await client.ConnectAsync(clientOptions);
 
-            await Task.Delay(Timeout.Infinite);
-        }
+        await Task.Delay(Timeout.Infinite);
     }
 }

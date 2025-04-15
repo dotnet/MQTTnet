@@ -35,11 +35,7 @@ public sealed class MqttPacketInspector
             return;
         }
 
-        if (_receivedPacketBuffer == null)
-        {
-            _receivedPacketBuffer = new MemoryStream();
-        }
-
+        _receivedPacketBuffer ??= new MemoryStream();
         _receivedPacketBuffer?.SetLength(0);
     }
 

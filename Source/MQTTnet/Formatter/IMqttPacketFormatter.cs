@@ -5,12 +5,11 @@
 using MQTTnet.Adapter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Formatter
-{
-    public interface IMqttPacketFormatter
-    {
-        MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket);
+namespace MQTTnet.Formatter;
 
-        MqttPacketBuffer Encode(MqttPacket mqttPacket);
-    }
+public interface IMqttPacketFormatter
+{
+    MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket);
+
+    MqttPacketBuffer Encode(MqttPacket mqttPacket);
 }

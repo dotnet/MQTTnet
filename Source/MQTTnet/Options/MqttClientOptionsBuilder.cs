@@ -307,7 +307,7 @@ public sealed class MqttClientOptionsBuilder
         ArgumentNullException.ThrowIfNull(optionsBuilder);
 
         _tcpOptions = new MqttClientTcpOptions();
-        optionsBuilder.Invoke(_tcpOptions);
+        optionsBuilder(_tcpOptions);
 
         return this;
     }
@@ -466,11 +466,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithWillUserProperty(string name, string value)
     {
-        if (_options.WillUserProperties == null)
-        {
-            _options.WillUserProperties = new List<MqttUserProperty>();
-        }
-
+        _options.WillUserProperties ??= [];
         _options.WillUserProperties.Add(new MqttUserProperty(name, value));
         return this;
     }

@@ -5,28 +5,27 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server;
+
+public sealed class MqttServerClientDisconnectOptions
 {
-    public sealed class MqttServerClientDisconnectOptions
-    {
-        public MqttDisconnectReasonCode ReasonCode { get; set; } = MqttDisconnectReasonCode.NormalDisconnection;
+    public MqttDisconnectReasonCode ReasonCode { get; set; } = MqttDisconnectReasonCode.NormalDisconnection;
 
-        /// <summary>
-        ///     The reason string is sent to every client via a DISCONNECT packet.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public string ReasonString { get; set; }
+    /// <summary>
+    ///     The reason string is sent to every client via a DISCONNECT packet.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public string ReasonString { get; set; }
 
-        /// <summary>
-        ///     The server reference is sent to every client via a DISCONNECT packet.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public string ServerReference { get; set; }
+    /// <summary>
+    ///     The server reference is sent to every client via a DISCONNECT packet.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public string ServerReference { get; set; }
 
-        /// <summary>
-        ///     These user properties are sent to every client via a DISCONNECT packet.
-        ///     <remarks>MQTT 5.0.0+ feature.</remarks>
-        /// </summary>
-        public List<MqttUserProperty> UserProperties { get; set; }
-    }
+    /// <summary>
+    ///     These user properties are sent to every client via a DISCONNECT packet.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public List<MqttUserProperty> UserProperties { get; set; }
 }

@@ -4,25 +4,24 @@
 
 using System;
 
-namespace MQTTnet.Extensions.Rpc
+namespace MQTTnet.Extensions.Rpc;
+
+public sealed class MqttRpcClientOptionsBuilder
 {
-    public sealed class MqttRpcClientOptionsBuilder
+    IMqttRpcClientTopicGenerationStrategy _topicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy();
+
+    public MqttRpcClientOptions Build()
     {
-        IMqttRpcClientTopicGenerationStrategy _topicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy();
-
-        public MqttRpcClientOptions Build()
+        return new MqttRpcClientOptions
         {
-            return new MqttRpcClientOptions
-            {
-                TopicGenerationStrategy = _topicGenerationStrategy
-            };
-        }
+            TopicGenerationStrategy = _topicGenerationStrategy
+        };
+    }
 
-        public MqttRpcClientOptionsBuilder WithTopicGenerationStrategy(IMqttRpcClientTopicGenerationStrategy value)
-        {
-            _topicGenerationStrategy = value ?? throw new ArgumentNullException(nameof(value));
+    public MqttRpcClientOptionsBuilder WithTopicGenerationStrategy(IMqttRpcClientTopicGenerationStrategy value)
+    {
+        _topicGenerationStrategy = value ?? throw new ArgumentNullException(nameof(value));
 
-            return this;
-        }
+        return this;
     }
 }

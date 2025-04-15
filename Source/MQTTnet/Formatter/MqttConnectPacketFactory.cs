@@ -33,21 +33,23 @@ public static class MqttConnectPacketFactory
             TryPrivate = clientOptions.TryPrivate
         };
 
-        if (!string.IsNullOrEmpty(clientOptions.WillTopic))
+        if (string.IsNullOrEmpty(clientOptions.WillTopic))
         {
-            connectPacket.WillFlag = true;
-            connectPacket.WillTopic = clientOptions.WillTopic;
-            connectPacket.WillQoS = clientOptions.WillQualityOfServiceLevel;
-            connectPacket.WillMessage = clientOptions.WillPayload;
-            connectPacket.WillRetain = clientOptions.WillRetain;
-            connectPacket.WillDelayInterval = clientOptions.WillDelayInterval;
-            connectPacket.WillContentType = clientOptions.WillContentType;
-            connectPacket.WillCorrelationData = clientOptions.WillCorrelationData;
-            connectPacket.WillResponseTopic = clientOptions.WillResponseTopic;
-            connectPacket.WillMessageExpiryInterval = clientOptions.WillMessageExpiryInterval;
-            connectPacket.WillPayloadFormatIndicator = clientOptions.WillPayloadFormatIndicator;
-            connectPacket.WillUserProperties = clientOptions.WillUserProperties;
+            return connectPacket;
         }
+
+        connectPacket.WillFlag = true;
+        connectPacket.WillTopic = clientOptions.WillTopic;
+        connectPacket.WillQoS = clientOptions.WillQualityOfServiceLevel;
+        connectPacket.WillMessage = clientOptions.WillPayload;
+        connectPacket.WillRetain = clientOptions.WillRetain;
+        connectPacket.WillDelayInterval = clientOptions.WillDelayInterval;
+        connectPacket.WillContentType = clientOptions.WillContentType;
+        connectPacket.WillCorrelationData = clientOptions.WillCorrelationData;
+        connectPacket.WillResponseTopic = clientOptions.WillResponseTopic;
+        connectPacket.WillMessageExpiryInterval = clientOptions.WillMessageExpiryInterval;
+        connectPacket.WillPayloadFormatIndicator = clientOptions.WillPayloadFormatIndicator;
+        connectPacket.WillUserProperties = clientOptions.WillUserProperties;
 
         return connectPacket;
     }

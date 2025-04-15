@@ -2,12 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Protocol
-{
-    public static class MqttPorts
-    {
-        public const int Default = 1883;
+namespace MQTTnet.Protocol;
 
-        public const int Secure = 8883;
-    }
+public static class MqttPorts
+{
+    public const int Default = 1883;
+
+    public const int Secure = 8883;
 }

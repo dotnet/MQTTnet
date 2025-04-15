@@ -6,7 +6,6 @@ using System;
 using System.Buffers;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Exceptions;
@@ -14,128 +13,125 @@ using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Extensions.Rpc
+namespace MQTTnet.Extensions.Rpc;
+
+public sealed class MqttRpcClient : IMqttRpcClient
 {
-    public sealed class MqttRpcClient : IMqttRpcClient
+    readonly IMqttClient _mqttClient;
+    readonly MqttRpcClientOptions _options;
+
+    readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>>();
+
+    public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
     {
-        readonly IMqttClient _mqttClient;
-        readonly MqttRpcClientOptions _options;
+        _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
 
-        readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>>();
+        _mqttClient.ApplicationMessageReceivedAsync += HandleApplicationMessageReceivedAsync;
+    }
 
-        public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
+    public void Dispose()
+    {
+        _mqttClient.ApplicationMessageReceivedAsync -= HandleApplicationMessageReceivedAsync;
+
+        foreach (var tcs in _waitingCalls)
         {
-            _mqttClient = mqttClient ?? throw new ArgumentNullException(nameof(mqttClient));
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-
-            _mqttClient.ApplicationMessageReceivedAsync += HandleApplicationMessageReceivedAsync;
+            tcs.Value.TrySetCanceled();
         }
 
-        public void Dispose()
-        {
-            _mqttClient.ApplicationMessageReceivedAsync -= HandleApplicationMessageReceivedAsync;
+        _waitingCalls.Clear();
+    }
 
-            foreach (var tcs in _waitingCalls)
+    public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
+    {
+        using var timeoutToken = new CancellationTokenSource(timeout);
+        try
+        {
+            return await ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, timeoutToken.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException exception)
+        {
+            if (timeoutToken.IsCancellationRequested)
             {
-                tcs.Value.TrySetCanceled();
+                throw new MqttCommunicationTimedOutException(exception);
             }
 
-            _waitingCalls.Clear();
+            throw;
+        }
+    }
+
+    public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(methodName);
+
+        var context = new TopicGenerationContext(_mqttClient, _options, methodName, parameters, qualityOfServiceLevel);
+        var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(context);
+
+        var requestTopic = topicNames.RequestTopic;
+        var responseTopic = topicNames.ResponseTopic;
+
+        if (string.IsNullOrWhiteSpace(requestTopic))
+        {
+            throw new MqttProtocolViolationException("RPC request topic is empty.");
         }
 
-        public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
+        if (string.IsNullOrWhiteSpace(responseTopic))
         {
-            using (var timeoutToken = new CancellationTokenSource(timeout))
-            {
-                try
-                {
-                    return await ExecuteAsync(methodName, payload, qualityOfServiceLevel, parameters, timeoutToken.Token).ConfigureAwait(false);
-                }
-                catch (OperationCanceledException exception)
-                {
-                    if (timeoutToken.IsCancellationRequested)
-                    {
-                        throw new MqttCommunicationTimedOutException(exception);
-                    }
-
-                    throw;
-                }
-            }
+            throw new MqttProtocolViolationException("RPC response topic is empty.");
         }
 
-        public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
+        var requestMessageBuilder = new MqttApplicationMessageBuilder().WithTopic(requestTopic).WithPayload(payload).WithQualityOfServiceLevel(qualityOfServiceLevel);
+
+        if (_mqttClient.Options.ProtocolVersion == MqttProtocolVersion.V500)
         {
-            ArgumentNullException.ThrowIfNull(methodName);
-
-            var context = new TopicGenerationContext(_mqttClient, _options, methodName, parameters, qualityOfServiceLevel);
-            var topicNames = _options.TopicGenerationStrategy.CreateRpcTopics(context);
-
-            var requestTopic = topicNames.RequestTopic;
-            var responseTopic = topicNames.ResponseTopic;
-
-            if (string.IsNullOrWhiteSpace(requestTopic))
-            {
-                throw new MqttProtocolViolationException("RPC request topic is empty.");
-            }
-
-            if (string.IsNullOrWhiteSpace(responseTopic))
-            {
-                throw new MqttProtocolViolationException("RPC response topic is empty.");
-            }
-
-            var requestMessageBuilder = new MqttApplicationMessageBuilder().WithTopic(requestTopic).WithPayload(payload).WithQualityOfServiceLevel(qualityOfServiceLevel);
-
-            if (_mqttClient.Options.ProtocolVersion == MqttProtocolVersion.V500)
-            {
-                requestMessageBuilder.WithResponseTopic(responseTopic);
-            }
-
-            var requestMessage = requestMessageBuilder.Build();
-
-            try
-            {
-                var awaitable = new AsyncTaskCompletionSource<byte[]>();
-
-                if (!_waitingCalls.TryAdd(responseTopic, awaitable))
-                {
-                    throw new InvalidOperationException();
-                }
-
-                var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(responseTopic, qualityOfServiceLevel).Build();
-
-                await _mqttClient.SubscribeAsync(subscribeOptions, cancellationToken).ConfigureAwait(false);
-                await _mqttClient.PublishAsync(requestMessage, cancellationToken).ConfigureAwait(false);
-
-                using (cancellationToken.Register(
-                           () =>
-                           {
-                               awaitable.TrySetCanceled();
-                           }))
-                {
-                    return await awaitable.Task.ConfigureAwait(false);
-                }
-            }
-            finally
-            {
-                _waitingCalls.TryRemove(responseTopic, out _);
-                await _mqttClient.UnsubscribeAsync(responseTopic, CancellationToken.None).ConfigureAwait(false);
-            }
+            requestMessageBuilder.WithResponseTopic(responseTopic);
         }
 
-        Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+        var requestMessage = requestMessageBuilder.Build();
+
+        try
         {
-            if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var awaitable))
+            var awaitable = new AsyncTaskCompletionSource<byte[]>();
+
+            if (!_waitingCalls.TryAdd(responseTopic, awaitable))
             {
-                return CompletedTask.Instance;
+                throw new InvalidOperationException();
             }
 
-            var payloadBuffer = eventArgs.ApplicationMessage.Payload.ToArray();
-            awaitable.TrySetResult(payloadBuffer);
+            var subscribeOptions = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(responseTopic, qualityOfServiceLevel).Build();
 
-            // Set this message to handled to that other code can avoid execution etc.
-            eventArgs.IsHandled = true;
+            await _mqttClient.SubscribeAsync(subscribeOptions, cancellationToken).ConfigureAwait(false);
+            await _mqttClient.PublishAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
+            using (cancellationToken.Register(
+                       () =>
+                       {
+                           awaitable.TrySetCanceled();
+                       }))
+            {
+                return await awaitable.Task.ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            _waitingCalls.TryRemove(responseTopic, out _);
+            await _mqttClient.UnsubscribeAsync(responseTopic, CancellationToken.None).ConfigureAwait(false);
+        }
+    }
+
+    Task HandleApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs eventArgs)
+    {
+        if (!_waitingCalls.TryRemove(eventArgs.ApplicationMessage.Topic, out var awaitable))
+        {
             return CompletedTask.Instance;
         }
+
+        var payloadBuffer = eventArgs.ApplicationMessage.Payload.ToArray();
+        awaitable.TrySetResult(payloadBuffer);
+
+        // Set this message to handled to that other code can avoid execution etc.
+        eventArgs.IsHandled = true;
+
+        return CompletedTask.Instance;
     }
 }

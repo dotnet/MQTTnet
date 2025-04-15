@@ -21,10 +21,7 @@ public sealed class MqttServerFactory
 
     public IMqttNetLogger DefaultLogger { get; }
 
-    public IList<Func<MqttServerFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<MqttServerFactory, IMqttServerAdapter>>
-    {
-        factory => new MqttTcpServerAdapter()
-    };
+    public IList<Func<MqttServerFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = [_ => new MqttTcpServerAdapter()];
 
     public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();
 

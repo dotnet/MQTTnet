@@ -18,11 +18,11 @@ namespace MQTTnet.AspNetCore;
 public sealed class SocketConnection : ConnectionContext
 {
     readonly EndPoint _endPoint;
+
     volatile bool _aborted;
     IDuplexPipe _application;
     SocketReceiver _receiver;
     SocketSender _sender;
-
     Socket _socket;
 
     public SocketConnection(EndPoint endPoint)
@@ -40,10 +40,13 @@ public sealed class SocketConnection : ConnectionContext
     }
 
     public override string ConnectionId { get; set; }
+
     public override IFeatureCollection Features { get; }
 
     public bool IsConnected { get; private set; }
+
     public override IDictionary<object, object> Items { get; set; }
+
     public override IDuplexPipe Transport { get; set; }
 
     public override ValueTask DisposeAsync()
@@ -78,7 +81,7 @@ public sealed class SocketConnection : ConnectionContext
         IsConnected = true;
     }
 
-    Exception ConnectionAborted()
+    static Exception ConnectionAborted()
     {
         return new MqttCommunicationException("Connection Aborted");
     }
@@ -95,8 +98,7 @@ public sealed class SocketConnection : ConnectionContext
         {
             error = new MqttCommunicationException(ex);
         }
-        catch (SocketException ex) when (ex.SocketErrorCode == SocketError.OperationAborted || ex.SocketErrorCode == SocketError.ConnectionAborted ||
-                                         ex.SocketErrorCode == SocketError.Interrupted || ex.SocketErrorCode == SocketError.InvalidArgument)
+        catch (SocketException ex) when (ex.SocketErrorCode is SocketError.OperationAborted or SocketError.ConnectionAborted or SocketError.Interrupted or SocketError.InvalidArgument)
         {
             if (!_aborted)
             {
@@ -126,7 +128,7 @@ public sealed class SocketConnection : ConnectionContext
                 error = error ?? ConnectionAborted();
             }
 
-            _application.Output.Complete(error);
+            await _application.Output.CompleteAsync(error);
         }
     }
 

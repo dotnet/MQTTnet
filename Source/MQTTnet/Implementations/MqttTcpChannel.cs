@@ -16,313 +16,312 @@ using MQTTnet.Channel;
 using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Implementations
+namespace MQTTnet.Implementations;
+
+public sealed class MqttTcpChannel : IMqttChannel
 {
-    public sealed class MqttTcpChannel : IMqttChannel
+    readonly MqttClientOptions _clientOptions;
+    readonly MqttClientTcpOptions _tcpOptions;
+
+    Stream _stream;
+
+    public MqttTcpChannel()
     {
-        readonly MqttClientOptions _clientOptions;
-        readonly MqttClientTcpOptions _tcpOptions;
+    }
 
-        Stream _stream;
+    public MqttTcpChannel(MqttClientOptions clientOptions) : this()
+    {
+        _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
+        _tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions;
 
-        public MqttTcpChannel()
+        IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
+    }
+
+    public MqttTcpChannel(Stream stream, EndPoint remoteEndPoint, X509Certificate2 clientCertificate) : this()
+    {
+        _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+
+        RemoteEndPoint = remoteEndPoint;
+
+        IsSecureConnection = stream is SslStream;
+        ClientCertificate = clientCertificate;
+    }
+
+    public X509Certificate2 ClientCertificate { get; }
+
+    public EndPoint RemoteEndPoint { get; private set; }
+
+    public bool IsSecureConnection { get; }
+
+    public async Task ConnectAsync(CancellationToken cancellationToken)
+    {
+        CrossPlatformSocket socket = null;
+        try
         {
-        }
-
-        public MqttTcpChannel(MqttClientOptions clientOptions) : this()
-        {
-            _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
-            _tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions;
-
-            IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
-        }
-
-        public MqttTcpChannel(Stream stream, EndPoint remoteEndPoint, X509Certificate2 clientCertificate) : this()
-        {
-            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
-
-            RemoteEndPoint = remoteEndPoint;
-
-            IsSecureConnection = stream is SslStream;
-            ClientCertificate = clientCertificate;
-        }
-
-        public X509Certificate2 ClientCertificate { get; }
-
-        public EndPoint RemoteEndPoint { get; private set; }
-
-        public bool IsSecureConnection { get; }
-
-        public async Task ConnectAsync(CancellationToken cancellationToken)
-        {
-            CrossPlatformSocket socket = null;
-            try
+            if (_tcpOptions.AddressFamily == AddressFamily.Unspecified)
             {
-                if (_tcpOptions.AddressFamily == AddressFamily.Unspecified)
+                socket = new CrossPlatformSocket(_tcpOptions.ProtocolType);
+            }
+            else
+            {
+                socket = new CrossPlatformSocket(_tcpOptions.AddressFamily, _tcpOptions.ProtocolType);
+            }
+
+            if (_tcpOptions.LocalEndpoint != null)
+            {
+                socket.Bind(_tcpOptions.LocalEndpoint);
+            }
+
+            socket.ReceiveBufferSize = _tcpOptions.BufferSize;
+            socket.SendBufferSize = _tcpOptions.BufferSize;
+            socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
+
+            if (_tcpOptions.ProtocolType == ProtocolType.Tcp)
+            {
+                // Other protocol types do not support the Nagle algorithm.
+                socket.NoDelay = _tcpOptions.NoDelay;
+            }
+
+            if (socket.LingerState != null)
+            {
+                socket.LingerState = _tcpOptions.LingerState;
+            }
+
+            if (_tcpOptions.DualMode.HasValue)
+            {
+                // It is important to avoid setting the flag if no specific value is set by the user
+                // because on IPv4 only networks the setter will always throw an exception. Regardless
+                // of the actual value.
+                socket.DualMode = _tcpOptions.DualMode.Value;
+            }
+
+            await socket.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var networkStream = socket.GetStream();
+
+            if (_tcpOptions.TlsOptions?.UseTls == true)
+            {
+                var targetHost = _tcpOptions.TlsOptions.TargetHost;
+                if (string.IsNullOrEmpty(targetHost))
                 {
-                    socket = new CrossPlatformSocket(_tcpOptions.ProtocolType);
+                    if (_tcpOptions.RemoteEndpoint is DnsEndPoint dns)
+                    {
+                        targetHost = dns.Host;
+                    }
+                }
+
+                SslStream sslStream;
+                if (_tcpOptions.TlsOptions.CertificateSelectionHandler != null)
+                {
+                    sslStream = new SslStream(
+                        networkStream,
+                        false,
+                        InternalUserCertificateValidationCallback,
+                        InternalUserCertificateSelectionCallback);
                 }
                 else
                 {
-                    socket = new CrossPlatformSocket(_tcpOptions.AddressFamily, _tcpOptions.ProtocolType);
+                    // Use a different constructor depending on the options for MQTTnet so that we do not have
+                    // to copy the exact same behavior of the selection handler.
+                    sslStream = new SslStream(
+                        networkStream,
+                        false,
+                        InternalUserCertificateValidationCallback);
                 }
 
-                if (_tcpOptions.LocalEndpoint != null)
+                try
                 {
-                    socket.Bind(_tcpOptions.LocalEndpoint);
-                }
-
-                socket.ReceiveBufferSize = _tcpOptions.BufferSize;
-                socket.SendBufferSize = _tcpOptions.BufferSize;
-                socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
-
-                if (_tcpOptions.ProtocolType == ProtocolType.Tcp)
-                {
-                    // Other protocol types do not support the Nagle algorithm.
-                    socket.NoDelay = _tcpOptions.NoDelay;
-                }
-
-                if (socket.LingerState != null)
-                {
-                    socket.LingerState = _tcpOptions.LingerState;
-                }
-
-                if (_tcpOptions.DualMode.HasValue)
-                {
-                    // It is important to avoid setting the flag if no specific value is set by the user
-                    // because on IPv4 only networks the setter will always throw an exception. Regardless
-                    // of the actual value.
-                    socket.DualMode = _tcpOptions.DualMode.Value;
-                }
-
-                await socket.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var networkStream = socket.GetStream();
-
-                if (_tcpOptions.TlsOptions?.UseTls == true)
-                {
-                    var targetHost = _tcpOptions.TlsOptions.TargetHost;
-                    if (string.IsNullOrEmpty(targetHost))
+                    var sslOptions = new SslClientAuthenticationOptions
                     {
-                        if (_tcpOptions.RemoteEndpoint is DnsEndPoint dns)
+                        ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
+                        ClientCertificates = LoadCertificates(),
+                        EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
+                        CertificateRevocationCheckMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors
+                            ? X509RevocationMode.NoCheck
+                            : _tcpOptions.TlsOptions.RevocationMode,
+                        TargetHost = targetHost,
+                        CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy,
+                        EncryptionPolicy = _tcpOptions.TlsOptions.EncryptionPolicy,
+                        AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
+                    };
+
+                    if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
+                    {
+                        sslOptions.CertificateChainPolicy = new X509ChainPolicy
                         {
-                            targetHost = dns.Host;
-                        }
-                    }
-
-                    SslStream sslStream;
-                    if (_tcpOptions.TlsOptions.CertificateSelectionHandler != null)
-                    {
-                        sslStream = new SslStream(
-                            networkStream,
-                            false,
-                            InternalUserCertificateValidationCallback,
-                            InternalUserCertificateSelectionCallback);
-                    }
-                    else
-                    {
-                        // Use a different constructor depending on the options for MQTTnet so that we do not have
-                        // to copy the exact same behavior of the selection handler.
-                        sslStream = new SslStream(
-                            networkStream,
-                            false,
-                            InternalUserCertificateValidationCallback);
-                    }
-
-                    try
-                    {
-                        var sslOptions = new SslClientAuthenticationOptions
-                        {
-                            ApplicationProtocols = _tcpOptions.TlsOptions.ApplicationProtocols,
-                            ClientCertificates = LoadCertificates(),
-                            EnabledSslProtocols = _tcpOptions.TlsOptions.SslProtocol,
-                            CertificateRevocationCheckMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors
-                                ? X509RevocationMode.NoCheck
-                                : _tcpOptions.TlsOptions.RevocationMode,
-                            TargetHost = targetHost,
-                            CipherSuitesPolicy = _tcpOptions.TlsOptions.CipherSuitesPolicy,
-                            EncryptionPolicy = _tcpOptions.TlsOptions.EncryptionPolicy,
-                            AllowRenegotiation = _tcpOptions.TlsOptions.AllowRenegotiation
+                            TrustMode = X509ChainTrustMode.CustomRootTrust,
+                            VerificationFlags = X509VerificationFlags.IgnoreEndRevocationUnknown,
+                            RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode
                         };
 
-                        if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
-                        {
-                            sslOptions.CertificateChainPolicy = new X509ChainPolicy
-                            {
-                                TrustMode = X509ChainTrustMode.CustomRootTrust,
-                                VerificationFlags = X509VerificationFlags.IgnoreEndRevocationUnknown,
-                                RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode
-                            };
-
-                            sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
-                        }
-
-                        await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
-                    }
-                    catch
-                    {
-                        await sslStream.DisposeAsync().ConfigureAwait(false);
-
-                        throw;
+                        sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
                     }
 
-                    _stream = sslStream;
+                    await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
                 }
-                else
+                catch
                 {
-                    _stream = networkStream;
+                    await sslStream.DisposeAsync().ConfigureAwait(false);
+
+                    throw;
                 }
 
-                RemoteEndPoint = socket.RemoteEndPoint;
+                _stream = sslStream;
             }
-            catch (Exception)
+            else
             {
-                socket?.Dispose();
-                throw;
+                _stream = networkStream;
             }
+
+            RemoteEndPoint = socket.RemoteEndPoint;
         }
-
-        public Task DisconnectAsync(CancellationToken cancellationToken)
+        catch
         {
-            Dispose();
-            return CompletedTask.Instance;
+            socket?.Dispose();
+            throw;
         }
+    }
 
-        public void Dispose()
+    public Task DisconnectAsync(CancellationToken cancellationToken)
+    {
+        Dispose();
+        return CompletedTask.Instance;
+    }
+
+    public void Dispose()
+    {
+        // When the stream is disposed it will also close the socket and this will also dispose it.
+        // So there is no need to dispose the socket again.
+        // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
+        try
         {
-            // When the stream is disposed it will also close the socket and this will also dispose it.
-            // So there is no need to dispose the socket again.
-            // https://stackoverflow.com/questions/3601521/should-i-manually-dispose-the-socket-after-closing-it
-            try
-            {
-                _stream?.Close();
-                _stream?.Dispose();
-            }
-            catch (ObjectDisposedException)
-            {
-            }
-            catch (NullReferenceException)
-            {
-            }
-            finally
-            {
-                _stream = null;
-            }
+            _stream?.Close();
+            _stream?.Dispose();
         }
-
-        public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        catch (ObjectDisposedException)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+        }
+        catch (NullReferenceException)
+        {
+        }
+        finally
+        {
+            _stream = null;
+        }
+    }
 
-            try
+    public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            var stream = _stream;
+
+            if (stream == null)
             {
-                var stream = _stream;
-
-                if (stream == null)
-                {
-                    return 0;
-                }
-
-                if (!stream.CanRead)
-                {
-                    return 0;
-                }
-
-                return await stream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
-            }
-            catch (ObjectDisposedException)
-            {
-                // Indicate a graceful socket close.
                 return 0;
             }
-            catch (IOException exception)
-            {
-                if (exception.InnerException is SocketException socketException)
-                {
-                    ExceptionDispatchInfo.Capture(socketException).Throw();
-                }
 
-                throw;
+            if (!stream.CanRead)
+            {
+                return 0;
             }
+
+            return await stream.ReadAsync(buffer.AsMemory(offset, count), cancellationToken).ConfigureAwait(false);
         }
-
-        public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+        catch (ObjectDisposedException)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            try
+            // Indicate a graceful socket close.
+            return 0;
+        }
+        catch (IOException exception)
+        {
+            if (exception.InnerException is SocketException socketException)
             {
-                var stream = _stream;
-
-                if (stream == null)
-                {
-                    throw new MqttCommunicationException("The TCP connection is closed.");
-                }
-
-                foreach (var segment in buffer)
-                {
-                    await stream.WriteAsync(segment, cancellationToken).ConfigureAwait(false);
-                }
+                ExceptionDispatchInfo.Capture(socketException).Throw();
             }
-            catch (ObjectDisposedException)
+
+            throw;
+        }
+    }
+
+    public async Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        try
+        {
+            var stream = _stream;
+
+            if (stream == null)
             {
                 throw new MqttCommunicationException("The TCP connection is closed.");
             }
-            catch (IOException exception)
-            {
-                if (exception.InnerException is SocketException socketException)
-                {
-                    ExceptionDispatchInfo.Capture(socketException).Throw();
-                }
 
-                throw;
+            foreach (var segment in buffer)
+            {
+                await stream.WriteAsync(segment, cancellationToken).ConfigureAwait(false);
             }
         }
-
-        X509Certificate InternalUserCertificateSelectionCallback(
-            object sender,
-            string targetHost,
-            X509CertificateCollection localCertificates,
-            X509Certificate remoteCertificate,
-            string[] acceptableIssuers)
+        catch (ObjectDisposedException)
         {
-            var certificateSelectionHandler = _tcpOptions?.TlsOptions?.CertificateSelectionHandler;
-            if (certificateSelectionHandler != null)
-            {
-                var eventArgs = new MqttClientCertificateSelectionEventArgs(targetHost, localCertificates, remoteCertificate, acceptableIssuers, _tcpOptions);
-                return certificateSelectionHandler(eventArgs);
-            }
-
-            if (localCertificates?.Count > 0)
-            {
-                return localCertificates[0];
-            }
-
-            return null;
+            throw new MqttCommunicationException("The TCP connection is closed.");
         }
-
-        bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+        catch (IOException exception)
         {
-            var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
-            if (certificateValidationHandler != null)
+            if (exception.InnerException is SocketException socketException)
             {
-                var eventArgs = new MqttClientCertificateValidationEventArgs(x509Certificate, chain, sslPolicyErrors, _tcpOptions);
-                return certificateValidationHandler(eventArgs);
+                ExceptionDispatchInfo.Capture(socketException).Throw();
             }
 
-            if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors ?? false)
-            {
-                sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
-            }
-
-            return sslPolicyErrors == SslPolicyErrors.None;
+            throw;
         }
+    }
 
-        X509CertificateCollection LoadCertificates()
+    X509Certificate InternalUserCertificateSelectionCallback(
+        object sender,
+        string targetHost,
+        X509CertificateCollection localCertificates,
+        X509Certificate remoteCertificate,
+        string[] acceptableIssuers)
+    {
+        var certificateSelectionHandler = _tcpOptions?.TlsOptions?.CertificateSelectionHandler;
+        if (certificateSelectionHandler != null)
         {
-            return _tcpOptions.TlsOptions.ClientCertificatesProvider?.GetCertificates();
+            var eventArgs = new MqttClientCertificateSelectionEventArgs(targetHost, localCertificates, remoteCertificate, acceptableIssuers, _tcpOptions);
+            return certificateSelectionHandler(eventArgs);
         }
+
+        if (localCertificates?.Count > 0)
+        {
+            return localCertificates[0];
+        }
+
+        return null;
+    }
+
+    bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    {
+        var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
+        if (certificateValidationHandler != null)
+        {
+            var eventArgs = new MqttClientCertificateValidationEventArgs(x509Certificate, chain, sslPolicyErrors, _tcpOptions);
+            return certificateValidationHandler(eventArgs);
+        }
+
+        if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors ?? false)
+        {
+            sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
+        }
+
+        return sslPolicyErrors == SslPolicyErrors.None;
+    }
+
+    X509CertificateCollection LoadCertificates()
+    {
+        return _tcpOptions.TlsOptions.ClientCertificatesProvider?.GetCertificates();
     }
 }

@@ -7,63 +7,61 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests.Server;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class Retain_Handling_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class Retain_Handling_Tests : BaseTestClass
+    [TestMethod]
+    public Task Send_At_Subscribe()
     {
-        [TestMethod]
-        public Task Send_At_Subscribe()
-        {
-            return ExecuteTest(MqttRetainHandling.SendAtSubscribe, 1, 2, 3);
-        }
+        return ExecuteTest(MqttRetainHandling.SendAtSubscribe, 1, 2, 3);
+    }
 
-        [TestMethod]
-        public Task Do_Not_Send_On_Subscribe()
-        {
-            return ExecuteTest(MqttRetainHandling.DoNotSendOnSubscribe, 0, 1, 1);
-        }
+    [TestMethod]
+    public Task Do_Not_Send_On_Subscribe()
+    {
+        return ExecuteTest(MqttRetainHandling.DoNotSendOnSubscribe, 0, 1, 1);
+    }
 
-        [TestMethod]
-        public Task Send_At_Subscribe_If_New_Subscription_Only()
-        {
-            return ExecuteTest(MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly, 1, 2, 2);
-        }
+    [TestMethod]
+    public Task Send_At_Subscribe_If_New_Subscription_Only()
+    {
+        return ExecuteTest(MqttRetainHandling.SendAtSubscribeIfNewSubscriptionOnly, 1, 2, 2);
+    }
 
-        async Task ExecuteTest(
-            MqttRetainHandling retainHandling,
-            int expectedCountAfterSubscribe,
-            int expectedCountAfterSecondPublish,
-            int expectedCountAfterSecondSubscribe)
-        {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                await testEnvironment.StartServer();
+    async Task ExecuteTest(
+        MqttRetainHandling retainHandling,
+        int expectedCountAfterSubscribe,
+        int expectedCountAfterSecondPublish,
+        int expectedCountAfterSecondSubscribe)
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        await testEnvironment.StartServer();
 
-                var client1 = await testEnvironment.ConnectClient();
-                await client1.PublishStringAsync("Topic", "Payload", retain: true);
+        var client1 = await testEnvironment.ConnectClient();
+        await client1.PublishStringAsync("Topic", "Payload", retain: true);
 
-                await LongTestDelay();
+        await LongTestDelay();
 
-                var client2 = await testEnvironment.ConnectClient();
-                var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client2);
+        var client2 = await testEnvironment.ConnectClient();
+        var applicationMessageHandler = testEnvironment.CreateApplicationMessageHandler(client2);
 
-                var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic").WithRetainHandling(retainHandling).Build();
-                await client2.SubscribeAsync(topicFilter);
-                await LongTestDelay();
+        var topicFilter = testEnvironment.ClientFactory.CreateTopicFilterBuilder().WithTopic("Topic").WithRetainHandling(retainHandling).Build();
+        await client2.SubscribeAsync(topicFilter);
+        await LongTestDelay();
 
-                applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSubscribe);
+        applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSubscribe);
 
-                await client1.PublishStringAsync("Topic", "Payload", retain: true);
-                await LongTestDelay();
+        await client1.PublishStringAsync("Topic", "Payload", retain: true);
+        await LongTestDelay();
 
-                applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSecondPublish);
+        applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSecondPublish);
 
-                await client2.SubscribeAsync(topicFilter);
-                await LongTestDelay();
+        await client2.SubscribeAsync(topicFilter);
+        await LongTestDelay();
 
-                applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSecondSubscribe);
-            }
-        }
+        applicationMessageHandler.AssertReceivedCountEquals(expectedCountAfterSecondSubscribe);
     }
 }

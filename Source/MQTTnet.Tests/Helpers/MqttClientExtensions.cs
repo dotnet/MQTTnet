@@ -5,15 +5,14 @@
 using System;
 using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests.Helpers
-{
-    public static class MqttClientExtensions
-    {
-        public static TestApplicationMessageReceivedHandler TrackReceivedMessages(this IMqttClient client)
-        {
-            ArgumentNullException.ThrowIfNull(client);
+namespace MQTTnet.Tests.Helpers;
 
-            return new TestApplicationMessageReceivedHandler(client);
-        }
+public static class MqttClientExtensions
+{
+    public static TestApplicationMessageReceivedHandler TrackReceivedMessages(this IMqttClient client)
+    {
+        ArgumentNullException.ThrowIfNull(client);
+
+        return new TestApplicationMessageReceivedHandler(client);
     }
 }

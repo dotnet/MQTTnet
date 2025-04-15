@@ -12,6 +12,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Tests;
 
+// ReSharper disable InconsistentNaming
 [TestClass]
 public class MqttTcpChannel_Tests
 {

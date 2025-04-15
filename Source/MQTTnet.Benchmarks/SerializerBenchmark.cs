@@ -17,103 +17,102 @@ using MQTTnet.Diagnostics.Logger;
 using System.Buffers;
 using System.Net;
 
-namespace MQTTnet.Benchmarks
+namespace MQTTnet.Benchmarks;
+
+[SimpleJob(RuntimeMoniker.Net60)]
+[RPlotExporter]
+[MemoryDiagnoser]
+public class SerializerBenchmark : BaseBenchmark
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
-    [RPlotExporter]
-    [MemoryDiagnoser]
-    public class SerializerBenchmark : BaseBenchmark
+    MqttPacket _packet;
+    ArraySegment<byte> _serializedPacket;
+    IMqttPacketFormatter _serializer;
+    MqttBufferWriter _bufferWriter;
+
+    [GlobalSetup]
+    public void GlobalSetup()
     {
-        MqttPacket _packet;
-        ArraySegment<byte> _serializedPacket;
-        IMqttPacketFormatter _serializer;
-        MqttBufferWriter _bufferWriter;
-
-        [GlobalSetup]
-        public void GlobalSetup()
+        _packet = new MqttPublishPacket
         {
-            _packet = new MqttPublishPacket
-            {
-                Topic = "A"
-            };
+            Topic = "A"
+        };
 
-            _bufferWriter = new MqttBufferWriter(4096, 65535);
-            _serializer = new MqttV3PacketFormatter(_bufferWriter, MqttProtocolVersion.V311);
-            _serializedPacket = _serializer.Encode(_packet).Join();
+        _bufferWriter = new MqttBufferWriter(4096, 65535);
+        _serializer = new MqttV3PacketFormatter(_bufferWriter, MqttProtocolVersion.V311);
+        _serializedPacket = _serializer.Encode(_packet).Join();
+    }
+
+    [Benchmark]
+    public void Serialize_10000_Messages()
+    {
+        for (var i = 0; i < 10000; i++)
+        {
+            _serializer.Encode(_packet);
+            _bufferWriter.Cleanup();
+        }
+    }
+
+    [Benchmark]
+    public void Deserialize_10000_Messages()
+    {
+        var channel = new BenchmarkMqttChannel(_serializedPacket);
+        var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), new MqttNetEventLogger());
+
+        for (var i = 0; i < 10000; i++)
+        {
+            channel.Reset();
+
+            reader.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
+        }
+    }
+
+    class BenchmarkMqttChannel : IMqttChannel
+    {
+        readonly ArraySegment<byte> _buffer;
+        int _position;
+
+        public BenchmarkMqttChannel(ArraySegment<byte> buffer)
+        {
+            _buffer = buffer;
+            _position = _buffer.Offset;
         }
 
-        [Benchmark]
-        public void Serialize_10000_Messages()
+        public EndPoint RemoteEndPoint { get; set; }
+
+        public bool IsSecureConnection { get; } = false;
+
+        public X509Certificate2 ClientCertificate { get; set; }
+
+        public void Reset()
         {
-            for (var i = 0; i < 10000; i++)
-            {
-                _serializer.Encode(_packet);
-                _bufferWriter.Cleanup();
-            }
+            _position = _buffer.Offset;
         }
 
-        [Benchmark]
-        public void Deserialize_10000_Messages()
+        public Task ConnectAsync(CancellationToken cancellationToken)
         {
-            var channel = new BenchmarkMqttChannel(_serializedPacket);
-            var reader = new MqttChannelAdapter(channel, new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535)), new MqttNetEventLogger());
-
-            for (var i = 0; i < 10000; i++)
-            {
-                channel.Reset();
-
-                var header = reader.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
-            }
+            throw new NotSupportedException();
         }
 
-        class BenchmarkMqttChannel : IMqttChannel
+        public Task DisconnectAsync(CancellationToken cancellationToken)
         {
-            readonly ArraySegment<byte> _buffer;
-            int _position;
+            throw new NotSupportedException();
+        }
 
-            public BenchmarkMqttChannel(ArraySegment<byte> buffer)
-            {
-                _buffer = buffer;
-                _position = _buffer.Offset;
-            }
+        public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            Array.Copy(_buffer.Array, _position, buffer, offset, count);
+            _position += count;
 
-            public EndPoint RemoteEndPoint { get; set; }
+            return Task.FromResult(count);
+        }
 
-            public bool IsSecureConnection { get; } = false;
+        public Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
 
-            public X509Certificate2 ClientCertificate { get; }
-
-            public void Reset()
-            {
-                _position = _buffer.Offset;
-            }
-
-            public Task ConnectAsync(CancellationToken cancellationToken)
-            {
-                throw new NotSupportedException();
-            }
-
-            public Task DisconnectAsync(CancellationToken cancellationToken)
-            {
-                throw new NotSupportedException();
-            }
-
-            public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
-            {
-                Array.Copy(_buffer.Array, _position, buffer, offset, count);
-                _position += count;
-
-                return Task.FromResult(count);
-            }
-
-            public Task WriteAsync(ReadOnlySequence<byte> buffer, bool isEndOfPacket, CancellationToken cancellationToken)
-            {
-                throw new NotSupportedException();
-            }
-
-            public void Dispose()
-            {
-            }
+        public void Dispose()
+        {
         }
     }
 }

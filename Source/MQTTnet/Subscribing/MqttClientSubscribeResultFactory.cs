@@ -12,9 +12,9 @@ namespace MQTTnet;
 
 public sealed class MqttClientSubscribeResultFactory
 {
-    static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = new List<MqttUserProperty>();
+    static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = [];
 
-    public MqttClientSubscribeResult Create(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
+    public static MqttClientSubscribeResult Create(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
     {
         ArgumentNullException.ThrowIfNull(subscribePacket);
         ArgumentNullException.ThrowIfNull(subAckPacket);

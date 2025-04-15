@@ -8,36 +8,35 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Formatter;
 
-namespace MQTTnet.Benchmarks
+namespace MQTTnet.Benchmarks;
+
+[SimpleJob(RuntimeMoniker.Net60)]
+[MemoryDiagnoser]
+public class MqttBufferReaderBenchmark
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
-    [MemoryDiagnoser]
-    public class MqttBufferReaderBenchmark
+    byte[] _buffer;
+    int _bufferLength;
+
+    [GlobalSetup]
+    public void GlobalSetup()
     {
-        byte[] _buffer;
-        int _bufferLength;
+        var writer = new MqttBufferWriter(1024, 1024);
+        writer.WriteString("hgfjkdfkjlghfdjghdfljkdfhgdlkjfshgsldkfjghsdflkjghdsflkjhrstiuoghlkfjbhnfbutghjoiöjhklötnbhtroliöuhbjntluiobkjzbhtdrlskbhtruhjkfthgbkftgjhgfiklhotriuöhbjtrsioöbtrsötrhträhtrühjtriüoätrhjtsrölbktrbnhtrulöbionhströloubinströoliubhnsöotrunbtöroisntröointröioujhgötiohjgötorshjnbgtöorihbnjtröoihbjntröobntröoibntrjhötrohjbtröoihntröoibnrtoiöbtrjnboöitrhjtnriohötrhjtöroihjtroöihjtroösibntsroönbotöirsbntöoihjntröoihntroöbtrboöitrnhoöitrhjntröoishbnjtröosbhtröbntriohjtröoijtöoitbjöotibjnhöotirhbjntroöibhnjrtoöibnhtroöibnhtörsbnhtöoirbnhtöroibntoörhjnbträöbtrbträbtrbtirbätrsibohjntrsöiobthnjiohjsrtoib");
 
-        [GlobalSetup]
-        public void GlobalSetup()
-        {
-            var writer = new MqttBufferWriter(1024, 1024);
-            writer.WriteString("hgfjkdfkjlghfdjghdfljkdfhgdlkjfshgsldkfjghsdflkjghdsflkjhrstiuoghlkfjbhnfbutghjoiöjhklötnbhtroliöuhbjntluiobkjzbhtdrlskbhtruhjkfthgbkftgjhgfiklhotriuöhbjtrsioöbtrsötrhträhtrühjtriüoätrhjtsrölbktrbnhtrulöbionhströloubinströoliubhnsöotrunbtöroisntröointröioujhgötiohjgötorshjnbgtöorihbnjtröoihbjntröobntröoibntrjhötrohjbtröoihntröoibnrtoiöbtrjnboöitrhjtnriohötrhjtöroihjtroöihjtroösibntsroönbotöirsbntöoihjntröoihntroöbtrboöitrnhoöitrhjntröoishbnjtröosbhtröbntriohjtröoijtöoitbjöotibjnhöotirhbjntroöibhnjrtoöibnhtroöibnhtörsbnhtöoirbnhtöroibntoörhjnbträöbtrbträbtrbtirbätrsibohjntrsöiobthnjiohjsrtoib");
+        _buffer = writer.GetBuffer();
+        _bufferLength = writer.Length;
+    }
 
-            _buffer = writer.GetBuffer();
-            _bufferLength = writer.Length;
-        }
+    [Benchmark]
+    public void Use_Span()
+    {
+        var span = _buffer.AsSpan(0, _bufferLength);
+        Encoding.UTF8.GetString(span);
+    }
 
-        [Benchmark]
-        public void Use_Span()
-        {
-            var span = _buffer.AsSpan(0, _bufferLength);
-            Encoding.UTF8.GetString(span);
-        }
-        
-        [Benchmark]
-        public void Use_Encoding()
-        {
-            Encoding.UTF8.GetString(_buffer, 0, _bufferLength);
-        }
+    [Benchmark]
+    public void Use_Encoding()
+    {
+        Encoding.UTF8.GetString(_buffer, 0, _bufferLength);
     }
 }

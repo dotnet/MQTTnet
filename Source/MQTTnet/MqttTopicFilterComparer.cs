@@ -174,15 +174,5 @@ namespace MQTTnet
 
             return MqttTopicFilterCompareResult.NoMatch;
         }
-
-        public static bool ContainsWildcards(string topicFilter)
-        {
-            if (topicFilter[topicFilter.Length - 1] == MultiLevelWildcard)
-            {
-                return true;
-            }
-
-            return topicFilter.Contains(SingleLevelWildcard);
-        }
     }
 }

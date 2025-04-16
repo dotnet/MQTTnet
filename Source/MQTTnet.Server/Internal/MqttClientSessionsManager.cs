@@ -466,15 +466,14 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
     }
 
-    public void OnSubscriptionsAdded(MqttSession clientSession, List<string> topics)
+    public void OnSubscriptionsAdded(MqttSession clientSession, List<MqttSubscription> subscriptions)
     {
         _sessionsManagementLock.EnterWriteLock();
         try
         {
-            foreach (var topic in topics)
+            foreach (var subscription in subscriptions)
             {
-                bool hasWildcard = MqttTopicFilterComparer.ContainsWildcards(topic);
-                if (hasWildcard)
+                if (subscription.TopicHasWildcard)
                 {
                     if (!clientSession.HasSubscribedWildcardTopics)
                     {
@@ -483,16 +482,16 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 }
                 else
                 {
-                    if (_simpleTopicsToSession.TryGetValue(topic, out var sessionsWithSimpleTopics))
+                    if (_simpleTopicsToSession.TryGetValue(subscription.Topic, out var sessionsWithSimpleTopics))
                     {
                         sessionsWithSimpleTopics.Add(clientSession);
                     }
                     else
                     {
-                        _simpleTopicsToSession[topic] = [clientSession];
+                        _simpleTopicsToSession[subscription.Topic] = [clientSession];
                     }
                 }
-                clientSession.AddSubscribedTopic(topic, hasWildcard);
+                clientSession.AddSubscribedTopic(subscription.Topic, subscription.TopicHasWildcard);
             }
         }
         finally
@@ -714,7 +713,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     void CleanupClientSessionUnsafe(MqttSession session)
     {
         _subscriberSessionsWithWildcards.Remove(session);
-        foreach (var simpleTopic in session.GetSimpleSubscribedTopics)
+        foreach (var simpleTopic in session.SubscribedSimpleTopics)
         {
             if (_simpleTopicsToSession.TryGetValue(simpleTopic, out var sessionsWithSimpleTopics))
             {

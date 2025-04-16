@@ -170,7 +170,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     {
                         // Create the initial subscriberSessions from whichever set is larger to take advantage 
                         // of the internal ConstructFrom other HashSet optimizations 
-                        if(sessionsWithSimpleTopics.Count > _subscriberSessionsWithWildcards.Count)
+                        if (sessionsWithSimpleTopics.Count > _subscriberSessionsWithWildcards.Count)
                         {
                             subscriberSessions = new HashSet<MqttSession>(sessionsWithSimpleTopics);
                             subscriberSessions.UnionWith(_subscriberSessionsWithWildcards);

@@ -144,7 +144,7 @@ namespace MQTTnet.Tests
             CompareAndAssert("/finance", "+/+", MqttTopicFilterCompareResult.IsMatch);
             CompareAndAssert("/finance", "/+", MqttTopicFilterCompareResult.IsMatch);
             CompareAndAssert("/finance", "+", MqttTopicFilterCompareResult.NoMatch);
-        }        
+        }
 
         static void CompareAndAssert(string topic, string filter, MqttTopicFilterCompareResult expectedResult)
         {

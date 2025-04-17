@@ -1027,9 +1027,13 @@ public sealed class MqttClient : Disposable, IMqttClient
 
                 if (timeWithoutPacketSent > keepAlivePeriod)
                 {
-                    using var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    timeoutCancellationTokenSource.CancelAfter(Options.Timeout);
-                    await PingAsync(timeoutCancellationTokenSource.Token).ConfigureAwait(false);
+                    using var pingTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                    // We already reached the keep alive timeout. Due to the RFC part [MQTT-3.1.2-24] the server will wait another
+                    // 1/2 of the keep alive time. So we can also use this value as the timeout.
+                    pingTimeout.CancelAfter(keepAlivePeriod / 2);
+
+                    await PingAsync(pingTimeout.Token).ConfigureAwait(false);
                 }
 
                 // Wait a fixed time in all cases. Calculation of the remaining time is complicated

@@ -13,6 +13,7 @@
 * Client: MQTT 5.0.0 is now the default version when connecting with a server **(BREAKING CHANGE)**
 * Client: Fixed enhanced authentication.
 * Client: Exposed WebSocket compression options in MQTT client options (thanks to @victornor, #2127)
+* Client: Fixed wrong timeout for keep alive check (thanks to @Erw1nT, #2129)
 * Server: Fixed enhanced authentication.
 * Server: Set default for "MaxPendingMessagesPerClient" to 1000 **(BREAKING CHANGE)**
 * Server: Set SSL version to "None" which will let the OS choose the version **(BREAKING CHANGE)**

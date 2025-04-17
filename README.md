@@ -3,9 +3,9 @@
 <br/>
 </p>
 
-[![NuGet Badge](https://buildstats.info/nuget/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
+[![NuGet Badge](https://img.shields.io/nuget/dt/MQTTnet)](https://www.nuget.org/packages/MQTTnet)
 [![CI](https://github.com/dotnet/MQTTnet/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dotnet/MQTTnet/actions/workflows/ci.yml)
-[![MyGet](https://img.shields.io/myget/mqttnet/v/mqttnet?color=orange&label=MyGet-Preview)](https://www.myget.org/feed/mqttnet/package/nuget/MQTTnet)
+[![MyGet](https://img.shields.io/myget/mqttnet/v/mqttnet?color=orange&label=preview)](https://www.myget.org/feed/mqttnet/package/nuget/MQTTnet)
 ![Size](https://img.shields.io/github/repo-size/dotnet/MQTTnet.svg)
 [![Join the chat at https://gitter.im/MQTTnet/community](https://badges.gitter.im/MQTTnet/community.svg)](https://gitter.im/MQTTnet/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://raw.githubusercontent.com/dotnet/MQTTnet/master/LICENSE)

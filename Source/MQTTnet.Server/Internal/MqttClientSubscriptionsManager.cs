@@ -166,7 +166,7 @@ namespace MQTTnet.Server.Internal
             var retainedApplicationMessages = await _retainedMessagesManager.GetMessages().ConfigureAwait(false);
             var result = new SubscribeResult(subscribePacket.TopicFilters.Count);
 
-            var addedSubscriptions = new List<string>();
+            var addedSubscriptions = new List<MqttSubscription>();
             var finalTopicFilters = new List<MqttTopicFilter>();
 
             // The topic filters are order by its QoS so that the higher QoS will win over a
@@ -195,7 +195,7 @@ namespace MQTTnet.Server.Internal
 
                 var createSubscriptionResult = CreateSubscription(topicFilter, subscribePacket.SubscriptionIdentifier, interceptorEventArgs.Response.ReasonCode);
 
-                addedSubscriptions.Add(topicFilter.Topic);
+                addedSubscriptions.Add(createSubscriptionResult.Subscription);
                 finalTopicFilters.Add(topicFilter);
 
                 FilterRetainedApplicationMessages(retainedApplicationMessages, createSubscriptionResult, result);

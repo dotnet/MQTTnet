@@ -31,7 +31,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     // See the MqttSubscription object for a detailed explanation.
     readonly MqttSessionsStorage _sessionsStorage = new();
     readonly HashSet<MqttSession> _subscriberSessionsWithWildcards = [];
-    readonly Dictionary<string, HashSet<MqttSession>> _simpleTopicsToSession = [];
+    readonly Dictionary<string, HashSet<MqttSession>> _simpleTopicToSessions = [];
 
     public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, MqttServerEventContainer eventContainer, IMqttNetLogger logger)
     {
@@ -166,19 +166,19 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 _sessionsManagementLock.EnterReadLock();
                 try
                 {
-                    if (_simpleTopicsToSession.TryGetValue(applicationMessage.Topic, out var sessionsWithSimpleTopics))
+                    if (_simpleTopicToSessions.TryGetValue(applicationMessage.Topic, out var matchedSimpleTopicSessions))
                     {
                         // Create the initial subscriberSessions from whichever set is larger to take advantage 
                         // of the internal ConstructFrom other HashSet optimizations 
-                        if (sessionsWithSimpleTopics.Count > _subscriberSessionsWithWildcards.Count)
+                        if (matchedSimpleTopicSessions.Count > _subscriberSessionsWithWildcards.Count)
                         {
-                            subscriberSessions = new HashSet<MqttSession>(sessionsWithSimpleTopics);
+                            subscriberSessions = new HashSet<MqttSession>(matchedSimpleTopicSessions);
                             subscriberSessions.UnionWith(_subscriberSessionsWithWildcards);
                         }
                         else
                         {
                             subscriberSessions = new HashSet<MqttSession>(_subscriberSessionsWithWildcards);
-                            subscriberSessions.UnionWith(sessionsWithSimpleTopics);
+                            subscriberSessions.UnionWith(matchedSimpleTopicSessions);
                         }
                     }
                     else
@@ -482,13 +482,13 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 }
                 else
                 {
-                    if (_simpleTopicsToSession.TryGetValue(subscription.Topic, out var sessionsWithSimpleTopics))
+                    if (_simpleTopicToSessions.TryGetValue(subscription.Topic, out var simpleTopicSessions))
                     {
-                        sessionsWithSimpleTopics.Add(clientSession);
+                        simpleTopicSessions.Add(clientSession);
                     }
                     else
                     {
-                        _simpleTopicsToSession[subscription.Topic] = [clientSession];
+                        _simpleTopicToSessions[subscription.Topic] = [clientSession];
                     }
                 }
                 clientSession.AddSubscribedTopic(subscription.Topic, subscription.TopicHasWildcard);
@@ -507,12 +507,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         {
             foreach (var subscriptionTopic in subscriptionTopics)
             {
-                if (_simpleTopicsToSession.TryGetValue(subscriptionTopic, out var sessionsWithSimpleTopics))
+                if (_simpleTopicToSessions.TryGetValue(subscriptionTopic, out var simpleTopicSessions))
                 {
-                    sessionsWithSimpleTopics.Remove(clientSession);
-                    if (sessionsWithSimpleTopics.Count == 0)
+                    simpleTopicSessions.Remove(clientSession);
+                    if (simpleTopicSessions.Count == 0)
                     {
-                        _simpleTopicsToSession.Remove(subscriptionTopic);
+                        _simpleTopicToSessions.Remove(subscriptionTopic);
                     }
                 }
                 clientSession.RemoveSubscribedTopic(subscriptionTopic);
@@ -715,12 +715,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         _subscriberSessionsWithWildcards.Remove(session);
         foreach (var simpleTopic in session.SubscribedSimpleTopics)
         {
-            if (_simpleTopicsToSession.TryGetValue(simpleTopic, out var sessionsWithSimpleTopics))
+            if (_simpleTopicToSessions.TryGetValue(simpleTopic, out var simpleTopicSessions))
             {
-                sessionsWithSimpleTopics.Remove(session);
-                if (sessionsWithSimpleTopics.Count == 0)
+                simpleTopicSessions.Remove(session);
+                if (simpleTopicSessions.Count == 0)
                 {
-                    _simpleTopicsToSession.Remove(simpleTopic);
+                    _simpleTopicToSessions.Remove(simpleTopic);
                 }
             }
         }

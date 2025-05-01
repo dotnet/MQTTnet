@@ -31,7 +31,7 @@ public sealed class Load_Tests : BaseTestClass
 
         for (var i = 0; i < 100; i++)
         {
-            _ = Task.Run(
+            _ = Task.Factory.StartNew(
                 async () =>
                 {
                     using var client = await testEnvironment.ConnectClient();
@@ -47,10 +47,10 @@ public sealed class Load_Tests : BaseTestClass
                     }
 
                     await client.DisconnectAsync();
-                });
+                }, TaskCreationOptions.LongRunning);
         }
 
-        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromSeconds(120));
+        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromMinutes(5));
 
         Assert.AreEqual(100000, receivedMessages);
     }

@@ -133,7 +133,7 @@ public sealed class MqttWebSocketChannel : IMqttChannel
         }
     }
 
-    IWebProxy CreateProxy()
+    WebProxy CreateProxy()
     {
         if (string.IsNullOrEmpty(_options.ProxyOptions?.Address))
         {

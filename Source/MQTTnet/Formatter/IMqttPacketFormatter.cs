@@ -9,7 +9,7 @@ namespace MQTTnet.Formatter;
 
 public interface IMqttPacketFormatter
 {
-    MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket);
+    MqttPacket Decode(ReceivedMqttPacket receivedPacket);
 
-    MqttPacketBuffer Encode(MqttPacket mqttPacket);
+    MqttPacketBuffer Encode(MqttPacket packet);
 }

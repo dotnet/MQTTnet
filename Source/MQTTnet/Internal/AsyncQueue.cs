@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.Internal;
 
+#pragma warning disable CA1711
+
 public sealed class AsyncQueue<TItem> : IDisposable
 {
     readonly AsyncSignal _signal = new();
@@ -56,7 +58,7 @@ public sealed class AsyncQueue<TItem> : IDisposable
     {
         if (_queue.TryDequeue(out var item))
         {
-            return AsyncQueueDequeueResult<TItem>.Success(item);
+            return new AsyncQueueDequeueResult<TItem>(true, item);
         }
 
         return AsyncQueueDequeueResult<TItem>.NonSuccess;
@@ -94,7 +96,7 @@ public sealed class AsyncQueue<TItem> : IDisposable
 
                 if (_queue.TryDequeue(out var item))
                 {
-                    return AsyncQueueDequeueResult<TItem>.Success(item);
+                    return new AsyncQueueDequeueResult<TItem>(true, item);
                 }
             }
             catch (OperationCanceledException)

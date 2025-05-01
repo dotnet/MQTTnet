@@ -13,9 +13,9 @@ public sealed class MqttNetNullLogger : IMqttNetLogger
 {
     public static MqttNetNullLogger Instance { get; } = new();
 
-    public bool IsEnabled { get; } = false;
+    public bool IsEnabled { get; }
 
-    public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+    public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
     {
     }
 }

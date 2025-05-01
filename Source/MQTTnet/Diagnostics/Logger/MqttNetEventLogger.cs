@@ -17,6 +17,8 @@ public sealed class MqttNetEventLogger(string logId = null) : IMqttNetLogger
 
     public string LogId { get; } = logId;
 
+    public IFormatProvider FormatProvider { get; set; }
+
     public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
     {
         var eventHandler = LogMessagePublished;
@@ -32,7 +34,7 @@ public sealed class MqttNetEventLogger(string logId = null) : IMqttNetLogger
         {
             try
             {
-                message = string.Format(message, parameters);
+                message = string.Format(FormatProvider, message, parameters);
             }
             catch (FormatException)
             {

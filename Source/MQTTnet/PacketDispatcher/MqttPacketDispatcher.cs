@@ -127,9 +127,6 @@ public sealed class MqttPacketDispatcher : IDisposable
 
     void ThrowIfDisposed()
     {
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(MqttPacketDispatcher));
-        }
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
     }
 }

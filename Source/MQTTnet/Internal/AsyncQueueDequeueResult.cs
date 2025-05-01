@@ -11,9 +11,4 @@ public sealed class AsyncQueueDequeueResult<TItem>(bool isSuccess, TItem item)
     public bool IsSuccess { get; } = isSuccess;
 
     public TItem Item { get; } = item;
-
-    public static AsyncQueueDequeueResult<TItem> Success(TItem item)
-    {
-        return new AsyncQueueDequeueResult<TItem>(true, item);
-    }
 }

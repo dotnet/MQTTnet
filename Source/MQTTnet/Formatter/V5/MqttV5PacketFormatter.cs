@@ -18,13 +18,13 @@ public sealed class MqttV5PacketFormatter : IMqttPacketFormatter
         _encoder = new MqttV5PacketEncoder(bufferWriter);
     }
 
-    public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
+    public MqttPacket Decode(ReceivedMqttPacket receivedPacket)
     {
-        return _decoder.Decode(receivedMqttPacket);
+        return _decoder.Decode(receivedPacket);
     }
 
-    public MqttPacketBuffer Encode(MqttPacket mqttPacket)
+    public MqttPacketBuffer Encode(MqttPacket packet)
     {
-        return _encoder.Encode(mqttPacket);
+        return _encoder.Encode(packet);
     }
 }

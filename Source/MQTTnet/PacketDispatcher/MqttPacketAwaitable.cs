@@ -40,14 +40,14 @@ public sealed class MqttPacketAwaitable<TPacket> : IMqttPacketAwaitable where TP
 
     public void Complete(MqttPacket packet)
     {
-        if (packet == null) throw new ArgumentNullException(nameof(packet));
+        ArgumentNullException.ThrowIfNull(packet);
 
         _promise.TrySetResult(packet);
     }
 
     public void Fail(Exception exception)
     {
-        if (exception == null) throw new ArgumentNullException(nameof(exception));
+        ArgumentNullException.ThrowIfNull(exception);
 
         _promise.TrySetException(exception);
     }

@@ -90,10 +90,7 @@ public sealed class AsyncSignal : IDisposable
 
     void ThrowIfDisposed()
     {
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(AsyncSignal));
-        }
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
     }
 
     sealed class AsyncSignalWaiter : IDisposable

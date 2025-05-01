@@ -11,6 +11,8 @@ using MQTTnet.LowLevelClient;
 
 namespace MQTTnet;
 
+#pragma warning disable CA1822
+
 public class MqttClientFactory
 {
     readonly IMqttNetLogger _logger;
@@ -48,6 +50,7 @@ public class MqttClientFactory
     }
 
     public MqttClientOptionsBuilder CreateClientOptionsBuilder()
+
     {
         return new MqttClientOptionsBuilder();
     }

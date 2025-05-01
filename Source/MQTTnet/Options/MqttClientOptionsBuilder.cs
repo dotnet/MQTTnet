@@ -127,7 +127,7 @@ public sealed class MqttClientOptionsBuilder
         ArgumentNullException.ThrowIfNull(uri);
 
         var port = uri.IsDefaultPort ? null : (int?)uri.Port;
-        switch (uri.Scheme.ToLower())
+        switch (uri.Scheme.ToLowerInvariant())
         {
             case "tcp":
             case "mqtt":

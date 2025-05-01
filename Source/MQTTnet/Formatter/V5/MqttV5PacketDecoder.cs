@@ -49,7 +49,7 @@ public sealed class MqttV5PacketDecoder
         };
     }
 
-    MqttPacket DecodeAuthPacket(ArraySegment<byte> body)
+    MqttAuthPacket DecodeAuthPacket(ArraySegment<byte> body)
     {
         _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
 
@@ -91,7 +91,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodeConnAckPacket(ArraySegment<byte> body)
+    MqttConnAckPacket DecodeConnAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -194,7 +194,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodeConnectPacket(ArraySegment<byte> body)
+    MqttConnectPacket DecodeConnectPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -333,7 +333,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodeDisconnectPacket(ArraySegment<byte> body)
+    MqttDisconnectPacket DecodeDisconnectPacket(ArraySegment<byte> body)
     {
         // From RFC: 3.14.2.1 Disconnect Reason Code
         // Byte 1 in the Variable Header is the Disconnect Reason Code.
@@ -379,7 +379,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodePubAckPacket(ArraySegment<byte> body)
+    MqttPubAckPacket DecodePubAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -416,7 +416,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodePubCompPacket(ArraySegment<byte> body)
+    MqttPubCompPacket DecodePubCompPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -454,7 +454,7 @@ public sealed class MqttV5PacketDecoder
     }
 
 
-    MqttPacket DecodePublishPacket(byte header, ArraySegment<byte> body)
+    MqttPublishPacket DecodePublishPacket(byte header, ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -529,7 +529,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodePubRecPacket(ArraySegment<byte> body)
+    MqttPubRecPacket DecodePubRecPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -566,7 +566,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodePubRelPacket(ArraySegment<byte> body)
+    MqttPubRelPacket DecodePubRelPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -603,7 +603,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodeSubAckPacket(ArraySegment<byte> body)
+    MqttSubAckPacket DecodeSubAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -639,7 +639,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodeSubscribePacket(ArraySegment<byte> body)
+    MqttSubscribePacket DecodeSubscribePacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -689,7 +689,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodeUnsubAckPacket(ArraySegment<byte> body)
+    MqttUnsubAckPacket DecodeUnsubAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -726,7 +726,7 @@ public sealed class MqttV5PacketDecoder
         return packet;
     }
 
-    MqttPacket DecodeUnsubscribePacket(ArraySegment<byte> body)
+    MqttUnsubscribePacket DecodeUnsubscribePacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 

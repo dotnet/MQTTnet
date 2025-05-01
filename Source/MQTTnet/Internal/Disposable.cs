@@ -12,10 +12,7 @@ public abstract class Disposable : IDisposable
 
     protected void ThrowIfDisposed()
     {
-        if (IsDisposed)
-        {
-            throw new ObjectDisposedException(GetType().Name);
-        }
+        ObjectDisposedException.ThrowIf(IsDisposed, GetType());
     }
 
     protected virtual void Dispose(bool disposing)

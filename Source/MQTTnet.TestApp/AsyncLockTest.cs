@@ -6,7 +6,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using MQTTnet.Exceptions;
-using MQTTnet.Internal;
 
 namespace MQTTnet.TestApp;
 

@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Linq;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 
@@ -21,27 +20,27 @@ public static class MqttApplicationMessageValidator
             return;
         }
 
-        if (applicationMessage.ContentType?.Any() == true)
+        if (applicationMessage.ContentType?.Length > 0)
         {
             Throw(nameof(applicationMessage.ContentType));
         }
 
-        if (applicationMessage.UserProperties?.Any() == true)
+        if (applicationMessage.UserProperties?.Count > 0)
         {
             Throw(nameof(applicationMessage.UserProperties));
         }
 
-        if (applicationMessage.CorrelationData?.Any() == true)
+        if (applicationMessage.CorrelationData?.Length > 0)
         {
             Throw(nameof(applicationMessage.CorrelationData));
         }
 
-        if (applicationMessage.ResponseTopic?.Any() == true)
+        if (applicationMessage.ResponseTopic?.Length > 0)
         {
             Throw(nameof(applicationMessage.ResponseTopic));
         }
 
-        if (applicationMessage.SubscriptionIdentifiers?.Any() == true)
+        if (applicationMessage.SubscriptionIdentifiers?.Count > 0)
         {
             Throw(nameof(applicationMessage.SubscriptionIdentifiers));
         }

@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,7 +31,7 @@ public sealed class AsyncLock : IDisposable
         {
             _isDisposed = true;
 
-            while (_waiters.Any())
+            while (_waiters.Count != 0)
             {
                 _waiters.Dequeue().Dispose();
             }
@@ -43,10 +42,7 @@ public sealed class AsyncLock : IDisposable
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (_isDisposed)
-        {
-            throw new ObjectDisposedException(nameof(AsyncLock));
-        }
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
 
         lock (_syncRoot)
         {
@@ -80,7 +76,7 @@ public sealed class AsyncLock : IDisposable
             // Try to find the next waiter which can be approved.
             // Some of them might be canceled already so it is not
             // guaranteed that the very next waiter is the correct one.
-            while (_waiters.Any())
+            while (_waiters.Count != 0)
             {
                 var waiter = _waiters.Dequeue();
                 var isApproved = waiter.Approve(_releaser);

@@ -8,10 +8,12 @@ using System.Threading;
 
 namespace MQTTnet.Internal;
 
+#pragma warning disable CA1711
+
 public sealed class BlockingQueue<TItem> : IDisposable
 {
-    readonly object _syncRoot = new();
     readonly LinkedList<TItem> _items = [];
+    readonly object _syncRoot = new();
 
     ManualResetEventSlim _gate = new(false);
 
@@ -26,14 +28,11 @@ public sealed class BlockingQueue<TItem> : IDisposable
         }
     }
 
-    public void Enqueue(TItem item)
+    public void Clear()
     {
-        ArgumentNullException.ThrowIfNull(item);
-
         lock (_syncRoot)
         {
-            _items.AddLast(item);
-            _gate?.Set();
+            _items.Clear();
         }
     }
 
@@ -61,6 +60,23 @@ public sealed class BlockingQueue<TItem> : IDisposable
         }
 
         throw new OperationCanceledException();
+    }
+
+    public void Dispose()
+    {
+        _gate?.Dispose();
+        _gate = null;
+    }
+
+    public void Enqueue(TItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+
+        lock (_syncRoot)
+        {
+            _items.AddLast(item);
+            _gate?.Set();
+        }
     }
 
     public TItem PeekAndWait(CancellationToken cancellationToken = default)
@@ -108,19 +124,5 @@ public sealed class BlockingQueue<TItem> : IDisposable
 
             return item!.Value;
         }
-    }
-
-    public void Clear()
-    {
-        lock (_syncRoot)
-        {
-            _items.Clear();
-        }
-    }
-
-    public void Dispose()
-    {
-        _gate?.Dispose();
-        _gate = null;
     }
 }

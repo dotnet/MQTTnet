@@ -390,7 +390,7 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
 
     byte EncodeSubAckPacket(MqttSubAckPacket packet)
     {
-        if (packet.ReasonCodes?.Any() != true)
+        if (packet.ReasonCodes?.Count == 0)
         {
             throw new MqttProtocolViolationException("At least one reason code must be set[MQTT - 3.8.3 - 3].");
         }
@@ -415,7 +415,7 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
 
     byte EncodeSubscribePacket(MqttSubscribePacket packet)
     {
-        if (packet.TopicFilters?.Any() != true)
+        if (packet.TopicFilters?.Count == 0)
         {
             throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
         }
@@ -486,7 +486,7 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
 
     byte EncodeUnsubscribePacket(MqttUnsubscribePacket packet)
     {
-        if (packet.TopicFilters?.Any() != true)
+        if (packet.TopicFilters?.Count == 0)
         {
             throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
         }

@@ -5,7 +5,6 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
@@ -30,14 +29,14 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         _mqttProtocolVersion = mqttProtocolVersion;
     }
 
-    public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
+    public MqttPacket Decode(ReceivedMqttPacket receivedPacket)
     {
-        if (receivedMqttPacket.TotalLength == 0)
+        if (receivedPacket.TotalLength == 0)
         {
             return null;
         }
 
-        var controlPacketType = receivedMqttPacket.FixedHeader >> 4;
+        var controlPacketType = receivedPacket.FixedHeader >> 4;
         if (controlPacketType is < 1 or > 14)
         {
             throw new MqttProtocolViolationException($"The packet type is invalid ({controlPacketType}).");
@@ -46,15 +45,15 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         switch ((MqttControlPacketType)controlPacketType)
         {
             case MqttControlPacketType.Publish:
-                return DecodePublishPacket(receivedMqttPacket);
+                return DecodePublishPacket(receivedPacket);
             case MqttControlPacketType.PubAck:
-                return DecodePubAckPacket(receivedMqttPacket.Body);
+                return DecodePubAckPacket(receivedPacket.Body);
             case MqttControlPacketType.PubRec:
-                return DecodePubRecPacket(receivedMqttPacket.Body);
+                return DecodePubRecPacket(receivedPacket.Body);
             case MqttControlPacketType.PubRel:
-                return DecodePubRelPacket(receivedMqttPacket.Body);
+                return DecodePubRelPacket(receivedPacket.Body);
             case MqttControlPacketType.PubComp:
-                return DecodePubCompPacket(receivedMqttPacket.Body);
+                return DecodePubCompPacket(receivedPacket.Body);
 
             case MqttControlPacketType.PingReq:
                 return MqttPingReqPacket.Instance;
@@ -62,25 +61,25 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
                 return MqttPingRespPacket.Instance;
 
             case MqttControlPacketType.Connect:
-                return DecodeConnectPacket(receivedMqttPacket.Body);
+                return DecodeConnectPacket(receivedPacket.Body);
             case MqttControlPacketType.ConnAck:
                 if (_mqttProtocolVersion == MqttProtocolVersion.V311)
                 {
-                    return DecodeConnAckPacketV311(receivedMqttPacket.Body);
+                    return DecodeConnAckPacketV311(receivedPacket.Body);
                 }
 
-                return DecodeConnAckPacket(receivedMqttPacket.Body);
+                return DecodeConnAckPacket(receivedPacket.Body);
             case MqttControlPacketType.Disconnect:
                 return DisconnectPacket;
 
             case MqttControlPacketType.Subscribe:
-                return DecodeSubscribePacket(receivedMqttPacket.Body);
+                return DecodeSubscribePacket(receivedPacket.Body);
             case MqttControlPacketType.SubAck:
-                return DecodeSubAckPacket(receivedMqttPacket.Body);
+                return DecodeSubAckPacket(receivedPacket.Body);
             case MqttControlPacketType.Unsubscribe:
-                return DecodeUnsubscribePacket(receivedMqttPacket.Body);
+                return DecodeUnsubscribePacket(receivedPacket.Body);
             case MqttControlPacketType.UnsubAck:
-                return DecodeUnsubAckPacket(receivedMqttPacket.Body);
+                return DecodeUnsubAckPacket(receivedPacket.Body);
 
             case MqttControlPacketType.Auth:
             default:
@@ -123,7 +122,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
             : new MqttPacketBuffer(firstSegment, payload);
     }
 
-    MqttPacket DecodeConnAckPacket(ArraySegment<byte> body)
+    MqttConnAckPacket DecodeConnAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -137,7 +136,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return packet;
     }
 
-    MqttPacket DecodeConnAckPacketV311(ArraySegment<byte> body)
+    MqttConnAckPacket DecodeConnAckPacketV311(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -153,7 +152,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return packet;
     }
 
-    MqttPacket DecodeConnectPacket(ArraySegment<byte> body)
+    MqttConnectPacket DecodeConnectPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -221,7 +220,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return packet;
     }
 
-    MqttPacket DecodePubAckPacket(ArraySegment<byte> body)
+    MqttPubAckPacket DecodePubAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -233,7 +232,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         };
     }
 
-    MqttPacket DecodePubCompPacket(ArraySegment<byte> body)
+    MqttPubCompPacket DecodePubCompPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -245,7 +244,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         };
     }
 
-    MqttPacket DecodePublishPacket(ReceivedMqttPacket receivedMqttPacket)
+    MqttPublishPacket DecodePublishPacket(ReceivedMqttPacket receivedMqttPacket)
     {
         ThrowIfBodyIsEmpty(receivedMqttPacket.Body);
 
@@ -280,7 +279,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return packet;
     }
 
-    MqttPacket DecodePubRecPacket(ArraySegment<byte> body)
+    MqttPubRecPacket DecodePubRecPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -292,7 +291,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         };
     }
 
-    MqttPacket DecodePubRelPacket(ArraySegment<byte> body)
+    MqttPubRelPacket DecodePubRelPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -304,7 +303,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         };
     }
 
-    MqttPacket DecodeSubAckPacket(ArraySegment<byte> body)
+    MqttSubAckPacket DecodeSubAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -324,7 +323,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return packet;
     }
 
-    MqttPacket DecodeSubscribePacket(ArraySegment<byte> body)
+    MqttSubscribePacket DecodeSubscribePacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -349,7 +348,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return packet;
     }
 
-    MqttPacket DecodeUnsubAckPacket(ArraySegment<byte> body)
+    MqttUnsubAckPacket DecodeUnsubAckPacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -361,7 +360,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         };
     }
 
-    MqttPacket DecodeUnsubscribePacket(ArraySegment<byte> body)
+    MqttUnsubscribePacket DecodeUnsubscribePacket(ArraySegment<byte> body)
     {
         ThrowIfBodyIsEmpty(body);
 
@@ -380,7 +379,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return packet;
     }
 
-    byte EncodeConnAckPacket(MqttConnAckPacket packet, MqttBufferWriter bufferWriter)
+    static byte EncodeConnAckPacket(MqttConnAckPacket packet, MqttBufferWriter bufferWriter)
     {
         bufferWriter.WriteByte(0); // Reserved.
         bufferWriter.WriteByte((byte)packet.ReturnCode);
@@ -388,7 +387,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
     }
 
-    byte EncodeConnAckPacketV311(MqttConnAckPacket packet, MqttBufferWriter bufferWriter)
+    static byte EncodeConnAckPacketV311(MqttConnAckPacket packet, MqttBufferWriter bufferWriter)
     {
         byte connectAcknowledgeFlags = 0x0;
         if (packet.IsSessionPresent)
@@ -402,7 +401,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.ConnAck);
     }
 
-    byte EncodeConnectPacket(MqttConnectPacket packet, MqttBufferWriter bufferWriter)
+    static byte EncodeConnectPacket(MqttConnectPacket packet, MqttBufferWriter bufferWriter)
     {
         ValidateConnectPacket(packet);
 
@@ -471,7 +470,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         return MqttBufferWriter.BuildFixedHeader(MqttControlPacketType.Connect);
     }
 
-    byte EncodeConnectPacketV311(MqttConnectPacket packet, MqttBufferWriter bufferWriter)
+    static byte EncodeConnectPacketV311(MqttConnectPacket packet, MqttBufferWriter bufferWriter)
     {
         ValidateConnectPacket(packet);
 
@@ -695,7 +694,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
 
         bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
 
-        if (packet.ReasonCodes.Any())
+        if (packet.ReasonCodes.Count != 0)
         {
             foreach (var packetSubscribeReturnCode in packet.ReasonCodes)
             {
@@ -723,7 +722,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
 
     static byte EncodeSubscribePacket(MqttSubscribePacket packet, MqttBufferWriter bufferWriter)
     {
-        if (!packet.TopicFilters.Any())
+        if (packet.TopicFilters.Count == 0)
         {
             throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.8.3-3].");
         }
@@ -760,7 +759,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
 
     static byte EncodeUnsubscribePacket(MqttUnsubscribePacket packet, MqttBufferWriter bufferWriter)
     {
-        if (!packet.TopicFilters.Any())
+        if (packet.TopicFilters.Count == 0)
         {
             throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
         }
@@ -772,7 +771,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
 
         bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
 
-        if (packet.TopicFilters?.Any() == true)
+        if (packet.TopicFilters?.Count > 0)
         {
             foreach (var topicFilter in packet.TopicFilters)
             {
@@ -792,7 +791,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         }
     }
 
-    void ValidateConnectPacket(MqttConnectPacket packet)
+    static void ValidateConnectPacket(MqttConnectPacket packet)
     {
         ArgumentNullException.ThrowIfNull(packet);
 

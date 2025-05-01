@@ -10,5 +10,5 @@ public interface IMqttNetLogger
 {
     bool IsEnabled { get; }
 
-    void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception);
+    void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception);
 }

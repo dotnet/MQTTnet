@@ -116,3 +116,4 @@ public sealed class MqttClientConnectResult
     ///     MQTTv5 only.
     /// </summary>
     public bool WildcardSubscriptionAvailable { get; init; }
+}

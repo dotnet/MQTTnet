@@ -135,6 +135,11 @@ namespace MQTTnet
             return new MqttClient(clientAdapterFactory, logger);
         }
 
+        public MqttExtendedAuthenticationExchangeOptionsFactory CreateMqttExtendedAuthenticationExchangeOptionsBuilder()
+        {
+            return new MqttExtendedAuthenticationExchangeOptionsFactory();
+        }
+
         public MqttServer CreateMqttServer(MqttServerOptions options)
         {
             return CreateMqttServer(options, DefaultLogger);

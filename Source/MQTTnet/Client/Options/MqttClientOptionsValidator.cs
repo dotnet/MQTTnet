@@ -68,8 +68,13 @@ namespace MQTTnet.Client
                 Throw(nameof(options.AuthenticationMethod));
             }
 
+            if (options.ExtendedAuthenticationExchangeHandler != null)
+            {
+                Throw(nameof(options.ExtendedAuthenticationExchangeHandler));
+            }
+
             // Will relevant properties.
-            
+
             if (options.WillPayloadFormatIndicator != MqttPayloadFormatIndicator.Unspecified)
             {
                 Throw(nameof(options.WillPayloadFormatIndicator));

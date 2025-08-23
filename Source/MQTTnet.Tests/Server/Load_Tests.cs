@@ -21,6 +21,7 @@ public sealed class Load_Tests : BaseTestClass
         var receivedMessages = 0;
 
         using var receiverClient = await testEnvironment.ConnectClient();
+
         receiverClient.ApplicationMessageReceivedAsync += _ =>
         {
             Interlocked.Increment(ref receivedMessages);
@@ -35,7 +36,7 @@ public sealed class Load_Tests : BaseTestClass
                 async () =>
                 {
                     using var client = await testEnvironment.ConnectClient();
-                    var applicationMessageBuilder = new MqttApplicationMessageBuilder();
+                    var applicationMessageBuilder = testEnvironment.ClientFactory.CreateApplicationMessageBuilder();
 
                     for (var j = 0; j < 1000; j++)
                     {
@@ -50,7 +51,7 @@ public sealed class Load_Tests : BaseTestClass
                 }, TaskCreationOptions.LongRunning);
         }
 
-        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromMinutes(5));
+        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromMinutes(3));
 
         Assert.AreEqual(100000, receivedMessages);
     }
@@ -77,6 +78,7 @@ public sealed class Load_Tests : BaseTestClass
                     try
                     {
                         using var client = await testEnvironment.ConnectLowLevelClient();
+
                         await client.SendAsync(
                             new MqttConnectPacket
                             {
@@ -110,7 +112,7 @@ public sealed class Load_Tests : BaseTestClass
                 TaskCreationOptions.LongRunning);
         }
 
-        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromMinutes(5));
+        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromMinutes(3));
 
         Assert.AreEqual(100000, receivedMessages);
     }
@@ -151,7 +153,7 @@ public sealed class Load_Tests : BaseTestClass
                 TaskCreationOptions.LongRunning);
         }
 
-        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromMinutes(5));
+        SpinWait.SpinUntil(() => receivedMessages == 100000, TimeSpan.FromMinutes(2));
 
         Assert.AreEqual(100000, receivedMessages);
     }

@@ -17,23 +17,23 @@ namespace MQTTnet.Tests.Internal;
 [TestClass]
 public class CrossPlatformSocket_Tests
 {
-    [TestMethod]
-    public async Task Connect_Send_Receive()
-    {
-        var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
-        await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 80), CancellationToken.None);
-
-        var requestBuffer = "GET / HTTP/1.1\r\nHost: www.google.de\r\n\r\n"u8.ToArray();
-        await crossPlatformSocket.SendAsync(new ArraySegment<byte>(requestBuffer), SocketFlags.None);
-
-        var buffer = new byte[1024];
-        var length = await crossPlatformSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-        crossPlatformSocket.Dispose();
-
-        var responseText = Encoding.UTF8.GetString(buffer, 0, length);
-
-        Assert.IsTrue(responseText.Contains("HTTP/1.1 200 OK"));
-    }
+    // [TestMethod]
+    // public async Task Connect_Send_Receive()
+    // {
+    //     var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
+    //     await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.google.de", 80), CancellationToken.None);
+    //
+    //     var requestBuffer = "GET / HTTP/1.1\r\nHost: www.google.de\r\n\r\n"u8.ToArray();
+    //     await crossPlatformSocket.SendAsync(new ArraySegment<byte>(requestBuffer), SocketFlags.None);
+    //
+    //     var buffer = new byte[1024];
+    //     var length = await crossPlatformSocket.ReceiveAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+    //     crossPlatformSocket.Dispose();
+    //
+    //     var responseText = Encoding.UTF8.GetString(buffer, 0, length);
+    //
+    //     Assert.IsTrue(responseText.Contains("HTTP/1.1 200 OK"));
+    // }
 
     [TestMethod]
     [ExpectedException(typeof(OperationCanceledException))]

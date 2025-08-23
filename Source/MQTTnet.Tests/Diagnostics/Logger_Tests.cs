@@ -18,7 +18,7 @@ public sealed class Logger_Tests : BaseTestClass
         var logger = new MqttNetEventLogger();
 
         MqttNetLogMessage logMessage = null;
-        logger.LogMessagePublished += (s, e) => { logMessage = e.LogMessage; };
+        logger.LogMessagePublished += (_, e) => { logMessage = e.LogMessage; };
 
         logger.Publish(MqttNetLogLevel.Info, "SOURCE", "MESSAGE", ["ABC"], new InvalidOperationException());
 

@@ -328,6 +328,7 @@ public sealed class TestEnvironment : IDisposable
 
             if (_exceptions.Any())
             {
+                // ReSharper disable once ThrowExceptionInUnexpectedLocation
                 throw new Exception($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
             }
         }

@@ -580,7 +580,7 @@ public sealed class MqttPacketSerialization_V3_Binary_Tests
         return packetFormatterAdapter.ProtocolVersion;
     }
 
-    static TPacket Roundtrip<TPacket>(TPacket packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, MqttBufferReader bufferReader = null, MqttBufferWriter bufferWriter = null) where TPacket : MqttPacket
+    static TPacket Roundtrip<TPacket>(TPacket packet, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, MqttBufferWriter bufferWriter = null) where TPacket : MqttPacket
     {
         var writer = bufferWriter ?? WriterFactory();
         var serializer = MqttPacketFormatterAdapter.GetMqttPacketFormatter(protocolVersion, writer);

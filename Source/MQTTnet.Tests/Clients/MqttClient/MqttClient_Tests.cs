@@ -468,7 +468,7 @@ public sealed class MqttClient_Tests : BaseTestClass
         const string expectedClient2Message = "hello client2";
 
         var client1 = await testEnvironment.ConnectClient();
-        client1.ApplicationMessageReceivedAsync += async e =>
+        client1.ApplicationMessageReceivedAsync += async _ =>
         {
             await client1.PublishStringAsync(client2Topic, expectedClient2Message, MqttQualityOfServiceLevel.AtLeastOnce).ConfigureAwait(false);
         };
@@ -562,7 +562,7 @@ public sealed class MqttClient_Tests : BaseTestClass
         var tries = 0;
         var maxTries = 3;
 
-        client.DisconnectedAsync += async e =>
+        client.DisconnectedAsync += async _ =>
         {
             if (tries >= maxTries)
             {

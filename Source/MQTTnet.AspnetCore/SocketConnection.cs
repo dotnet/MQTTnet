@@ -125,7 +125,7 @@ public sealed class SocketConnection : ConnectionContext
         {
             if (_aborted)
             {
-                error = error ?? ConnectionAborted();
+                error ??= ConnectionAborted();
             }
 
             await _application.Output.CompleteAsync(error);

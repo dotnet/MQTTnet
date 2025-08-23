@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
@@ -25,9 +24,6 @@ public class MessageDeliveryBenchmark : BaseBenchmark
     Dictionary<string, IMqttClient> _mqttPublisherClientsByPublisherName;
     MqttServer _mqttServer;
     List<IMqttClient> _mqttSubscriberClients;
-    Dictionary<string, string> _publisherByTopic;
-    List<MqttApplicationMessage> _topicPublishMessages;
-    Dictionary<string, List<string>> _topicsByPublisher;
 
     [Params(1000, 10000)] public int _numPublishers;
 
@@ -36,6 +32,8 @@ public class MessageDeliveryBenchmark : BaseBenchmark
     [Params(10)] public int _numSubscribers;
 
     [Params(1, 5)] public int _numTopicsPerPublisher;
+    Dictionary<string, string> _publisherByTopic;
+    Dictionary<string, List<string>> _topicsByPublisher;
 
     [GlobalCleanup]
     public void Cleanup()
@@ -62,9 +60,6 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         _mqttServer = null;
     }
 
-    /// <summary>
-    ///     Publish messages and wait for messages sent to subscribers
-    /// </summary>
     [Benchmark]
     public void DeliverMessages()
     {
@@ -97,6 +92,7 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         }
         catch
         {
+            // Ignore all errors.
         }
 
         _cancellationTokenSource.Dispose();
@@ -107,22 +103,12 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         }
     }
 
-
     [GlobalSetup]
     public void Setup()
     {
         _lockMsgCount = new object();
 
         TopicGenerator.Generate(_numPublishers, _numTopicsPerPublisher, out _topicsByPublisher, out _, out _);
-
-        var topics = _topicsByPublisher.First().Value;
-        _topicPublishMessages = new List<MqttApplicationMessage>();
-        // Prepare messages, same for each publisher
-        foreach (var topic in topics)
-        {
-            var message = new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload([1, 2, 3, 4, 5, 6, 7, 8]).Build();
-            _topicPublishMessages.Add(message);
-        }
 
         // Create server
         var serverFactory = new MqttServerFactory();

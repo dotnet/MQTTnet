@@ -100,7 +100,7 @@ public class SerializerBenchmark : BaseBenchmark
 
         public Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            Array.Copy(_buffer.Array, _position, buffer, offset, count);
+            Array.Copy(_buffer!.Array!, _position, buffer, offset, count);
             _position += count;
 
             return Task.FromResult(count);

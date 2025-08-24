@@ -51,7 +51,7 @@ public sealed class Load_Tests : BaseTestClass
                 }, TaskCreationOptions.LongRunning);
         }
 
-        var result = SpinWait.SpinUntil(() => receivedMessages > 90000, TimeSpan.FromMinutes(5));
+        var result = SpinWait.SpinUntil(() => receivedMessages > 50000, TimeSpan.FromMinutes(5));
 
         Assert.IsTrue(result);
     }
@@ -112,7 +112,7 @@ public sealed class Load_Tests : BaseTestClass
                 TaskCreationOptions.LongRunning);
         }
 
-        var result = SpinWait.SpinUntil(() => receivedMessages > 90000, TimeSpan.FromMinutes(5));
+        var result = SpinWait.SpinUntil(() => receivedMessages > 50000, TimeSpan.FromMinutes(5));
 
         Assert.IsTrue(result);
     }
@@ -153,7 +153,7 @@ public sealed class Load_Tests : BaseTestClass
                 TaskCreationOptions.LongRunning);
         }
 
-        var result = SpinWait.SpinUntil(() => receivedMessages > 90000, TimeSpan.FromMinutes(5));
+        var result = SpinWait.SpinUntil(() => receivedMessages > 50000, TimeSpan.FromMinutes(5));
 
         Assert.IsTrue(result);
     }

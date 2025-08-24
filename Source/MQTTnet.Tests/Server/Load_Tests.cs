@@ -12,9 +12,7 @@ namespace MQTTnet.Tests.Server;
 [TestClass]
 public sealed class Load_Tests : BaseTestClass
 {
-#if DEBUG
     [TestMethod]
-#endif
     public async Task Handle_100_000_Messages_In_Low_Level_Client()
     {
         using var testEnvironment = CreateTestEnvironment();
@@ -75,9 +73,7 @@ public sealed class Load_Tests : BaseTestClass
         Assert.IsTrue(result);
     }
 
-#if DEBUG
     [TestMethod]
-#endif
     public async Task Handle_100_000_Messages_In_Receiving_Client()
     {
         using var testEnvironment = CreateTestEnvironment();
@@ -120,9 +116,7 @@ public sealed class Load_Tests : BaseTestClass
         Assert.IsTrue(result);
     }
 
-#if DEBUG
     [TestMethod]
-#endif
     public async Task Handle_100_000_Messages_In_Server()
     {
         using var testEnvironment = CreateTestEnvironment();

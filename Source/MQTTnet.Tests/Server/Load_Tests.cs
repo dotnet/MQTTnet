@@ -12,7 +12,72 @@ namespace MQTTnet.Tests.Server;
 [TestClass]
 public sealed class Load_Tests : BaseTestClass
 {
+#if DEBUG
     [TestMethod]
+#endif
+    public async Task Handle_100_000_Messages_In_Low_Level_Client()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        var server = await testEnvironment.StartServer();
+
+        var receivedMessages = 0;
+
+        server.InterceptingPublishAsync += _ =>
+        {
+            Interlocked.Increment(ref receivedMessages);
+            return CompletedTask.Instance;
+        };
+
+        for (var i = 0; i < 100; i++)
+        {
+            _ = Task.Factory.StartNew(
+                async () =>
+                {
+                    try
+                    {
+                        using var client = await testEnvironment.ConnectLowLevelClient();
+
+                        await client.SendAsync(
+                            new MqttConnectPacket
+                            {
+                                ClientId = "Handle_100_000_Messages_In_Low_Level_Client_" + Guid.NewGuid()
+                            },
+                            CancellationToken.None);
+
+                        var packet = await client.ReceiveAsync(CancellationToken.None);
+
+                        var connAckPacket = packet as MqttConnAckPacket;
+
+                        Assert.IsTrue(connAckPacket != null);
+                        Assert.AreEqual(MqttConnectReasonCode.Success, connAckPacket.ReasonCode);
+
+                        var publishPacket = new MqttPublishPacket();
+
+                        for (var j = 0; j < 1000; j++)
+                        {
+                            publishPacket.Topic = j.ToString();
+
+                            await client.SendAsync(publishPacket, CancellationToken.None).ConfigureAwait(false);
+                        }
+
+                        await client.DisconnectAsync(CancellationToken.None);
+                    }
+                    catch (Exception exception)
+                    {
+                        Console.WriteLine(exception);
+                    }
+                },
+                TaskCreationOptions.LongRunning);
+        }
+
+        var result = SpinWait.SpinUntil(() => receivedMessages >= 100000, TimeSpan.FromMinutes(5));
+
+        Assert.IsTrue(result);
+    }
+
+#if DEBUG
+    [TestMethod]
+#endif
     public async Task Handle_100_000_Messages_In_Receiving_Client()
     {
         using var testEnvironment = CreateTestEnvironment();
@@ -40,84 +105,24 @@ public sealed class Load_Tests : BaseTestClass
 
                     for (var j = 0; j < 1000; j++)
                     {
-                        var message = applicationMessageBuilder.WithTopic("t/" + j)
-                            .Build();
+                        var message = applicationMessageBuilder.WithTopic("t/" + j).Build();
 
-                        await client.PublishAsync(message)
-                            .ConfigureAwait(false);
+                        await client.PublishAsync(message).ConfigureAwait(false);
                     }
 
                     await client.DisconnectAsync();
-                }, TaskCreationOptions.LongRunning);
-        }
-
-        var result = SpinWait.SpinUntil(() => receivedMessages > 50000, TimeSpan.FromMinutes(5));
-
-        Assert.IsTrue(result);
-    }
-
-    [TestMethod]
-    public async Task Handle_100_000_Messages_In_Low_Level_Client()
-    {
-        using var testEnvironment = CreateTestEnvironment();
-        var server = await testEnvironment.StartServer();
-
-        var receivedMessages = 0;
-
-        server.InterceptingPublishAsync += _ =>
-        {
-            Interlocked.Increment(ref receivedMessages);
-            return CompletedTask.Instance;
-        };
-
-        for (var i = 0; i < 100; i++)
-        {
-            _ = Task.Factory.StartNew(
-                async () =>
-                {
-                    try
-                    {
-                        using var client = await testEnvironment.ConnectLowLevelClient();
-
-                        await client.SendAsync(
-                            new MqttConnectPacket
-                            {
-                                ClientId = "Handle_100_000_Messages_In_Low_Level_Client_" + Guid.NewGuid()
-                            }, CancellationToken.None);
-
-                        var packet = await client.ReceiveAsync(CancellationToken.None);
-
-                        var connAckPacket = packet as MqttConnAckPacket;
-
-                        Assert.IsTrue(connAckPacket != null);
-                        Assert.AreEqual(MqttConnectReasonCode.Success, connAckPacket.ReasonCode);
-
-                        var publishPacket = new MqttPublishPacket();
-
-                        for (var j = 0; j < 1000; j++)
-                        {
-                            publishPacket.Topic = j.ToString();
-
-                            await client.SendAsync(publishPacket, CancellationToken.None)
-                                .ConfigureAwait(false);
-                        }
-
-                        await client.DisconnectAsync(CancellationToken.None);
-                    }
-                    catch (Exception exception)
-                    {
-                        Console.WriteLine(exception);
-                    }
                 },
                 TaskCreationOptions.LongRunning);
         }
 
-        var result = SpinWait.SpinUntil(() => receivedMessages > 50000, TimeSpan.FromMinutes(5));
+        var result = SpinWait.SpinUntil(() => receivedMessages >= 100000, TimeSpan.FromMinutes(5));
 
         Assert.IsTrue(result);
     }
 
+#if DEBUG
     [TestMethod]
+#endif
     public async Task Handle_100_000_Messages_In_Server()
     {
         using var testEnvironment = CreateTestEnvironment();
@@ -141,11 +146,9 @@ public sealed class Load_Tests : BaseTestClass
 
                     for (var j = 0; j < 1000; j++)
                     {
-                        var message = applicationMessageBuilder.WithTopic(j.ToString())
-                            .Build();
+                        var message = applicationMessageBuilder.WithTopic(j.ToString()).Build();
 
-                        await client.PublishAsync(message)
-                            .ConfigureAwait(false);
+                        await client.PublishAsync(message).ConfigureAwait(false);
                     }
 
                     await client.DisconnectAsync();
@@ -153,7 +156,7 @@ public sealed class Load_Tests : BaseTestClass
                 TaskCreationOptions.LongRunning);
         }
 
-        var result = SpinWait.SpinUntil(() => receivedMessages > 50000, TimeSpan.FromMinutes(5));
+        var result = SpinWait.SpinUntil(() => receivedMessages >= 100000, TimeSpan.FromMinutes(5));
 
         Assert.IsTrue(result);
     }

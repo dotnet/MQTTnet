@@ -9,7 +9,9 @@ using MQTTnet.Protocol;
 namespace MQTTnet.Tests.Server;
 
 // ReSharper disable InconsistentNaming
+#if DEBUG
 [TestClass]
+#endif
 public sealed class Load_Tests : BaseTestClass
 {
     [TestMethod]

@@ -2,34 +2,31 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
+namespace MQTTnet.Server;
 
-namespace MQTTnet.Server
+public sealed class MqttServerStopOptionsBuilder
 {
-    public sealed class MqttServerStopOptionsBuilder
+    readonly MqttServerStopOptions _options = new();
+
+    public MqttServerStopOptionsBuilder WithDefaultClientDisconnectOptions(MqttServerClientDisconnectOptions value)
     {
-        readonly MqttServerStopOptions _options = new MqttServerStopOptions();
+        _options.DefaultClientDisconnectOptions = value;
+        return this;
+    }
 
-        public MqttServerStopOptionsBuilder WithDefaultClientDisconnectOptions(MqttServerClientDisconnectOptions value)
-        {
-            _options.DefaultClientDisconnectOptions = value;
-            return this;
-        }
+    public MqttServerStopOptionsBuilder WithDefaultClientDisconnectOptions(Action<MqttServerClientDisconnectOptionsBuilder> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
 
-        public MqttServerStopOptionsBuilder WithDefaultClientDisconnectOptions(Action<MqttServerClientDisconnectOptionsBuilder> builder)
-        {
-            ArgumentNullException.ThrowIfNull(builder);
+        var optionsBuilder = new MqttServerClientDisconnectOptionsBuilder();
+        builder(optionsBuilder);
 
-            var optionsBuilder = new MqttServerClientDisconnectOptionsBuilder();
-            builder.Invoke(optionsBuilder);
+        _options.DefaultClientDisconnectOptions = optionsBuilder.Build();
+        return this;
+    }
 
-            _options.DefaultClientDisconnectOptions = optionsBuilder.Build();
-            return this;
-        }
-
-        public MqttServerStopOptions Build()
-        {
-            return _options;
-        }
+    public MqttServerStopOptions Build()
+    {
+        return _options;
     }
 }

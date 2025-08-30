@@ -2,27 +2,58 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
-using MQTTnet.Internal;
+using MQTTnet.Exceptions;
 
-namespace MQTTnet.TestApp
+namespace MQTTnet.TestApp;
+
+public sealed class AsyncLockTest
 {
-    public sealed class AsyncLockTest
+    public async Task Run()
     {
-        public async Task Run()
+        try
         {
-            var asyncLock = new AsyncLock();
+            var semaphore = new SemaphoreSlim(1, 1);
 
-            using (var cancellationToken = new CancellationTokenSource())
+            await semaphore.WaitAsync();
+            try
             {
-                for (var i = 0; i < 100000; i++)
-                {
-                    using (await asyncLock.EnterAsync(cancellationToken.Token).ConfigureAwait(false))
-                    {
-                    }
-                } 
+                // Wait for data from socket etc...
+                // Then get an exception.
+                semaphore.Dispose();
+                throw new MqttCommunicationException("Connection closed");
+            }
+            finally
+            {
+                semaphore.Release();
             }
         }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception.ToString());
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+        // var asyncLock = new AsyncLock();
+        //
+        // using var cancellationToken = new CancellationTokenSource();
+        // for (var i = 0; i < 100000; i++)
+        // {
+        //     using (await asyncLock.EnterAsync(cancellationToken.Token).ConfigureAwait(false))
+        //     {
+        //     }
+        // }
     }
 }

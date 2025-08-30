@@ -23,7 +23,7 @@ public sealed class MqttClientPublishResult
     ///     topic but overall transmit
     ///     to the server etc. was a success.
     /// </summary>
-    public bool IsSuccess => ReasonCode == MqttClientPublishReasonCode.Success || ReasonCode == MqttClientPublishReasonCode.NoMatchingSubscribers;
+    public bool IsSuccess => ReasonCode is MqttClientPublishReasonCode.Success or MqttClientPublishReasonCode.NoMatchingSubscribers;
 
     /// <summary>
     ///     Gets the packet identifier which was used for this publish.

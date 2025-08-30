@@ -5,21 +5,20 @@
 using System;
 using System.Reflection;
 
-namespace MQTTnet.Tests.Helpers
+namespace MQTTnet.Tests.Helpers;
+
+public static class ReflectionExtensions
 {
-    public static class ReflectionExtensions
+    public static object GetFieldValue(this object source, string fieldName)
     {
-        public static object GetFieldValue(this object source, string fieldName)
+        ArgumentNullException.ThrowIfNull(source);
+
+        var field = source.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+        if (field == null)
         {
-            ArgumentNullException.ThrowIfNull(source);
-
-            var field = source.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-            if (field == null)
-            {
-                throw new ArgumentException($"Field {fieldName} not found.");
-            }
-
-            return field.GetValue(source);
+            throw new ArgumentException($"Field {fieldName} not found.");
         }
+
+        return field.GetValue(source);
     }
 }

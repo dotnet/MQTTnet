@@ -4,47 +4,46 @@
 
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server.Internal;
+
+public sealed class MqttSubscription
 {
-    public sealed class MqttSubscription
+    public MqttSubscription(
+        string topic,
+        bool noLocal,
+        MqttRetainHandling retainHandling,
+        bool retainAsPublished,
+        MqttQualityOfServiceLevel qualityOfServiceLevel,
+        uint identifier)
     {
-        public MqttSubscription(
-            string topic,
-            bool noLocal,
-            MqttRetainHandling retainHandling,
-            bool retainAsPublished,
-            MqttQualityOfServiceLevel qualityOfServiceLevel,
-            uint identifier)
-        {
-            Topic = topic;
-            NoLocal = noLocal;
-            RetainHandling = retainHandling;
-            RetainAsPublished = retainAsPublished;
-            GrantedQualityOfServiceLevel = qualityOfServiceLevel;
-            Identifier = identifier;
+        Topic = topic;
+        NoLocal = noLocal;
+        RetainHandling = retainHandling;
+        RetainAsPublished = retainAsPublished;
+        GrantedQualityOfServiceLevel = qualityOfServiceLevel;
+        Identifier = identifier;
 
-            MqttTopicHash.Calculate(Topic, out var hash, out var hashMask, out var hasWildcard);
-            TopicHash = hash;
-            TopicHashMask = hashMask;
-            TopicHasWildcard = hasWildcard;
-        }
-
-        public MqttQualityOfServiceLevel GrantedQualityOfServiceLevel { get; }
-
-        public uint Identifier { get; }
-
-        public bool NoLocal { get; }
-
-        public bool RetainAsPublished { get; }
-
-        public MqttRetainHandling RetainHandling { get; }
-
-        public string Topic { get; }
-
-        public ulong TopicHash { get; }
-
-        public ulong TopicHashMask { get; }
-
-        public bool TopicHasWildcard { get; }
+        MqttTopicHash.Calculate(Topic, out var hash, out var hashMask, out var hasWildcard);
+        TopicHash = hash;
+        TopicHashMask = hashMask;
+        TopicHasWildcard = hasWildcard;
     }
+
+    public MqttQualityOfServiceLevel GrantedQualityOfServiceLevel { get; }
+
+    public uint Identifier { get; }
+
+    public bool NoLocal { get; }
+
+    public bool RetainAsPublished { get; }
+
+    public MqttRetainHandling RetainHandling { get; }
+
+    public string Topic { get; }
+
+    public ulong TopicHash { get; }
+
+    public ulong TopicHashMask { get; }
+
+    public bool TopicHasWildcard { get; }
 }

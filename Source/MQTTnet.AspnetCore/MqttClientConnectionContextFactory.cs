@@ -7,27 +7,26 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore;
+
+public sealed class MqttClientConnectionContextFactory : IMqttClientAdapterFactory
 {
-    public sealed class MqttClientConnectionContextFactory : IMqttClientAdapterFactory
+    public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
     {
-        public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
+        if (options == null) throw new ArgumentNullException(nameof(options));
+
+        switch (options.ChannelOptions)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-
-            switch (options.ChannelOptions)
+            case MqttClientTcpOptions tcpOptions:
             {
-                case MqttClientTcpOptions tcpOptions:
-                    {
-                        var tcpConnection = new SocketConnection(tcpOptions.RemoteEndpoint);
+                var tcpConnection = new SocketConnection(tcpOptions.RemoteEndpoint);
 
-                        var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535));
-                        return new MqttConnectionContext(formatter, tcpConnection);
-                    }
-                default:
-                    {
-                        throw new NotSupportedException();
-                    }
+                var formatter = new MqttPacketFormatterAdapter(options.ProtocolVersion, new MqttBufferWriter(4096, 65535));
+                return new MqttConnectionContext(formatter, tcpConnection);
+            }
+            default:
+            {
+                throw new NotSupportedException();
             }
         }
     }

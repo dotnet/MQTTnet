@@ -30,7 +30,7 @@ public class SubscribeBenchmark : BaseBenchmark
     [GlobalSetup]
     public void Setup()
     {
-        TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out var topicsByPublisher, out var singleWildcardTopicsByPublisher, out var multiWildcardTopicsByPublisher);
+        TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out var topicsByPublisher, out _, out _);
         _topics = topicsByPublisher.Values.First();
 
         var serverOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();

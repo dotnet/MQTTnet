@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using MQTTnet.Packets;
 
 namespace MQTTnet;
@@ -21,11 +20,7 @@ public sealed class MqttClientUnsubscribeOptionsBuilder
     {
         ArgumentNullException.ThrowIfNull(topic);
 
-        if (_unsubscribeOptions.TopicFilters is null)
-        {
-            _unsubscribeOptions.TopicFilters = new List<string>();
-        }
-
+        _unsubscribeOptions.TopicFilters ??= [];
         _unsubscribeOptions.TopicFilters.Add(topic);
 
         return this;
@@ -55,10 +50,7 @@ public sealed class MqttClientUnsubscribeOptionsBuilder
     {
         ArgumentNullException.ThrowIfNull(userProperty);
 
-        if (_unsubscribeOptions.UserProperties is null)
-        {
-            _unsubscribeOptions.UserProperties = new List<MqttUserProperty>();
-        }
+        _unsubscribeOptions.UserProperties ??= [];
 
         _unsubscribeOptions.UserProperties.Add(userProperty);
 

@@ -74,7 +74,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
              */
 
             var timeout = new TaskCompletionSource<object>();
-            using (cancellationToken.Register(() => timeout.TrySetResult(null)))
+            await using (cancellationToken.Register(() => timeout.TrySetResult(null)))
             {
                 var connectTask = Task.Run(
                     async () =>

@@ -24,7 +24,7 @@ public sealed class MqttClientSubscribeOptions
     ///     Gets or sets a list of topic filters the client wants to subscribe to.
     ///     Topic filters can include regular topics or wild cards.
     /// </summary>
-    public List<MqttTopicFilter> TopicFilters { get; set; } = new();
+    public List<MqttTopicFilter> TopicFilters { get; set; } = [];
 
     /// <summary>
     ///     Gets or sets the user properties.

@@ -413,7 +413,7 @@ m/XriWr/Cq4h/JfB7NTsezVslgkBaoU=
             if (e.ClientWasConnected)
             {
                 // Use the current options as the new options.
-                await mqttClient.ConnectAsync(mqttClient.Options);
+                await mqttClient.ConnectAsync(mqttClientOptions);
             }
         };
 

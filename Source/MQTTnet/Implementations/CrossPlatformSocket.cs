@@ -99,11 +99,7 @@ namespace MQTTnet.Implementations
 #endif
         }
 
-        public LingerOption LingerState
-        {
-            get => _socket.LingerState;
-            set => _socket.LingerState = value;
-        }
+        public LingerOption LingerState = new LingerOption(false, 0);
 
         public EndPoint LocalEndPoint => _socket.LocalEndPoint;
 
@@ -220,7 +216,8 @@ namespace MQTTnet.Implementations
                     // The connection will not be established when the DNS endpoint is used.
                     if (endPoint is DnsEndPoint dns && dns.AddressFamily == AddressFamily.Unspecified)
                     {
-                        await _socket.ConnectAsync(dns.Host, dns.Port).ConfigureAwait(false);
+                        // await _socket.Conne¡ctAsync(dns.Host, dns.Port).ConfigureAwait(false);
+                        _socket.Connect(dns.Host, dns.Port);
                     }
                     else
                     {

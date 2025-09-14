@@ -7,63 +7,61 @@ using System.IO;
 using System.IO.Pipelines;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Benchmarks
+namespace MQTTnet.Benchmarks;
+
+[SimpleJob(RuntimeMoniker.Net60)]
+[RPlotExporter, RankColumn]
+[MemoryDiagnoser]
+public class SendPacketAsyncBenchmark : BaseBenchmark
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
-    [RPlotExporter, RankColumn]
-    [MemoryDiagnoser]
-    public class SendPacketAsyncBenchmark : BaseBenchmark
+    MemoryStream _stream;
+    MqttPacketBuffer _buffer;
+
+    [GlobalSetup]
+    public void GlobalSetup()
     {
-        MemoryStream stream;
-        MqttPacketBuffer buffer;
+        _stream = new MemoryStream(1024);
+        var packet = new ArraySegment<byte>(new byte[10]);
+        _buffer = new MqttPacketBuffer(packet);
+    }
 
-        [GlobalSetup]
-        public void GlobalSetup()
+    [Benchmark(Baseline = true)]
+    public async ValueTask Before()
+    {
+        _stream.Position = 0;
+        var output = PipeWriter.Create(_stream);
+
+        WritePacketBuffer(output, _buffer);
+        await output.FlushAsync();
+    }
+
+    [Benchmark]
+    public async ValueTask After()
+    {
+        _stream.Position = 0;
+        var output = PipeWriter.Create(_stream);
+
+        if (_buffer.Payload.Length == 0)
         {
-            stream = new MemoryStream(1024);
-            var packet = new ArraySegment<byte>(new byte[10]);
-            buffer = new MqttPacketBuffer(packet);
+            await output.WriteAsync(_buffer.Packet).ConfigureAwait(false);
         }
-
-        [Benchmark(Baseline = true)]
-        public async ValueTask Before()
+        else
         {
-            stream.Position = 0;
-            var output = PipeWriter.Create(stream);
-
-            WritePacketBuffer(output, buffer);
-            await output.FlushAsync();
+            WritePacketBuffer(output, _buffer);
+            await output.FlushAsync().ConfigureAwait(false);
         }
+    }
 
-        [Benchmark]
-        public async ValueTask After()
-        {
-            stream.Position = 0;
-            var output = PipeWriter.Create(stream);
+    static void WritePacketBuffer(PipeWriter output, MqttPacketBuffer buffer)
+    {
+        // copy MqttPacketBuffer's Packet and Payload to the same buffer block of PipeWriter
+        // MqttPacket will be transmitted within the bounds of a WebSocket frame after PipeWriter.FlushAsync
 
-            if (buffer.Payload.Length == 0)
-            {
-                await output.WriteAsync(buffer.Packet).ConfigureAwait(false);
-            }
-            else
-            {
-                WritePacketBuffer(output, buffer);
-                await output.FlushAsync().ConfigureAwait(false);
-            }
-        }
+        var span = output.GetSpan(buffer.Length);
 
+        buffer.Packet.AsSpan().CopyTo(span);
+        buffer.Payload.CopyTo(span[buffer.Packet.Count..]);
 
-        static void WritePacketBuffer(PipeWriter output, MqttPacketBuffer buffer)
-        {
-            // copy MqttPacketBuffer's Packet and Payload to the same buffer block of PipeWriter
-            // MqttPacket will be transmitted within the bounds of a WebSocket frame after PipeWriter.FlushAsync
-
-            var span = output.GetSpan(buffer.Length);
-
-            buffer.Packet.AsSpan().CopyTo(span);
-            buffer.Payload.CopyTo(span.Slice(buffer.Packet.Count));
-
-            output.Advance(buffer.Length);
-        }
+        output.Advance(buffer.Length);
     }
 }

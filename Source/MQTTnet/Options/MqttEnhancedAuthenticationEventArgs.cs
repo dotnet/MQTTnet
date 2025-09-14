@@ -89,10 +89,7 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
 
     public Task SendAsync(SendMqttEnhancedAuthenticationDataOptions options, CancellationToken cancellationToken = default)
     {
-        if (options == null)
-        {
-            throw new ArgumentNullException(nameof(options));
-        }
+        ArgumentNullException.ThrowIfNull(options);
 
         var authPacket = new MqttAuthPacket
         {

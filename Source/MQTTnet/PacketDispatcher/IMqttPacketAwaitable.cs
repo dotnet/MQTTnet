@@ -5,16 +5,15 @@
 using MQTTnet.Packets;
 using System;
 
-namespace MQTTnet.PacketDispatcher
+namespace MQTTnet.PacketDispatcher;
+
+public interface IMqttPacketAwaitable : IDisposable
 {
-    public interface IMqttPacketAwaitable : IDisposable
-    {
-        MqttPacketAwaitableFilter Filter { get; }
-        
-        void Complete(MqttPacket packet);
+    MqttPacketAwaitableFilter Filter { get; }
 
-        void Fail(Exception exception);
+    void Complete(MqttPacket packet);
 
-        void Cancel();
-    }
+    void Fail(Exception exception);
+
+    void Cancel();
 }

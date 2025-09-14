@@ -13,7 +13,7 @@ public sealed class MqttClientUnsubscribeOptions
     ///     Gets or sets a list of topic filters the client wants to unsubscribe from.
     ///     Topic filters can include regular topics or wild cards.
     /// </summary>
-    public List<string> TopicFilters { get; set; } = new();
+    public List<string> TopicFilters { get; set; } = [];
 
     /// <summary>
     ///     Gets or sets the user properties.

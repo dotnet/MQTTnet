@@ -41,5 +41,5 @@ public class MqttEnhancedAuthenticationExchangeData
     ///     The feature is very similar to the HTTP header concept.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; }
+    public List<MqttUserProperty> UserProperties { get; set; }
 }

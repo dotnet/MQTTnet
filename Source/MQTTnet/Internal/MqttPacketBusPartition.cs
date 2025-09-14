@@ -2,14 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public enum MqttPacketBusPartition
 {
-    public enum MqttPacketBusPartition
-    {
-        Data,
-        
-        Control,
-        
-        Health
-    }
+    Data,
+
+    Control,
+
+    Health
 }

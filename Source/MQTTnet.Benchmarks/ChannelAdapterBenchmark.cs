@@ -12,79 +12,78 @@ using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Benchmarks
+namespace MQTTnet.Benchmarks;
+
+[MemoryDiagnoser]
+public sealed class ChannelAdapterBenchmark : BaseBenchmark
 {
-    [MemoryDiagnoser]
-    public sealed class ChannelAdapterBenchmark : BaseBenchmark
+    MqttChannelAdapter _channelAdapter;
+    int _iterations;
+    MqttPublishPacket _packet;
+    MemoryStream _stream;
+
+    [Benchmark]
+    public void Receive_10000_Messages()
     {
-        MqttChannelAdapter _channelAdapter;
-        int _iterations;
-        MqttPublishPacket _packet;
-        MemoryStream _stream;
+        _stream.Position = 0;
 
-        [Benchmark]
-        public void Receive_10000_Messages()
+        for (var i = 0; i < 10000; i++)
         {
-            _stream.Position = 0;
-
-            for (var i = 0; i < 10000; i++)
-            {
-                _channelAdapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
-            }
-
-            _stream.Position = 0;
+            _channelAdapter.ReceivePacketAsync(CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        [Benchmark]
-        public void Send_10000_Messages()
+        _stream.Position = 0;
+    }
+
+    [Benchmark]
+    public void Send_10000_Messages()
+    {
+        _stream.Position = 0;
+
+        for (var i = 0; i < 10000; i++)
         {
-            _stream.Position = 0;
-
-            for (var i = 0; i < 10000; i++)
-            {
-                _channelAdapter.SendPacketAsync(_packet, CancellationToken.None).GetAwaiter().GetResult();
-            }
-
-            _stream.Position = 0;
+            _channelAdapter.SendPacketAsync(_packet, CancellationToken.None).GetAwaiter().GetResult();
         }
 
-        [GlobalSetup]
-        public void Setup()
+        _stream.Position = 0;
+    }
+
+    [GlobalSetup]
+    public void Setup()
+    {
+        _packet = new MqttPublishPacket
         {
-            _packet = new MqttPublishPacket
-            {
-                Topic = "A"
-            };
+            Topic = "A"
+        };
 
-            var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
+        var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
 
-            var serializedPacket = Join(serializer.Encode(_packet).Join());
+        var serializedPacket = Join(serializer.Encode(_packet).Join());
 
-            _iterations = 10000;
+        _iterations = 10000;
 
-            _stream = new MemoryStream(_iterations * serializedPacket.Length);
+        _stream = new MemoryStream(_iterations * serializedPacket.Length);
 
-            for (var i = 0; i < _iterations; i++)
-            {
-                _stream.Write(serializedPacket, 0, serializedPacket.Length);
-            }
-
-            _stream.Position = 0;
-
-            var channel = new MemoryMqttChannel(_stream);
-
-            _channelAdapter = new MqttChannelAdapter(channel, serializer, new MqttNetEventLogger());
+        for (var i = 0; i < _iterations; i++)
+        {
+            _stream.Write(serializedPacket, 0, serializedPacket.Length);
         }
 
-        static byte[] Join(params ArraySegment<byte>[] chunks)
-        {
-            var buffer = new MemoryStream();
-            foreach (var chunk in chunks)
-            {
-                buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
-            }
+        _stream.Position = 0;
 
-            return buffer.ToArray();
+        var channel = new MemoryMqttChannel(_stream);
+
+        _channelAdapter = new MqttChannelAdapter(channel, serializer, new MqttNetEventLogger());
+    }
+
+    static byte[] Join(params ArraySegment<byte>[] chunks)
+    {
+        var buffer = new MemoryStream();
+        foreach (var chunk in chunks)
+        {
+            buffer.Write(chunk.Array, chunk.Offset, chunk.Count);
         }
+
+        return buffer.ToArray();
     }
 }

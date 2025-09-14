@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 
@@ -12,15 +11,15 @@ namespace MQTTnet;
 
 public sealed class MqttClientSubscribeResultFactory
 {
-    static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = new List<MqttUserProperty>();
+    static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = [];
 
-    public MqttClientSubscribeResult Create(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
+    public static MqttClientSubscribeResult Create(MqttSubscribePacket subscribePacket, MqttSubAckPacket subAckPacket)
     {
         ArgumentNullException.ThrowIfNull(subscribePacket);
         ArgumentNullException.ThrowIfNull(subAckPacket);
 
         // MQTTv5.0.0 handling.
-        if (subAckPacket.ReasonCodes.Any() && subAckPacket.ReasonCodes.Count != subscribePacket.TopicFilters.Count)
+        if (subAckPacket.ReasonCodes.Count != 0 && subAckPacket.ReasonCodes.Count != subscribePacket.TopicFilters.Count)
         {
             throw new MqttProtocolViolationException("The reason codes are not matching the topic filters [MQTT-3.9.3-1].");
         }

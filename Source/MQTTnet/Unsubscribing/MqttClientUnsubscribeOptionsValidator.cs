@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Linq;
 using MQTTnet.Formatter;
 
 namespace MQTTnet;
@@ -20,7 +19,7 @@ public static class MqttClientUnsubscribeOptionsValidator
             return;
         }
 
-        if (options.UserProperties?.Any() == true)
+        if (options.UserProperties?.Count > 0)
         {
             Throw(nameof(options.UserProperties));
         }

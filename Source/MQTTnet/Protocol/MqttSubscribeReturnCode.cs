@@ -2,13 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Protocol
+namespace MQTTnet.Protocol;
+
+public enum MqttSubscribeReturnCode
 {
-    public enum MqttSubscribeReturnCode
-    {
-        SuccessMaximumQoS0 = 0x00,
-        SuccessMaximumQoS1 = 0x01,
-        SuccessMaximumQoS2 = 0x02,
-        Failure = 0x80
-    }
+    SuccessMaximumQoS0 = 0x00,
+    SuccessMaximumQoS1 = 0x01,
+    SuccessMaximumQoS2 = 0x02,
+    Failure = 0x80
 }

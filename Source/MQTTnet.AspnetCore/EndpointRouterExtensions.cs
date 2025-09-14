@@ -6,19 +6,17 @@ using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 
-namespace MQTTnet.AspNetCore
-{
-    public static class EndpointRouterExtensions
-    {
-        public static void MapMqtt(this IEndpointRouteBuilder endpoints, string pattern)
-        {
-            ArgumentNullException.ThrowIfNull(endpoints);
+namespace MQTTnet.AspNetCore;
 
-            endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, options =>
-            {
-                options.WebSockets.SubProtocolSelector = MqttSubProtocolSelector.SelectSubProtocol;
-            });
-        }
+public static class EndpointRouterExtensions
+{
+    public static void MapMqtt(this IEndpointRouteBuilder endpoints, string pattern)
+    {
+        ArgumentNullException.ThrowIfNull(endpoints);
+
+        endpoints.MapConnectionHandler<MqttConnectionHandler>(pattern, options =>
+        {
+            options.WebSockets.SubProtocolSelector = MqttSubProtocolSelector.SelectSubProtocol;
+        });
     }
 }
-

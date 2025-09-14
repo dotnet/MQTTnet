@@ -8,117 +8,116 @@ using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Server.Internal.Adapter
+namespace MQTTnet.Server.Internal.Adapter;
+
+public sealed class MqttTcpServerAdapter : IMqttServerAdapter
 {
-    public sealed class MqttTcpServerAdapter : IMqttServerAdapter
+    readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
+
+    CancellationTokenSource _cancellationTokenSource;
+
+    MqttServerOptions _serverOptions;
+
+    public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
+
+    public bool TreatSocketOpeningErrorAsWarning { get; set; }
+
+    public void Dispose()
     {
-        readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
+        Cleanup();
+    }
 
-        CancellationTokenSource _cancellationTokenSource;
-
-        MqttServerOptions _serverOptions;
-
-        public Func<IMqttChannelAdapter, Task> ClientHandler { get; set; }
-
-        public bool TreatSocketOpeningErrorAsWarning { get; set; }
-
-        public void Dispose()
+    public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
+    {
+        if (_cancellationTokenSource != null)
         {
-            Cleanup();
+            throw new InvalidOperationException("Server is already started.");
         }
 
-        public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
+        _serverOptions = options;
+
+        _cancellationTokenSource = new CancellationTokenSource();
+
+        if (options.DefaultEndpointOptions.IsEnabled)
         {
-            if (_cancellationTokenSource != null)
+            RegisterListeners(options.DefaultEndpointOptions, logger, _cancellationTokenSource.Token);
+        }
+
+        if (options.TlsEndpointOptions?.IsEnabled == true)
+        {
+            if (options.TlsEndpointOptions.CertificateProvider == null)
             {
-                throw new InvalidOperationException("Server is already started.");
+                throw new ArgumentException("TLS certificate is not set.");
             }
 
-            _serverOptions = options;
+            RegisterListeners(options.TlsEndpointOptions, logger, _cancellationTokenSource.Token);
+        }
 
-            _cancellationTokenSource = new CancellationTokenSource();
+        return CompletedTask.Instance;
+    }
 
-            if (options.DefaultEndpointOptions.IsEnabled)
+    public Task StopAsync()
+    {
+        Cleanup();
+        return CompletedTask.Instance;
+    }
+
+    void Cleanup()
+    {
+        try
+        {
+            _cancellationTokenSource?.Cancel(false);
+        }
+        finally
+        {
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+
+            foreach (var listener in _listeners)
             {
-                RegisterListeners(options.DefaultEndpointOptions, logger, _cancellationTokenSource.Token);
+                listener.Dispose();
             }
 
-            if (options.TlsEndpointOptions?.IsEnabled == true)
-            {
-                if (options.TlsEndpointOptions.CertificateProvider == null)
-                {
-                    throw new ArgumentException("TLS certificate is not set.");
-                }
+            _listeners.Clear();
+        }
+    }
 
-                RegisterListeners(options.TlsEndpointOptions, logger, _cancellationTokenSource.Token);
-            }
-
+    Task OnClientAcceptedAsync(IMqttChannelAdapter channelAdapter)
+    {
+        var clientHandler = ClientHandler;
+        if (clientHandler == null)
+        {
             return CompletedTask.Instance;
         }
 
-        public Task StopAsync()
+        return clientHandler(channelAdapter);
+    }
+
+    void RegisterListeners(MqttServerTcpEndpointBaseOptions tcpEndpointOptions, IMqttNetLogger logger, CancellationToken cancellationToken)
+    {
+        if (!tcpEndpointOptions.BoundInterNetworkAddress.Equals(IPAddress.None))
         {
-            Cleanup();
-            return CompletedTask.Instance;
-        }
-
-        void Cleanup()
-        {
-            try
+            var listenerV4 = new MqttTcpServerListener(AddressFamily.InterNetwork, _serverOptions, tcpEndpointOptions, logger)
             {
-                _cancellationTokenSource?.Cancel(false);
-            }
-            finally
+                ClientHandler = OnClientAcceptedAsync
+            };
+
+            if (listenerV4.Start(TreatSocketOpeningErrorAsWarning, cancellationToken))
             {
-                _cancellationTokenSource?.Dispose();
-                _cancellationTokenSource = null;
-
-                foreach (var listener in _listeners)
-                {
-                    listener.Dispose();
-                }
-
-                _listeners.Clear();
+                _listeners.Add(listenerV4);
             }
         }
 
-        Task OnClientAcceptedAsync(IMqttChannelAdapter channelAdapter)
+        if (!tcpEndpointOptions.BoundInterNetworkV6Address.Equals(IPAddress.None))
         {
-            var clientHandler = ClientHandler;
-            if (clientHandler == null)
+            var listenerV6 = new MqttTcpServerListener(AddressFamily.InterNetworkV6, _serverOptions, tcpEndpointOptions, logger)
             {
-                return CompletedTask.Instance;
-            }
+                ClientHandler = OnClientAcceptedAsync
+            };
 
-            return clientHandler(channelAdapter);
-        }
-
-        void RegisterListeners(MqttServerTcpEndpointBaseOptions tcpEndpointOptions, IMqttNetLogger logger, CancellationToken cancellationToken)
-        {
-            if (!tcpEndpointOptions.BoundInterNetworkAddress.Equals(IPAddress.None))
+            if (listenerV6.Start(TreatSocketOpeningErrorAsWarning, cancellationToken))
             {
-                var listenerV4 = new MqttTcpServerListener(AddressFamily.InterNetwork, _serverOptions, tcpEndpointOptions, logger)
-                {
-                    ClientHandler = OnClientAcceptedAsync
-                };
-
-                if (listenerV4.Start(TreatSocketOpeningErrorAsWarning, cancellationToken))
-                {
-                    _listeners.Add(listenerV4);
-                }
-            }
-
-            if (!tcpEndpointOptions.BoundInterNetworkV6Address.Equals(IPAddress.None))
-            {
-                var listenerV6 = new MqttTcpServerListener(AddressFamily.InterNetworkV6, _serverOptions, tcpEndpointOptions, logger)
-                {
-                    ClientHandler = OnClientAcceptedAsync
-                };
-
-                if (listenerV6.Start(TreatSocketOpeningErrorAsWarning, cancellationToken))
-                {
-                    _listeners.Add(listenerV6);
-                }
+                _listeners.Add(listenerV6);
             }
         }
     }

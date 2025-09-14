@@ -14,7 +14,7 @@ public sealed class MqttSubscribePacket : MqttPacketWithIdentifier
     /// </summary>
     public uint SubscriptionIdentifier { get; set; }
 
-    public List<MqttTopicFilter> TopicFilters { get; set; } = new();
+    public List<MqttTopicFilter> TopicFilters { get; set; } = [];
 
     /// <summary>
     ///     Added in MQTTv5.

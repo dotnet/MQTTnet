@@ -2,14 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Formatter
-{
-    public enum MqttProtocolVersion
-    {
-        Unknown = 0,
+namespace MQTTnet.Formatter;
 
-        V310 = 3,
-        V311 = 4,
-        V500 = 5
-    }
+public enum MqttProtocolVersion
+{
+    Unknown = 0,
+
+    V310 = 3,
+    V311 = 4,
+    V500 = 5
 }

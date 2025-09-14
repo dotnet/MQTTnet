@@ -2,85 +2,84 @@ using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public static class MqttMemoryHelper
 {
-    public static class MqttMemoryHelper
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Copy(byte[] source, int sourceIndex, byte[] destination, int destinationIndex, int length)
     {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Copy(byte[] source, int sourceIndex, byte[] destination, int destinationIndex, int length)
+        source.AsSpan(sourceIndex, length).CopyTo(destination.AsSpan(destinationIndex, length));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Copy(ReadOnlySequence<byte> sequence, int sourceIndex, byte[] destination, int destinationIndex, int length)
+    {
+        sequence.Slice(sourceIndex).CopyTo(destination.AsSpan(destinationIndex, length));
+    }
+
+    public static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
+    {
+        return source.AsSpan().SequenceEqual(target);
+    }
+
+    public static bool SequenceEqual(ReadOnlySequence<byte> source, ReadOnlySequence<byte> target)
+    {
+        if (source.Length != target.Length)
         {
-            source.AsSpan(sourceIndex, length).CopyTo(destination.AsSpan(destinationIndex, length));
+            return false;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Copy(ReadOnlySequence<byte> sequence, int sourceIndex, byte[] destination, int destinationIndex, int length)
-        {
-            sequence.Slice(sourceIndex).CopyTo(destination.AsSpan(destinationIndex, length));
-        }
+        long comparedLength = 0;
+        long length = source.Length;
 
-        public static bool SequenceEqual(ArraySegment<byte> source, ArraySegment<byte> target)
-        {
-            return source.AsSpan().SequenceEqual(target);
-        }
+        int sourceOffset = 0;
+        int targetOffset = 0;
 
-        public static bool SequenceEqual(ReadOnlySequence<byte> source, ReadOnlySequence<byte> target)
+        var sourceEnumerator = source.GetEnumerator();
+        var targetEnumerator = target.GetEnumerator();
+
+        var sourceSegment = sourceEnumerator.Current;
+        var targetSegment = targetEnumerator.Current;
+
+        while (true)
         {
-            if (source.Length != target.Length)
+            var compareLength = Math.Min(sourceSegment.Length - sourceOffset, targetSegment.Length - targetOffset);
+
+            if (compareLength > 0 &&
+                !sourceSegment.Span.Slice(sourceOffset, compareLength).SequenceEqual(targetSegment.Span.Slice(targetOffset, compareLength)))
             {
                 return false;
             }
 
-            long comparedLength = 0;
-            long length = source.Length;
-
-            int sourceOffset = 0;
-            int targetOffset = 0;
-
-            var sourceEnumerator = source.GetEnumerator();
-            var targetEnumerator = target.GetEnumerator();
-
-            ReadOnlyMemory<byte> sourceSegment = sourceEnumerator.Current;
-            ReadOnlyMemory<byte> targetSegment = targetEnumerator.Current;
-
-            while (true)
+            comparedLength += compareLength;
+            if (comparedLength >= length)
             {
-                int compareLength = Math.Min(sourceSegment.Length - sourceOffset, targetSegment.Length - targetOffset);
+                return true;
+            }
 
-                if (compareLength > 0 &&
-                    !sourceSegment.Span.Slice(sourceOffset, compareLength).SequenceEqual(targetSegment.Span.Slice(targetOffset, compareLength)))
+            sourceOffset += compareLength;
+            if (sourceOffset >= sourceSegment.Length)
+            {
+                if (!sourceEnumerator.MoveNext())
                 {
                     return false;
                 }
 
-                comparedLength += compareLength;
-                if (comparedLength >= length)
+                sourceSegment = sourceEnumerator.Current;
+                sourceOffset = 0;
+            }
+
+            targetOffset += compareLength;
+            if (targetOffset >= targetSegment.Length)
+            {
+                if (!targetEnumerator.MoveNext())
                 {
-                    return true;
+                    return false;
                 }
 
-                sourceOffset += compareLength;
-                if (sourceOffset >= sourceSegment.Length)
-                {
-                    if (!sourceEnumerator.MoveNext())
-                    {
-                        return false;
-                    }
-
-                    sourceSegment = sourceEnumerator.Current;
-                    sourceOffset = 0;
-                }
-
-                targetOffset += compareLength;
-                if (targetOffset >= targetSegment.Length)
-                {
-                    if (!targetEnumerator.MoveNext())
-                    {
-                        return false;
-                    }
-
-                    targetSegment = targetEnumerator.Current;
-                    targetOffset = 0;
-                }
+                targetSegment = targetEnumerator.Current;
+                targetOffset = 0;
             }
         }
     }

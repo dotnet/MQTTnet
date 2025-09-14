@@ -59,7 +59,7 @@ public sealed class MqttClientWebSocketOptionsBuilder
         ArgumentNullException.ThrowIfNull(configure);
 
         var proxyOptionsBuilder = new MqttClientWebSocketProxyOptionsBuilder();
-        configure.Invoke(proxyOptionsBuilder);
+        configure(proxyOptionsBuilder);
 
         _webSocketOptions.ProxyOptions = proxyOptionsBuilder.Build();
         return this;

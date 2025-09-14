@@ -33,10 +33,8 @@ public static class ApplicationBuilderExtensions
                 }
 
                 var adapter = app.ApplicationServices.GetRequiredService<MqttWebSocketServerAdapter>();
-                using (var webSocket = await context.WebSockets.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false))
-                {
-                    await adapter.RunWebSocketConnectionAsync(webSocket, context);
-                }
+                using var webSocket = await context.WebSockets.AcceptWebSocketAsync(subProtocol).ConfigureAwait(false);
+                await adapter.RunWebSocketConnectionAsync(webSocket, context);
             });
 
         return app;

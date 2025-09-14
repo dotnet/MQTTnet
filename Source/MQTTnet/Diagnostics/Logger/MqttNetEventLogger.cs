@@ -4,61 +4,57 @@
 
 using System;
 
-namespace MQTTnet.Diagnostics.Logger
+namespace MQTTnet.Diagnostics.Logger;
+
+/// <summary>
+///     This logger fires an event when a new message was published.
+/// </summary>
+public sealed class MqttNetEventLogger(string logId = null) : IMqttNetLogger
 {
-    /// <summary>
-    ///     This logger fires an event when a new message was published.
-    /// </summary>
-    public sealed class MqttNetEventLogger : IMqttNetLogger
+    public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
+
+    public bool IsEnabled => LogMessagePublished != null;
+
+    public string LogId { get; } = logId;
+
+    public IFormatProvider FormatProvider { get; set; }
+
+    public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
     {
-        public MqttNetEventLogger(string logId = null)
+        var eventHandler = LogMessagePublished;
+        if (eventHandler == null)
         {
-            LogId = logId;
+            // No listener is attached so we can step out.
+            // Keep a reference to the handler because the handler
+            // might be null after preparing the message.
+            return;
         }
 
-        public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
-
-        public bool IsEnabled => LogMessagePublished != null;
-
-        public string LogId { get; }
-
-        public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
+        if (parameters?.Length > 0 && message?.Length > 0)
         {
-            var eventHandler = LogMessagePublished;
-            if (eventHandler == null)
+            try
             {
-                // No listener is attached so we can step out.
-                // Keep a reference to the handler because the handler
-                // might be null after preparing the message.
-                return;
+                message = string.Format(FormatProvider, message, parameters);
             }
-
-            if (parameters?.Length > 0 && message?.Length > 0)
+            catch (FormatException)
             {
-                try
-                {
-                    message = string.Format(message, parameters);
-                }
-                catch (FormatException)
-                {
-                    message = "MESSAGE FORMAT INVALID: " + message;
-                }
+                message = "MESSAGE FORMAT INVALID: " + message;
             }
-
-            // We only use UTC here to improve performance. Using a local date time
-            // would require to load the time zone settings!
-            var logMessage = new MqttNetLogMessage
-            {
-                LogId = LogId,
-                Timestamp = DateTime.UtcNow,
-                Source = source,
-                ThreadId = Environment.CurrentManagedThreadId,
-                Level = level,
-                Message = message,
-                Exception = exception
-            };
-
-            eventHandler.Invoke(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
         }
+
+        // We only use UTC here to improve performance. Using a local date time
+        // would require to load the time zone settings!
+        var logMessage = new MqttNetLogMessage
+        {
+            LogId = LogId,
+            Timestamp = DateTime.UtcNow,
+            Source = source,
+            ThreadId = Environment.CurrentManagedThreadId,
+            Level = level,
+            Message = message,
+            Exception = exception
+        };
+
+        eventHandler(this, new MqttNetLogMessagePublishedEventArgs(logMessage));
     }
 }

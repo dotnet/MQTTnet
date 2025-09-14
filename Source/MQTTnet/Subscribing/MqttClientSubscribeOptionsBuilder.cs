@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -69,11 +68,7 @@ public sealed class MqttClientSubscribeOptionsBuilder
     {
         ArgumentNullException.ThrowIfNull(topicFilter);
 
-        if (_subscribeOptions.TopicFilters == null)
-        {
-            _subscribeOptions.TopicFilters = new List<MqttTopicFilter>();
-        }
-
+        _subscribeOptions.TopicFilters ??= [];
         _subscribeOptions.TopicFilters.Add(topicFilter);
 
         return this;
@@ -85,11 +80,7 @@ public sealed class MqttClientSubscribeOptionsBuilder
     /// </summary>
     public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, string value)
     {
-        if (_subscribeOptions.UserProperties == null)
-        {
-            _subscribeOptions.UserProperties = new List<MqttUserProperty>();
-        }
-
+        _subscribeOptions.UserProperties ??= [];
         _subscribeOptions.UserProperties.Add(new MqttUserProperty(name, value));
 
         return this;

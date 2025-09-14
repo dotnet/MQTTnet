@@ -5,28 +5,22 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
 
-namespace MQTTnet.Certificates
+namespace MQTTnet.Certificates;
+
+public class BlobCertificateProvider(byte[] blob) : ICertificateProvider
 {
-    public class BlobCertificateProvider : ICertificateProvider
+    public byte[] Blob { get; } = blob ?? throw new ArgumentNullException(nameof(blob));
+
+    public string Password { get; set; }
+
+    public X509Certificate2 GetCertificate()
     {
-        public BlobCertificateProvider(byte[] blob)
+        if (string.IsNullOrEmpty(Password))
         {
-            Blob = blob ?? throw new ArgumentNullException(nameof(blob));
+            // Use a different overload when no password is specified. Otherwise, the constructor will fail.
+            return new X509Certificate2(Blob);
         }
 
-        public byte[] Blob { get; }
-
-        public string Password { get; set; }
-
-        public X509Certificate2 GetCertificate()
-        {
-            if (string.IsNullOrEmpty(Password))
-            {
-                // Use a different overload when no password is specified. Otherwise the constructor will fail.
-                return new X509Certificate2(Blob);
-            }
-
-            return new X509Certificate2(Blob, Password);
-        }
+        return new X509Certificate2(Blob, Password);
     }
 }

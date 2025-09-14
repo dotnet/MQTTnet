@@ -6,49 +6,48 @@ using System;
 using System.Threading.Tasks;
 using MQTTnet.Diagnostics.Logger;
 
-namespace MQTTnet.TestApp
+namespace MQTTnet.TestApp;
+
+public static class ClientFlowTest
 {
-    public static class ClientFlowTest
+    public static async Task RunAsync()
     {
-        public static async Task RunAsync()
+        try
         {
-            try
-            {
-                var logger = new MqttNetEventLogger();
-                MqttNetConsoleLogger.ForwardToConsole(logger);
+            var logger = new MqttNetEventLogger();
+            MqttNetConsoleLogger.ForwardToConsole(logger);
 
-                var factory = new MqttClientFactory(logger);
+            var factory = new MqttClientFactory(logger);
 
-                var client = factory.CreateMqttClient();
+            var client = factory.CreateMqttClient();
 
-                var options = new MqttClientOptionsBuilder()
-                    .WithTcpServer("localhost")
-                    .Build();
+            var options = new MqttClientOptionsBuilder()
+                .WithTcpServer("localhost")
+                .Build();
 
-                Console.WriteLine("BEFORE CONNECT");
-                await client.ConnectAsync(options);
-                Console.WriteLine("AFTER CONNECT");
+            Console.WriteLine("BEFORE CONNECT");
+            await client.ConnectAsync(options);
+            Console.WriteLine("AFTER CONNECT");
 
-                Console.WriteLine("BEFORE SUBSCRIBE");
-                await client.SubscribeAsync("test/topic");
-                Console.WriteLine("AFTER SUBSCRIBE");
+            Console.WriteLine("BEFORE SUBSCRIBE");
+            await client.SubscribeAsync("test/topic");
+            Console.WriteLine("AFTER SUBSCRIBE");
 
-                Console.WriteLine("BEFORE PUBLISH");
-                await client.PublishStringAsync("test/topic", "payload");
-                Console.WriteLine("AFTER PUBLISH");
+            Console.WriteLine("BEFORE PUBLISH");
+            await client.PublishStringAsync("test/topic", "payload");
+            Console.WriteLine("AFTER PUBLISH");
 
-                await Task.Delay(1000);
+            await Task.Delay(1000);
 
-                Console.WriteLine("BEFORE DISCONNECT");
-                await client.DisconnectAsync();
-                Console.WriteLine("AFTER DISCONNECT");
+            Console.WriteLine("BEFORE DISCONNECT");
+            await client.DisconnectAsync();
+            Console.WriteLine("AFTER DISCONNECT");
 
-                Console.WriteLine("FINISHED");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
+            Console.WriteLine("FINISHED");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex);
         }
     }
 }

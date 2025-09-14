@@ -10,99 +10,98 @@ using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Internal;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.TestApp
+namespace MQTTnet.TestApp;
+
+public static class ClientTest
 {
-    public static class ClientTest
+    public static async Task RunAsync()
     {
-        public static async Task RunAsync()
+        try
         {
-            try
+            var logger = new MqttNetEventLogger();
+            MqttNetConsoleLogger.ForwardToConsole(logger);
+
+            var factory = new MqttClientFactory(logger);
+            var client = factory.CreateMqttClient();
+            var clientOptions = new MqttClientOptions
             {
-                var logger = new MqttNetEventLogger();
-                MqttNetConsoleLogger.ForwardToConsole(logger);
-
-                var factory = new MqttClientFactory(logger);
-                var client = factory.CreateMqttClient();
-                var clientOptions = new MqttClientOptions
+                ChannelOptions = new MqttClientTcpOptions
                 {
-                    ChannelOptions = new MqttClientTcpOptions
-                    {
-                        RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
-                    }
-                };
+                    RemoteEndpoint = new DnsEndPoint("127.0.0.1", 0)
+                }
+            };
 
-                client.ApplicationMessageReceivedAsync += e =>
+            client.ApplicationMessageReceivedAsync += e =>
+            {
+                var payloadText = string.Empty;
+                if (e.ApplicationMessage.Payload.Length > 0)
                 {
-                    var payloadText = string.Empty;
-                    if (e.ApplicationMessage.Payload.Length > 0)
-                    {
-                        payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
-                    }
+                    payloadText = Encoding.UTF8.GetString(e.ApplicationMessage.Payload);
+                }
 
-                    Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
-                    Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
-                    Console.WriteLine($"+ Payload = {payloadText}");
-                    Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
-                    Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
-                    Console.WriteLine();
+                Console.WriteLine("### RECEIVED APPLICATION MESSAGE ###");
+                Console.WriteLine($"+ Topic = {e.ApplicationMessage.Topic}");
+                Console.WriteLine($"+ Payload = {payloadText}");
+                Console.WriteLine($"+ QoS = {e.ApplicationMessage.QualityOfServiceLevel}");
+                Console.WriteLine($"+ Retain = {e.ApplicationMessage.Retain}");
+                Console.WriteLine();
 
-                    return CompletedTask.Instance;
-                };
+                return CompletedTask.Instance;
+            };
 
-                client.ConnectedAsync += async e =>
-                {
-                    Console.WriteLine("### CONNECTED WITH SERVER ###");
+            client.ConnectedAsync += async _ =>
+            {
+                Console.WriteLine("### CONNECTED WITH SERVER ###");
 
-                    await client.SubscribeAsync("#");
+                await client.SubscribeAsync("#");
 
-                    Console.WriteLine("### SUBSCRIBED ###");
-                };
+                Console.WriteLine("### SUBSCRIBED ###");
+            };
 
-                client.DisconnectedAsync += async e =>
-                {
-                    Console.WriteLine("### DISCONNECTED FROM SERVER ###");
-                    await Task.Delay(TimeSpan.FromSeconds(5));
-
-                    try
-                    {
-                        await client.ConnectAsync(clientOptions);
-                    }
-                    catch
-                    {
-                        Console.WriteLine("### RECONNECTING FAILED ###");
-                    }
-                };
+            client.DisconnectedAsync += async _ =>
+            {
+                Console.WriteLine("### DISCONNECTED FROM SERVER ###");
+                await Task.Delay(TimeSpan.FromSeconds(5));
 
                 try
                 {
                     await client.ConnectAsync(clientOptions);
                 }
-                catch (Exception exception)
+                catch
                 {
-                    Console.WriteLine("### CONNECTING FAILED ###" + Environment.NewLine + exception);
+                    Console.WriteLine("### RECONNECTING FAILED ###");
                 }
+            };
 
-                Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
-
-                while (true)
-                {
-                    Console.ReadLine();
-
-                    await client.SubscribeAsync("test");
-
-                    var applicationMessage = new MqttApplicationMessageBuilder()
-                        .WithTopic("A/B/C")
-                        .WithPayload("Hello World")
-                        .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
-                        .Build();
-
-                    await client.PublishAsync(applicationMessage);
-                }
+            try
+            {
+                await client.ConnectAsync(clientOptions);
             }
             catch (Exception exception)
             {
-                Console.WriteLine(exception);
+                Console.WriteLine("### CONNECTING FAILED ###" + Environment.NewLine + exception);
             }
+
+            Console.WriteLine("### WAITING FOR APPLICATION MESSAGES ###");
+
+            while (true)
+            {
+                Console.ReadLine();
+
+                await client.SubscribeAsync("test");
+
+                var applicationMessage = new MqttApplicationMessageBuilder()
+                    .WithTopic("A/B/C")
+                    .WithPayload("Hello World")
+                    .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
+                    .Build();
+
+                await client.PublishAsync(applicationMessage);
+            }
+        }
+        catch (Exception exception)
+        {
+            Console.WriteLine(exception);
         }
     }
 }

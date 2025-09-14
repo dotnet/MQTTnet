@@ -5,29 +5,28 @@
 using System.Security.Authentication;
 using MQTTnet.Certificates;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server;
+
+public sealed class MqttServerTlsTcpEndpointOptions : MqttServerTcpEndpointBaseOptions
 {
-    public sealed class MqttServerTlsTcpEndpointOptions : MqttServerTcpEndpointBaseOptions
+    public MqttServerTlsTcpEndpointOptions()
     {
-        public MqttServerTlsTcpEndpointOptions()
-        {
-            Port = 8883;
-        }
-
-        public System.Net.Security.RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
-
-        public ICertificateProvider CertificateProvider { get; set; }
-
-        public bool ClientCertificateRequired { get; set; }
-
-        public bool CheckCertificateRevocation { get; set; }
-
-        /// <summary>
-        /// The default value is SslProtocols.None, which allows the operating system to choose the best protocol to use, and to block protocols that are not secure.
-        /// </summary>
-        /// <seealso href="https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.sslprotocols">SslProtocols</seealso>       
-        public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
-
-        public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
+        Port = 8883;
     }
+
+    public System.Net.Security.RemoteCertificateValidationCallback RemoteCertificateValidationCallback { get; set; }
+
+    public ICertificateProvider CertificateProvider { get; set; }
+
+    public bool ClientCertificateRequired { get; set; }
+
+    public bool CheckCertificateRevocation { get; set; }
+
+    /// <summary>
+    /// The default value is SslProtocols.None, which allows the operating system to choose the best protocol to use, and to block protocols that are not secure.
+    /// </summary>
+    /// <seealso href="https://learn.microsoft.com/en-us/dotnet/api/system.security.authentication.sslprotocols">SslProtocols</seealso>
+    public SslProtocols SslProtocol { get; set; } = SslProtocols.None;
+
+    public System.Net.Security.CipherSuitesPolicy CipherSuitesPolicy { get; set; }
 }

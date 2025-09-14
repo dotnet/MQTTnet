@@ -5,32 +5,26 @@
 using System;
 using System.Threading.Tasks;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public sealed class AsyncTaskCompletionSource<TResult>
 {
-    public sealed class AsyncTaskCompletionSource<TResult>
+    readonly TaskCompletionSource<TResult> _taskCompletionSource = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    public Task<TResult> Task => _taskCompletionSource.Task;
+
+    public void TrySetCanceled()
     {
-        readonly TaskCompletionSource<TResult> _taskCompletionSource;
+        _taskCompletionSource.TrySetCanceled();
+    }
 
-        public AsyncTaskCompletionSource()
-        {
-            _taskCompletionSource = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-        }
+    public void TrySetException(Exception exception)
+    {
+        _taskCompletionSource.TrySetException(exception);
+    }
 
-        public Task<TResult> Task => _taskCompletionSource.Task;
-
-        public void TrySetCanceled()
-        {
-            _taskCompletionSource.TrySetCanceled();
-        }
-
-        public void TrySetException(Exception exception)
-        {
-            _taskCompletionSource.TrySetException(exception);
-        }
-
-        public bool TrySetResult(TResult result)
-        {
-            return _taskCompletionSource.TrySetResult(result);
-        }
+    public bool TrySetResult(TResult result)
+    {
+        return _taskCompletionSource.TrySetResult(result);
     }
 }

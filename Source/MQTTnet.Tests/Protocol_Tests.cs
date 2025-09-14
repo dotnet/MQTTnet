@@ -5,51 +5,51 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class Protocol_Tests
 {
-    [TestClass]
-    public sealed class Protocol_Tests
+    [TestMethod]
+    public void Encode_Four_Byte_Integer()
     {
-        [TestMethod]
-        public void Encode_Four_Byte_Integer()
+        var writer = new MqttBufferWriter(4, 4);
+
+        for (uint value = 0; value < 268435455; value++)
         {
-            var writer = new MqttBufferWriter(4, 4);
+            writer.WriteVariableByteInteger(value);
 
-            for (uint value = 0; value < 268435455; value++)
-            {
-                writer.WriteVariableByteInteger(value);
+            var buffer = writer.GetBuffer();
 
-                var buffer = writer.GetBuffer();
+            var reader = new MqttBufferReader();
+            reader.SetBuffer(buffer, 0, writer.Length);
+            var checkValue = reader.ReadVariableByteInteger();
 
-                var reader = new MqttBufferReader();
-                reader.SetBuffer(buffer, 0, writer.Length);
-                var checkValue = reader.ReadVariableByteInteger();
+            Assert.AreEqual(value, checkValue);
 
-                Assert.AreEqual(value, checkValue);
-
-                writer.Reset(0);
-            }
+            writer.Reset(0);
         }
+    }
 
-        [TestMethod]
-        public void Encode_Two_Byte_Integer()
+    [TestMethod]
+    public void Encode_Two_Byte_Integer()
+    {
+        var writer = new MqttBufferWriter(2, 2);
+
+        for (ushort value = 0; value < ushort.MaxValue; value++)
         {
-            var writer = new MqttBufferWriter(2, 2);
+            writer.WriteTwoByteInteger(value);
 
-            for (ushort value = 0; value < ushort.MaxValue; value++)
-            {
-                writer.WriteTwoByteInteger(value);
+            var buffer = writer.GetBuffer();
 
-                var buffer = writer.GetBuffer();
+            var reader = new MqttBufferReader();
+            reader.SetBuffer(buffer, 0, writer.Length);
+            var checkValue = reader.ReadTwoByteInteger();
 
-                var reader = new MqttBufferReader();
-                reader.SetBuffer(buffer, 0, writer.Length);
-                var checkValue = reader.ReadTwoByteInteger();
+            Assert.AreEqual(value, checkValue);
 
-                Assert.AreEqual(value, checkValue);
-
-                writer.Reset(0);
-            }
+            writer.Reset(0);
         }
     }
 }

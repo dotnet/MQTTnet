@@ -51,11 +51,7 @@ public sealed class MqttClientDisconnectOptionsBuilder
 
     public MqttClientDisconnectOptionsBuilder WithUserProperty(string name, string value)
     {
-        if (_userProperties == null)
-        {
-            _userProperties = new List<MqttUserProperty>();
-        }
-
+        _userProperties ??= [];
         _userProperties.Add(new MqttUserProperty(name, value));
         return this;
     }

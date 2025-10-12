@@ -4,16 +4,15 @@
 
 using System;
 
-namespace MQTTnet.Exceptions
-{
-    public sealed class MqttCommunicationTimedOutException : MqttCommunicationException
-    {
-        public MqttCommunicationTimedOutException() : base("The operation has timed out.")
-        {
-        }
+namespace MQTTnet.Exceptions;
 
-        public MqttCommunicationTimedOutException(Exception innerException) : base("The operation has timed out.", innerException)
-        {
-        }
+public sealed class MqttCommunicationTimedOutException : MqttCommunicationException
+{
+    public MqttCommunicationTimedOutException() : base("The operation has timed out.")
+    {
+    }
+
+    public MqttCommunicationTimedOutException(Exception innerException) : base("The operation has timed out.", innerException)
+    {
     }
 }

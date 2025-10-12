@@ -4,26 +4,25 @@
 
 using System;
 
-namespace MQTTnet.Extensions.Rpc
+namespace MQTTnet.Extensions.Rpc;
+
+public static class MqttFactoryExtensions
 {
-    public static class MqttFactoryExtensions
+    public static IMqttRpcClient CreateMqttRpcClient(this MqttClientFactory clientFactory, IMqttClient mqttClient)
     {
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttClientFactory clientFactory, IMqttClient mqttClient)
-        {
-            return clientFactory.CreateMqttRpcClient(
-                mqttClient,
-                new MqttRpcClientOptions
-                {
-                    TopicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy()
-                });
-        }
+        return clientFactory.CreateMqttRpcClient(
+            mqttClient,
+            new MqttRpcClientOptions
+            {
+                TopicGenerationStrategy = new DefaultMqttRpcClientTopicGenerationStrategy()
+            });
+    }
 
-        public static IMqttRpcClient CreateMqttRpcClient(this MqttClientFactory _, IMqttClient mqttClient, MqttRpcClientOptions rpcClientOptions)
-        {
-            ArgumentNullException.ThrowIfNull(mqttClient);
-            ArgumentNullException.ThrowIfNull(rpcClientOptions);
+    public static IMqttRpcClient CreateMqttRpcClient(this MqttClientFactory _, IMqttClient mqttClient, MqttRpcClientOptions rpcClientOptions)
+    {
+        ArgumentNullException.ThrowIfNull(mqttClient);
+        ArgumentNullException.ThrowIfNull(rpcClientOptions);
 
-            return new MqttRpcClient(mqttClient, rpcClientOptions);
-        }
+        return new MqttRpcClient(mqttClient, rpcClientOptions);
     }
 }

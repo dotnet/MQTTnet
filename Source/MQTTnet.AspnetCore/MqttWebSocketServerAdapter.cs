@@ -43,10 +43,8 @@ public sealed class MqttWebSocketServerAdapter : IMqttServerAdapter
                 var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
                 var channel = new MqttWebSocketChannel(webSocket, remoteEndPoint, isSecureConnection, clientCertificate);
 
-                using (var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger))
-                {
-                    await clientHandler(channelAdapter).ConfigureAwait(false);
-                }
+                using var channelAdapter = new MqttChannelAdapter(channel, formatter, _logger);
+                await clientHandler(channelAdapter).ConfigureAwait(false);
             }
         }
         finally

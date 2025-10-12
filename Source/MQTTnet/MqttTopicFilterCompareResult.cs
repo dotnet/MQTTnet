@@ -2,16 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet
+namespace MQTTnet;
+
+public enum MqttTopicFilterCompareResult
 {
-    public enum MqttTopicFilterCompareResult
-    {
-        NoMatch,
-        
-        IsMatch,
-        
-        FilterInvalid,
-        
-        TopicInvalid
-    }
+    NoMatch,
+
+    IsMatch,
+
+    FilterInvalid,
+
+    TopicInvalid
 }

@@ -5,16 +5,15 @@
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Tests.Helpers
+namespace MQTTnet.Tests.Helpers;
+
+public static class MqttPacketWriterExtensions
 {
-    public static class MqttPacketWriterExtensions
+    public static byte[] AddMqttHeader(this MqttBufferWriter writer, MqttControlPacketType header, byte[] body)
     {
-        public static byte[] AddMqttHeader(this MqttBufferWriter writer, MqttControlPacketType header, byte[] body)
-        {
-            writer.WriteByte(MqttBufferWriter.BuildFixedHeader(header));
-            writer.WriteVariableByteInteger((uint)body.Length);
-            writer.WriteBinary(body, 0, body.Length);
-            return writer.GetBuffer();
-        }
+        writer.WriteByte(MqttBufferWriter.BuildFixedHeader(header));
+        writer.WriteVariableByteInteger((uint)body.Length);
+        writer.WriteBinary(body, 0, body.Length);
+        return writer.GetBuffer();
     }
 }

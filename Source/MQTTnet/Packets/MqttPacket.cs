@@ -4,6 +4,4 @@
 
 namespace MQTTnet.Packets;
 
-public abstract class MqttPacket
-{
-}
+public abstract class MqttPacket;

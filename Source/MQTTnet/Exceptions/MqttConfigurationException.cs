@@ -4,22 +4,21 @@
 
 using System;
 
-namespace MQTTnet.Exceptions
+namespace MQTTnet.Exceptions;
+
+public class MqttConfigurationException : Exception
 {
-    public class MqttConfigurationException : Exception
+    protected MqttConfigurationException()
     {
-        protected MqttConfigurationException()
-        {
-        }
+    }
 
-        public MqttConfigurationException(Exception innerException)
-            : base(innerException.Message, innerException)
-        {
-        }
+    public MqttConfigurationException(Exception innerException)
+        : base(innerException.Message, innerException)
+    {
+    }
 
-        public MqttConfigurationException(string message)
-            : base(message)
-        {
-        }
+    public MqttConfigurationException(string message)
+        : base(message)
+    {
     }
 }

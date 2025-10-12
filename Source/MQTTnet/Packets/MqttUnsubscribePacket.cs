@@ -8,7 +8,7 @@ namespace MQTTnet.Packets;
 
 public sealed class MqttUnsubscribePacket : MqttPacketWithIdentifier
 {
-    public List<string> TopicFilters { get; set; } = new();
+    public List<string> TopicFilters { get; set; } = [];
 
     /// <summary>
     ///     Added in MQTTv5.

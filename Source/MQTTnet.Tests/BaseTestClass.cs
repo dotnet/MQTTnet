@@ -8,20 +8,20 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 using MQTTnet.Tests.Mockups;
 
-namespace MQTTnet.Tests
-{
-    public abstract class BaseTestClass
-    {
-        public TestContext TestContext { get; set; }
-        
-        protected TestEnvironment CreateTestEnvironment(MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
-        {
-            return new TestEnvironment(TestContext, protocolVersion);
-        }
+namespace MQTTnet.Tests;
 
-        protected Task LongTestDelay()
-        {
-            return Task.Delay(TimeSpan.FromSeconds(1));
-        }
+public abstract class BaseTestClass
+{
+    public TestContext TestContext { get; set; }
+
+    protected TestEnvironment CreateTestEnvironment(
+        MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311, bool trackUnobservedTaskException = true)
+    {
+        return new TestEnvironment(TestContext, protocolVersion, trackUnobservedTaskException);
+    }
+
+    protected Task LongTestDelay()
+    {
+        return Task.Delay(TimeSpan.FromSeconds(1));
     }
 }

@@ -2,21 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Formatter;
+
+public struct MqttFixedHeader(byte flags, int remainingLength, int totalLength)
 {
-    public struct MqttFixedHeader
-    {
-        public MqttFixedHeader(byte flags, int remainingLength, int totalLength)
-        {
-            Flags = flags;
-            RemainingLength = remainingLength;
-            TotalLength = totalLength;
-        }
+    public byte Flags { get; } = flags;
 
-        public byte Flags { get; }
+    public int RemainingLength { get; } = remainingLength;
 
-        public int RemainingLength { get; }
-
-        public int TotalLength { get; }
-    }
+    public int TotalLength { get; } = totalLength;
 }

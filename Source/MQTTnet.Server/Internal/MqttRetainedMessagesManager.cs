@@ -5,145 +5,150 @@
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server.Internal;
+
+public sealed class MqttRetainedMessagesManager
 {
-    public sealed class MqttRetainedMessagesManager
+    readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
+    readonly AsyncLock _storageAccessLock = new AsyncLock();
+
+    readonly MqttServerEventContainer _eventContainer;
+    readonly MqttNetSourceLogger _logger;
+
+    public MqttRetainedMessagesManager(MqttServerEventContainer eventContainer, IMqttNetLogger logger)
     {
-        readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
-        readonly AsyncLock _storageAccessLock = new AsyncLock();
+        _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
 
-        readonly MqttServerEventContainer _eventContainer;
-        readonly MqttNetSourceLogger _logger;
+        ArgumentNullException.ThrowIfNull(logger);
 
-        public MqttRetainedMessagesManager(MqttServerEventContainer eventContainer, IMqttNetLogger logger)
+        _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));
+    }
+
+    public async Task Start()
+    {
+        try
         {
-            _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
+            var eventArgs = new LoadingRetainedMessagesEventArgs();
+            await _eventContainer.LoadingRetainedMessagesEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
-            ArgumentNullException.ThrowIfNull(logger);
-
-            _logger = logger.WithSource(nameof(MqttRetainedMessagesManager));
-        }
-
-        public async Task Start()
-        {
-            try
+            lock (_messages)
             {
-                var eventArgs = new LoadingRetainedMessagesEventArgs();
-                await _eventContainer.LoadingRetainedMessagesEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                _messages.Clear();
 
-                lock (_messages)
+                if (eventArgs.LoadedRetainedMessages != null)
                 {
-                    _messages.Clear();
-
-                    if (eventArgs.LoadedRetainedMessages != null)
+                    foreach (var retainedMessage in eventArgs.LoadedRetainedMessages)
                     {
-                        foreach (var retainedMessage in eventArgs.LoadedRetainedMessages)
-                        {
-                            _messages[retainedMessage.Topic] = retainedMessage;
-                        }
+                        _messages[retainedMessage.Topic] = retainedMessage;
                     }
                 }
             }
-            catch (Exception exception)
-            {
-                _logger.Error(exception, "Unhandled exception while loading retained messages.");
-            }
         }
-
-        public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)
+        catch (Exception exception)
         {
-            ArgumentNullException.ThrowIfNull(applicationMessage);
+            _logger.Error(exception, "Unhandled exception while loading retained messages.");
+        }
+    }
 
-            try
+    public async Task UpdateMessage(string clientId, MqttApplicationMessage applicationMessage)
+    {
+        ArgumentNullException.ThrowIfNull(applicationMessage);
+
+        try
+        {
+            List<MqttApplicationMessage> messagesForSave = null;
+            var saveIsRequired = false;
+
+            lock (_messages)
             {
                 List<MqttApplicationMessage> messagesForSave = null;
                 var saveIsRequired = false;
                 var hasHandlers = _eventContainer.RetainedMessageChangedEvent.HasHandlers;
+                var payload = applicationMessage.Payload;
+                var hasPayload = payload.Length > 0;
 
-                lock (_messages)
+                if (!hasPayload)
                 {
-                    var payload = applicationMessage.Payload;
-                    var hasPayload = payload.Length > 0;
-
-                    if (!hasPayload)
+                    saveIsRequired = _messages.Remove(applicationMessage.Topic);
+                    _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                }
+                else
+                {
+                    if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
                     {
-                        saveIsRequired = _messages.Remove(applicationMessage.Topic);
-                        _logger.Verbose("Client '{0}' cleared retained message for topic '{1}'.", clientId, applicationMessage.Topic);
+                        _messages[applicationMessage.Topic] = applicationMessage;
+                        saveIsRequired = true;
                     }
                     else
                     {
-                        if (!_messages.TryGetValue(applicationMessage.Topic, out var existingMessage))
+                        if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
+                            !MqttMemoryHelper.SequenceEqual(existingMessage.Payload, payload))
                         {
                             _messages[applicationMessage.Topic] = applicationMessage;
                             saveIsRequired = true;
                         }
-                        else
-                        {
-                            if (existingMessage.QualityOfServiceLevel != applicationMessage.QualityOfServiceLevel ||
-                                !MqttMemoryHelper.SequenceEqual(existingMessage.Payload, payload))
-                            {
-                                _messages[applicationMessage.Topic] = applicationMessage;
-                                saveIsRequired = true;
-                            }
-                        }
-
-                        _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                     }
 
                     if (saveIsRequired && hasHandlers)
                     {
                         messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
                     }
+                    _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
 
                 if (saveIsRequired && hasHandlers)
                 {
-                    using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
-                    {
-                        var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
-                        await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-                    }
+                    messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
                 }
             }
-            catch (Exception exception)
-            {
-                _logger.Error(exception, "Unhandled exception while handling retained messages.");
-            }
-        }
 
-        public Task<IList<MqttApplicationMessage>> GetMessages()
-        {
-            lock (_messages)
+            if (saveIsRequired)
             {
-                var result = new List<MqttApplicationMessage>(_messages.Values);
-                return Task.FromResult((IList<MqttApplicationMessage>)result);
-            }
-        }
-
-        public Task<MqttApplicationMessage> GetMessage(string topic)
-        {
-            lock (_messages)
-            {
-                if (_messages.TryGetValue(topic, out var message))
+                using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
                 {
-                    return Task.FromResult(message);
+                    var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
+                    await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
+        }
+        catch (Exception exception)
+        {
+            _logger.Error(exception, "Unhandled exception while handling retained messages.");
+        }
+    }
 
-            return Task.FromResult<MqttApplicationMessage>(null);
+    public Task<IList<MqttApplicationMessage>> GetMessages()
+    {
+        lock (_messages)
+        {
+            var result = new List<MqttApplicationMessage>(_messages.Values);
+            return Task.FromResult((IList<MqttApplicationMessage>)result);
+        }
+    }
+
+    public Task<MqttApplicationMessage> GetMessage(string topic)
+    {
+        lock (_messages)
+        {
+            if (_messages.TryGetValue(topic, out var message))
+            {
+                return Task.FromResult(message);
+            }
         }
 
-        public async Task ClearMessages()
-        {
-            lock (_messages)
-            {
-                _messages.Clear();
-            }
+        return Task.FromResult<MqttApplicationMessage>(null);
+    }
 
-            using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
-            {
-                await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
-            }
+    public async Task ClearMessages()
+    {
+        lock (_messages)
+        {
+            _messages.Clear();
+        }
+
+        using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
+        {
+            await _eventContainer.RetainedMessagesClearedEvent.InvokeAsync(EventArgs.Empty).ConfigureAwait(false);
         }
     }
 }

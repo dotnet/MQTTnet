@@ -8,7 +8,7 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet;
 
-public class MqttExtendedAuthenticationExchangeData
+public class MqttEnhancedAuthenticationExchangeData
 {
     /// <summary>
     ///     Gets or sets the authentication data.
@@ -41,5 +41,5 @@ public class MqttExtendedAuthenticationExchangeData
     ///     The feature is very similar to the HTTP header concept.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; }
+    public List<MqttUserProperty> UserProperties { get; set; }
 }

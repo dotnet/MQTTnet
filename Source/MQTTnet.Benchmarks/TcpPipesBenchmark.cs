@@ -11,70 +11,69 @@ using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.AspNetCore;
 
-namespace MQTTnet.Benchmarks
+namespace MQTTnet.Benchmarks;
+
+[SimpleJob(RuntimeMoniker.Net60)]
+[MemoryDiagnoser]
+public class TcpPipesBenchmark : BaseBenchmark
 {
-    [SimpleJob(RuntimeMoniker.Net60)]
-    [MemoryDiagnoser]
-    public class TcpPipesBenchmark : BaseBenchmark
+    IDuplexPipe _client;
+    IDuplexPipe _server;
+
+    [GlobalSetup]
+    public void Setup()
     {
-        IDuplexPipe _client;
-        IDuplexPipe _server;
+        var server = new TcpListener(IPAddress.Any, 1883);
 
-        [GlobalSetup]
-        public void Setup()
+        server.Start(1);
+
+        var task = Task.Run(() => server.AcceptSocket());
+
+        var clientConnection = new SocketConnection(new IPEndPoint(IPAddress.Loopback, 1883));
+
+        clientConnection.StartAsync().GetAwaiter().GetResult();
+        _client = clientConnection.Transport;
+
+        var serverConnection = new SocketConnection(task.GetAwaiter().GetResult());
+        serverConnection.StartAsync().GetAwaiter().GetResult();
+        _server = serverConnection.Transport;
+    }
+
+
+    [Benchmark]
+    public async Task Send_10000_Chunks_Pipe()
+    {
+        var size = 5;
+        var iterations = 10000;
+
+        await Task.WhenAll(WriteAsync(iterations, size), ReadAsync(iterations, size));
+    }
+
+    async Task ReadAsync(int iterations, int size)
+    {
+        await Task.Yield();
+
+        var expected = iterations * size;
+        long read = 0;
+        var input = _client.Input;
+
+        while (read < expected)
         {
-            var server = new TcpListener(IPAddress.Any, 1883);
-
-            server.Start(1);
-
-            var task = Task.Run(() => server.AcceptSocket());
-
-            var clientConnection = new SocketConnection(new IPEndPoint(IPAddress.Loopback, 1883));
-
-            clientConnection.StartAsync().GetAwaiter().GetResult();
-            _client = clientConnection.Transport;
-
-            var serverConnection = new SocketConnection(task.GetAwaiter().GetResult());
-            serverConnection.StartAsync().GetAwaiter().GetResult();
-            _server = serverConnection.Transport;
+            var readresult = await input.ReadAsync(CancellationToken.None).ConfigureAwait(false);
+            input.AdvanceTo(readresult.Buffer.End);
+            read += readresult.Buffer.Length;
         }
+    }
 
+    async Task WriteAsync(int iterations, int size)
+    {
+        await Task.Yield();
 
-        [Benchmark]
-        public async Task Send_10000_Chunks_Pipe()
+        var output = _server.Output;
+
+        for (var i = 0; i < iterations; i++)
         {
-            var size = 5;
-            var iterations = 10000;
-
-            await Task.WhenAll(WriteAsync(iterations, size), ReadAsync(iterations, size));
-        }
-
-        async Task ReadAsync(int iterations, int size)
-        {
-            await Task.Yield();
-
-            var expected = iterations * size;
-            long read = 0;
-            var input = _client.Input;
-
-            while (read < expected)
-            {
-                var readresult = await input.ReadAsync(CancellationToken.None).ConfigureAwait(false);
-                input.AdvanceTo(readresult.Buffer.End);
-                read += readresult.Buffer.Length;
-            }
-        }
-
-        async Task WriteAsync(int iterations, int size)
-        {
-            await Task.Yield();
-
-            var output = _server.Output;
-
-            for (var i = 0; i < iterations; i++)
-            {
-                await output.WriteAsync(new byte[size], CancellationToken.None).ConfigureAwait(false);
-            }
+            await output.WriteAsync(new byte[size], CancellationToken.None).ConfigureAwait(false);
         }
     }
 }

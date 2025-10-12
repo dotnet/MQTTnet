@@ -22,17 +22,15 @@ public static class Server_Simple_Samples
          * See _Run_Minimal_Server_ for more information.
          */
 
-        using (var mqttServer = await StartMqttServer())
-        {
-            // Let the client connect.
-            await Task.Delay(TimeSpan.FromSeconds(5));
+        using var mqttServer = await StartMqttServer();
+        // Let the client connect.
+        await Task.Delay(TimeSpan.FromSeconds(5));
 
-            // Now disconnect the client (if connected).
-            var affectedClient = (await mqttServer.GetClientsAsync()).FirstOrDefault(c => c.Id == "MyClient");
-            if (affectedClient != null)
-            {
-                await affectedClient.DisconnectAsync();
-            }
+        // Now disconnect the client (if connected).
+        var affectedClient = (await mqttServer.GetClientsAsync()).FirstOrDefault(c => c.Id == "MyClient");
+        if (affectedClient != null)
+        {
+            await affectedClient.DisconnectAsync();
         }
     }
 
@@ -44,18 +42,16 @@ public static class Server_Simple_Samples
          * See _Run_Minimal_Server_ for more information.
          */
 
-        using (var mqttServer = await StartMqttServer())
-        {
-            // Create a new message using the builder as usual.
-            var message = new MqttApplicationMessageBuilder().WithTopic("HelloWorld").WithPayload("Test").Build();
+        using var mqttServer = await StartMqttServer();
+        // Create a new message using the builder as usual.
+        var message = new MqttApplicationMessageBuilder().WithTopic("HelloWorld").WithPayload("Test").Build();
 
-            // Now inject the new message at the broker.
-            await mqttServer.InjectApplicationMessage(
-                new InjectedMqttApplicationMessage(message)
-                {
-                    SenderClientId = "SenderClientId"
-                });
-        }
+        // Now inject the new message at the broker.
+        await mqttServer.InjectApplicationMessage(
+            new InjectedMqttApplicationMessage(message)
+            {
+                SenderClientId = "SenderClientId"
+            });
     }
 
     public static async Task Run_Minimal_Server()
@@ -77,16 +73,14 @@ public static class Server_Simple_Samples
         //     .WithDefaultEndpointPort(1234)
         //     .Build();
 
-        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
-        {
-            await mqttServer.StartAsync();
+        using var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
+        await mqttServer.StartAsync();
 
-            Console.WriteLine("Press Enter to exit.");
-            Console.ReadLine();
+        Console.WriteLine("Press Enter to exit.");
+        Console.ReadLine();
 
-            // Stop and dispose the MQTT server if it is no longer needed!
-            await mqttServer.StopAsync();
-        }
+        // Stop and dispose the MQTT server if it is no longer needed!
+        await mqttServer.StopAsync();
     }
 
     public static async Task Run_Server_With_Logging()
@@ -103,16 +97,14 @@ public static class Server_Simple_Samples
 
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
-        {
-            await mqttServer.StartAsync();
+        using var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
+        await mqttServer.StartAsync();
 
-            Console.WriteLine("Press Enter to exit.");
-            Console.ReadLine();
+        Console.WriteLine("Press Enter to exit.");
+        Console.ReadLine();
 
-            // Stop and dispose the MQTT server if it is no longer needed!
-            await mqttServer.StopAsync();
-        }
+        // Stop and dispose the MQTT server if it is no longer needed!
+        await mqttServer.StopAsync();
     }
 
     public static async Task Validating_Connections()
@@ -127,37 +119,35 @@ public static class Server_Simple_Samples
 
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
+        using var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
+        // Setup connection validation before starting the server so that there is
+        // no change to connect without valid credentials.
+        mqttServer.ValidatingConnectionAsync += e =>
         {
-            // Setup connection validation before starting the server so that there is
-            // no change to connect without valid credentials.
-            mqttServer.ValidatingConnectionAsync += e =>
+            if (e.ClientId != "ValidClientId")
             {
-                if (e.ClientId != "ValidClientId")
-                {
-                    e.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
-                }
+                e.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
+            }
 
-                if (e.UserName != "ValidUser")
-                {
-                    e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                }
+            if (e.UserName != "ValidUser")
+            {
+                e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+            }
 
-                if (e.Password != "SecretPassword")
-                {
-                    e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
-                }
+            if (e.Password != "SecretPassword")
+            {
+                e.ReasonCode = MqttConnectReasonCode.BadUserNameOrPassword;
+            }
 
-                return Task.CompletedTask;
-            };
+            return Task.CompletedTask;
+        };
 
-            await mqttServer.StartAsync();
+        await mqttServer.StartAsync();
 
-            Console.WriteLine("Press Enter to exit.");
-            Console.ReadLine();
+        Console.WriteLine("Press Enter to exit.");
+        Console.ReadLine();
 
-            await mqttServer.StopAsync();
-        }
+        await mqttServer.StopAsync();
     }
 
     static async Task<MqttServer> StartMqttServer()

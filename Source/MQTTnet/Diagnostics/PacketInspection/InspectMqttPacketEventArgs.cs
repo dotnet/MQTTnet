@@ -4,18 +4,17 @@
 
 using System;
 
-namespace MQTTnet.Diagnostics.PacketInspection
+namespace MQTTnet.Diagnostics.PacketInspection;
+
+public sealed class InspectMqttPacketEventArgs : EventArgs
 {
-    public sealed class InspectMqttPacketEventArgs : EventArgs
+    public InspectMqttPacketEventArgs(MqttPacketFlowDirection direction, byte[] buffer)
     {
-        public InspectMqttPacketEventArgs(MqttPacketFlowDirection direction, byte[] buffer)
-        {
-            Direction = direction;
-            Buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
-        }
-
-        public byte[] Buffer { get; }
-
-        public MqttPacketFlowDirection Direction { get; }
+        Direction = direction;
+        Buffer = buffer ?? throw new ArgumentNullException(nameof(buffer));
     }
+
+    public byte[] Buffer { get; }
+
+    public MqttPacketFlowDirection Direction { get; }
 }

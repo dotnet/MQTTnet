@@ -5,33 +5,32 @@
 using System;
 using System.Buffers;
 
-namespace MQTTnet.Tests.ASP.Mockups
+namespace MQTTnet.Tests.ASP.Mockups;
+
+public sealed class MemoryOwner : IMemoryOwner<byte>
 {
-    public sealed class MemoryOwner : IMemoryOwner<byte>
+    readonly byte[] _raw;
+
+    public MemoryOwner(int size)
     {
-        readonly byte[] _raw;
-
-        public MemoryOwner(int size)
+        if (size <= 0)
         {
-            if (size <= 0)
-            {
-                size = 1024;
-            }
-
-            if (size > 4096)
-            {
-                size = 4096;
-            }
-
-            _raw = ArrayPool<byte>.Shared.Rent(size);
-            Memory = _raw;
+            size = 1024;
         }
 
-        public Memory<byte> Memory { get; }
-
-        public void Dispose()
+        if (size > 4096)
         {
-            ArrayPool<byte>.Shared.Return(_raw);
+            size = 4096;
         }
+
+        _raw = ArrayPool<byte>.Shared.Rent(size);
+        Memory = _raw;
+    }
+
+    public Memory<byte> Memory { get; }
+
+    public void Dispose()
+    {
+        ArrayPool<byte>.Shared.Return(_raw);
     }
 }

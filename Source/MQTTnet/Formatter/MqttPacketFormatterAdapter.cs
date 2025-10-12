@@ -10,141 +10,130 @@ using MQTTnet.Formatter.V3;
 using MQTTnet.Formatter.V5;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Formatter
+namespace MQTTnet.Formatter;
+
+public sealed class MqttPacketFormatterAdapter
 {
-    public sealed class MqttPacketFormatterAdapter
+    readonly MqttBufferReader _bufferReader = new();
+    readonly MqttBufferWriter _bufferWriter;
+
+    IMqttPacketFormatter _formatter;
+
+    public MqttPacketFormatterAdapter(MqttBufferWriter mqttBufferWriter)
     {
-        readonly MqttBufferReader _bufferReader = new MqttBufferReader();
-        readonly MqttBufferWriter _bufferWriter;
+        _bufferWriter = mqttBufferWriter ?? throw new ArgumentNullException(nameof(mqttBufferWriter));
+    }
 
-        IMqttPacketFormatter _formatter;
+    public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)
+        : this(bufferWriter)
+    {
+        UseProtocolVersion(protocolVersion);
+    }
 
-        public MqttPacketFormatterAdapter(MqttBufferWriter mqttBufferWriter)
+    public MqttProtocolVersion ProtocolVersion { get; private set; } = MqttProtocolVersion.Unknown;
+
+    public void Cleanup()
+    {
+        _bufferWriter.Cleanup();
+    }
+
+    public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
+    {
+        ThrowIfFormatterNotSet();
+        return _formatter.Decode(receivedMqttPacket);
+    }
+
+    public void DetectProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
+    {
+        var protocolVersion = ParseProtocolVersion(receivedMqttPacket);
+        UseProtocolVersion(protocolVersion);
+    }
+
+    public MqttPacketBuffer Encode(MqttPacket packet)
+    {
+        ThrowIfFormatterNotSet();
+        return _formatter.Encode(packet);
+    }
+
+    public static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)
+    {
+        if (protocolVersion == MqttProtocolVersion.Unknown)
         {
-            _bufferWriter = mqttBufferWriter ?? throw new ArgumentNullException(nameof(mqttBufferWriter));
+            throw new InvalidOperationException("MQTT protocol version is invalid.");
         }
 
-        public MqttPacketFormatterAdapter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)
-            : this(bufferWriter)
+        return protocolVersion switch
         {
-            UseProtocolVersion(protocolVersion);
+            MqttProtocolVersion.V500 => new MqttV5PacketFormatter(bufferWriter),
+            MqttProtocolVersion.V310 or MqttProtocolVersion.V311 => new MqttV3PacketFormatter(bufferWriter, protocolVersion),
+            _ => throw new NotSupportedException()
+        };
+    }
+
+    MqttProtocolVersion ParseProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
+    {
+        if (receivedMqttPacket.Body.Count < 7)
+        {
+            // 2 byte protocol name length
+            // at least 4 byte protocol name
+            // 1 byte protocol level
+            throw new MqttProtocolViolationException("CONNECT packet must have at least 7 bytes.");
         }
 
-        public MqttProtocolVersion ProtocolVersion { get; private set; } = MqttProtocolVersion.Unknown;
+        _bufferReader.SetBuffer(receivedMqttPacket.Body.Array, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
 
-        public void Cleanup()
-        {
-            _bufferWriter.Cleanup();
-        }
+        var protocolName = _bufferReader.ReadString();
+        var protocolLevel = _bufferReader.ReadByte();
 
-        public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
-        {
-            ThrowIfFormatterNotSet();
-            return _formatter.Decode(receivedMqttPacket);
-        }
+        // Remove the mosquitto try_private flag (MQTT 3.1.1 Bridge).
+        // This flag is accepted but not yet used.
+        protocolLevel &= 0x7F;
 
-        public void DetectProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
+        if (protocolName == "MQTT")
         {
-            var protocolVersion = ParseProtocolVersion(receivedMqttPacket);
-            UseProtocolVersion(protocolVersion);
-        }
-
-        public MqttPacketBuffer Encode(MqttPacket packet)
-        {
-            ThrowIfFormatterNotSet();
-            return _formatter.Encode(packet);
-        }
-
-        public static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)
-        {
-            if (protocolVersion == MqttProtocolVersion.Unknown)
+            if (protocolLevel == 5)
             {
-                throw new InvalidOperationException("MQTT protocol version is invalid.");
+                return MqttProtocolVersion.V500;
             }
 
-            switch (protocolVersion)
+            if (protocolLevel == 4)
             {
-                case MqttProtocolVersion.V500:
-                    {
-                        return new MqttV5PacketFormatter(bufferWriter);
-                    }
-                case MqttProtocolVersion.V310:
-                case MqttProtocolVersion.V311:
-                    {
-                        return new MqttV3PacketFormatter(bufferWriter, protocolVersion);
-                    }
-                default:
-                    {
-                        throw new NotSupportedException();
-                    }
+                return MqttProtocolVersion.V311;
             }
+
+            throw new MqttProtocolViolationException($"Protocol level '{protocolLevel}' not supported.");
         }
 
-        MqttProtocolVersion ParseProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
+        if (protocolName == "MQIsdp")
         {
-            if (receivedMqttPacket.Body.Count < 7)
+            if (protocolLevel == 3)
             {
-                // 2 byte protocol name length
-                // at least 4 byte protocol name
-                // 1 byte protocol level
-                throw new MqttProtocolViolationException("CONNECT packet must have at least 7 bytes.");
+                return MqttProtocolVersion.V310;
             }
 
-            _bufferReader.SetBuffer(receivedMqttPacket.Body.Array, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
-
-            var protocolName = _bufferReader.ReadString();
-            var protocolLevel = _bufferReader.ReadByte();
-
-            // Remove the mosquitto try_private flag (MQTT 3.1.1 Bridge).
-            // This flag is accepted but not yet used.
-            protocolLevel &= 0x7F;
-
-            if (protocolName == "MQTT")
-            {
-                if (protocolLevel == 5)
-                {
-                    return MqttProtocolVersion.V500;
-                }
-
-                if (protocolLevel == 4)
-                {
-                    return MqttProtocolVersion.V311;
-                }
-
-                throw new MqttProtocolViolationException($"Protocol level '{protocolLevel}' not supported.");
-            }
-
-            if (protocolName == "MQIsdp")
-            {
-                if (protocolLevel == 3)
-                {
-                    return MqttProtocolVersion.V310;
-                }
-
-                throw new MqttProtocolViolationException($"Protocol level '{protocolLevel}' not supported.");
-            }
-
-            throw new MqttProtocolViolationException($"Protocol '{protocolName}' not supported.");
+            throw new MqttProtocolViolationException($"Protocol level '{protocolLevel}' not supported.");
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ThrowIfFormatterNotSet()
+        throw new MqttProtocolViolationException($"Protocol '{protocolName}' not supported.");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    void ThrowIfFormatterNotSet()
+    {
+        if (_formatter == null)
         {
-            if (_formatter == null)
-            {
-                throw new InvalidOperationException("Protocol version not set or detected.");
-            }
+            throw new InvalidOperationException("Protocol version not set or detected.");
         }
+    }
 
-        void UseProtocolVersion(MqttProtocolVersion protocolVersion)
+    void UseProtocolVersion(MqttProtocolVersion protocolVersion)
+    {
+        if (protocolVersion == MqttProtocolVersion.Unknown)
         {
-            if (protocolVersion == MqttProtocolVersion.Unknown)
-            {
-                throw new InvalidOperationException("MQTT protocol version is invalid.");
-            }
-
-            ProtocolVersion = protocolVersion;
-            _formatter = GetMqttPacketFormatter(protocolVersion, _bufferWriter);
+            throw new InvalidOperationException("MQTT protocol version is invalid.");
         }
+
+        ProtocolVersion = protocolVersion;
+        _formatter = GetMqttPacketFormatter(protocolVersion, _bufferWriter);
     }
 }

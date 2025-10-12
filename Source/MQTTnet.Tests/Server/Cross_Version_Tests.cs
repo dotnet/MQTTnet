@@ -4,63 +4,59 @@ using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests.Server;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class Cross_Version_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class Cross_Version_Tests : BaseTestClass
+    [TestMethod]
+    public async Task Send_V311_Receive_V500()
     {
-        [TestMethod]
-        public async Task Send_V311_Receive_V500()
-        {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                await testEnvironment.StartServer();
+        using var testEnvironment = CreateTestEnvironment();
+        await testEnvironment.StartServer();
 
-                var receiver = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
-                var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
-                await receiver.SubscribeAsync("#");
+        var receiver = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V500));
+        var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
+        await receiver.SubscribeAsync("#");
 
-                var sender = await testEnvironment.ConnectClient();
+        var sender = await testEnvironment.ConnectClient();
 
-                var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("My/Message").WithPayload("My_Payload").Build();
-                await sender.PublishAsync(applicationMessage);
+        var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("My/Message").WithPayload("My_Payload").Build();
+        await sender.PublishAsync(applicationMessage);
 
-                await LongTestDelay();
+        await LongTestDelay();
 
-                Assert.AreEqual(1, receivedApplicationMessages.ReceivedEventArgs.Count);
-                Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.Topic);
-                Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.ConvertPayloadToString());
-            }
-        }
+        Assert.AreEqual(1, receivedApplicationMessages.ReceivedEventArgs.Count);
+        Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.Topic);
+        Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.ConvertPayloadToString());
+    }
 
-        [TestMethod]
-        public async Task Send_V500_Receive_V311()
-        {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                await testEnvironment.StartServer();
+    [TestMethod]
+    public async Task Send_V500_Receive_V311()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        await testEnvironment.StartServer();
 
-                var receiver = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V311));
-                var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
-                await receiver.SubscribeAsync("#");
+        var receiver = await testEnvironment.ConnectClient(o => o.WithProtocolVersion(MqttProtocolVersion.V311));
+        var receivedApplicationMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
+        await receiver.SubscribeAsync("#");
 
-                var sender = await testEnvironment.ConnectClient();
+        var sender = await testEnvironment.ConnectClient();
 
-                var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("My/Message")
-                    .WithPayload("My_Payload")
-                    .WithUserProperty("A", "B")
-                    .WithResponseTopic("Response")
-                    .WithCorrelationData(Encoding.UTF8.GetBytes("Correlation"))
-                    .Build();
+        var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("My/Message")
+            .WithPayload("My_Payload")
+            .WithUserProperty("A", "B")
+            .WithResponseTopic("Response")
+            .WithCorrelationData(Encoding.UTF8.GetBytes("Correlation"))
+            .Build();
 
-                await sender.PublishAsync(applicationMessage);
+        await sender.PublishAsync(applicationMessage);
 
-                await LongTestDelay();
+        await LongTestDelay();
 
-                Assert.AreEqual(1, receivedApplicationMessages.ReceivedEventArgs.Count);
-                Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.Topic);
-                Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.ConvertPayloadToString());
-            }
-        }
+        Assert.AreEqual(1, receivedApplicationMessages.ReceivedEventArgs.Count);
+        Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.Topic);
+        Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.ConvertPayloadToString());
     }
 }

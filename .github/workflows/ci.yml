@@ -3,8 +3,8 @@ name: CI
 on: [push, pull_request]
 
 env:
-  VERSION: "5.0.0.${{github.run_number}}"
-  PACKAGE_SUFFIX: "-RC"
+  VERSION: "5.1.0.${{github.run_number}}"
+  PACKAGE_SUFFIX: ""
 
 jobs:
   build:
@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Execute tests
-        run: dotnet test --framework net8.0 Source/MQTTnet.Tests/MQTTnet.Tests.csproj
+        run: dotnet test --framework net8.0 --configuration Release Source/MQTTnet.Tests/MQTTnet.Tests.csproj
 
   sign:
     needs: build

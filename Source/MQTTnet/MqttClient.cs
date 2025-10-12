@@ -134,10 +134,8 @@ public sealed class MqttClient : Disposable, IMqttClient
             {
                 // Fall back to the general timeout specified in the options if the user passed
                 // CancellationToken.None or similar.
-                using (var timeout = new CancellationTokenSource(Options.Timeout))
-                {
-                    connectResult = await ConnectInternal(adapter, timeout.Token).ConfigureAwait(false);
-                }
+                using var timeout = new CancellationTokenSource(Options.Timeout);
+                connectResult = await ConnectInternal(adapter, timeout.Token).ConfigureAwait(false);
             }
 
             if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
@@ -219,10 +217,8 @@ public sealed class MqttClient : Disposable, IMqttClient
             }
             else
             {
-                using (var timeout = new CancellationTokenSource(Options.Timeout))
-                {
-                    await Send(disconnectPacket, timeout.Token).ConfigureAwait(false);
-                }
+                using var timeout = new CancellationTokenSource(Options.Timeout);
+                await Send(disconnectPacket, timeout.Token).ConfigureAwait(false);
             }
         }
         finally
@@ -244,10 +240,8 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
         else
         {
-            using (var timeout = new CancellationTokenSource(Options.Timeout))
-            {
-                await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
-            }
+            using var timeout = new CancellationTokenSource(Options.Timeout);
+            await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
         }
     }
 
@@ -288,7 +282,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
     }
 
-    public Task SendExtendedAuthenticationExchangeDataAsync(MqttExtendedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
+    public Task SendEnhancedAuthenticationExchangeDataAsync(MqttEnhancedAuthenticationExchangeData data, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(data);
 
@@ -335,13 +329,11 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
         else
         {
-            using (var timeout = new CancellationTokenSource(Options.Timeout))
-            {
-                subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, timeout.Token).ConfigureAwait(false);
-            }
+            using var timeout = new CancellationTokenSource(Options.Timeout);
+            subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, timeout.Token).ConfigureAwait(false);
         }
 
-        return MqttClientResultFactory.SubscribeResult.Create(subscribePacket, subAckPacket);
+        return MqttClientSubscribeResultFactory.Create(subscribePacket, subAckPacket);
     }
 
     public async Task<MqttClientUnsubscribeResult> UnsubscribeAsync(MqttClientUnsubscribeOptions options, CancellationToken cancellationToken = default)
@@ -371,13 +363,11 @@ public sealed class MqttClient : Disposable, IMqttClient
         }
         else
         {
-            using (var timeout = new CancellationTokenSource(Options.Timeout))
-            {
-                unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, timeout.Token).ConfigureAwait(false);
-            }
+            using var timeout = new CancellationTokenSource(Options.Timeout);
+            unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, timeout.Token).ConfigureAwait(false);
         }
 
-        return MqttClientResultFactory.UnsubscribeResult.Create(unsubscribePacket, unsubAckPacket);
+        return MqttClientUnsubscribeResultFactory.Create(unsubscribePacket, unsubAckPacket);
     }
 
     protected override void Dispose(bool disposing)
@@ -437,27 +427,30 @@ public sealed class MqttClient : Disposable, IMqttClient
             var connectPacket = MqttConnectPacketFactory.Create(options);
             await Send(connectPacket, cancellationToken).ConfigureAwait(false);
 
-            var receivedPacket = await Receive(cancellationToken).ConfigureAwait(false);
-
-            switch (receivedPacket)
+            while (true)
             {
-                case MqttConnAckPacket connAckPacket:
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var receivedPacket = await Receive(cancellationToken).ConfigureAwait(false);
+
+                if (receivedPacket is MqttAuthPacket authPacket)
                 {
-                    result = MqttClientResultFactory.ConnectResult.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
+                    await HandleEnhancedAuthentication(authPacket, cancellationToken);
+                    continue;
+                }
+
+                if (receivedPacket is MqttConnAckPacket connAckPacket)
+                {
+                    result = MqttClientConnectResultFactory.Create(connAckPacket, channelAdapter.PacketFormatterAdapter.ProtocolVersion);
                     break;
                 }
-                case MqttAuthPacket _:
+
+                if (receivedPacket != null)
                 {
-                    throw new NotSupportedException("Extended authentication handler is not yet supported");
+                    throw new MqttProtocolViolationException($"Received other packet than CONNACK or AUTH while connecting ({receivedPacket}).");
                 }
-                case null:
-                {
-                    throw new MqttCommunicationException("Connection closed.");
-                }
-                default:
-                {
-                    throw new InvalidOperationException($"Received an unexpected MQTT packet ({receivedPacket}).");
-                }
+
+                throw new MqttCommunicationException("Connection closed.");
             }
         }
         catch (Exception exception)
@@ -468,6 +461,12 @@ public sealed class MqttClient : Disposable, IMqttClient
         _logger.Verbose("Authenticated MQTT connection with server established.");
 
         return result;
+    }
+
+    Task HandleEnhancedAuthentication(MqttAuthPacket authPacket, CancellationToken cancellationToken)
+    {
+        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter, cancellationToken);
+        return Options.EnhancedAuthenticationHandler.HandleEnhancedAuthenticationAsync(eventArgs);
     }
 
     void Cleanup()
@@ -501,24 +500,24 @@ public sealed class MqttClient : Disposable, IMqttClient
     {
         var backgroundCancellationToken = _mqttClientAlive.Token;
 
-        using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken))
+        using var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(backgroundCancellationToken, cancellationToken);
+        _logger.Verbose("Trying to connect with server '{0}'", Options.ChannelOptions);
+        await channelAdapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
+        _logger.Verbose("Connection with server established");
+
+        _publishPacketReceiverQueue?.Dispose();
+        _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
+
+        var connectResult = await Authenticate(channelAdapter, Options, effectiveCancellationToken.Token).ConfigureAwait(false);
+        if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
         {
-            _logger.Verbose("Trying to connect with server '{0}'", Options.ChannelOptions);
-            await channelAdapter.ConnectAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
-            _logger.Verbose("Connection with server established");
-
-            _publishPacketReceiverQueue?.Dispose();
-            _publishPacketReceiverQueue = new AsyncQueue<MqttPublishPacket>();
-
-            var connectResult = await Authenticate(channelAdapter, Options, effectiveCancellationToken.Token).ConfigureAwait(false);
-            if (connectResult.ResultCode == MqttClientConnectResultCode.Success)
-            {
-                _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
-                _packetReceiverTask = Task.Run(() => ReceivePacketsLoop(backgroundCancellationToken), backgroundCancellationToken);
-            }
-
             return connectResult;
         }
+
+        _publishPacketReceiverTask = Task.Run(() => ProcessReceivedPublishPackets(backgroundCancellationToken), backgroundCancellationToken);
+        _packetReceiverTask = Task.Run(() => ReceivePacketsLoop(backgroundCancellationToken), backgroundCancellationToken);
+
+        return connectResult;
     }
 
     async Task DisconnectCore(Task sender, Exception exception, MqttClientConnectResult connectResult, bool clientWasConnected)
@@ -531,10 +530,8 @@ public sealed class MqttClient : Disposable, IMqttClient
             {
                 _logger.Verbose("Disconnecting [Timeout={0}]", Options.Timeout);
 
-                using (var timeout = new CancellationTokenSource(Options.Timeout))
-                {
-                    await _adapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
-                }
+                using var timeout = new CancellationTokenSource(Options.Timeout);
+                await _adapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
             }
 
             _logger.Verbose("Disconnected from adapter.");
@@ -646,12 +643,26 @@ public sealed class MqttClient : Disposable, IMqttClient
         return _events.ConnectedEvent.InvokeAsync(eventArgs);
     }
 
-    Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket)
+    Task ProcessReceivedAuthPacket(MqttAuthPacket authPacket, CancellationToken cancellationToken)
     {
-        var extendedAuthenticationExchangeHandler = Options.ExtendedAuthenticationExchangeHandler;
-        return extendedAuthenticationExchangeHandler != null
-            ? extendedAuthenticationExchangeHandler.HandleRequestAsync(new MqttExtendedAuthenticationExchangeContext(authPacket, this))
-            : CompletedTask.Instance;
+        if (Options.EnhancedAuthenticationHandler == null)
+        {
+            // From RFC: If the re-authentication fails, the Client or Server SHOULD send DISCONNECT with an appropriate Reason Code
+            // as described in section 4.13, and MUST close the Network Connection [MQTT-4.12.1-2].
+            //
+            // Since we have no handler there is no chance to fulfil the re-authentication request.
+            _ = DisconnectAsync(new MqttClientDisconnectOptions
+            {
+                Reason = MqttClientDisconnectOptionsReason.ImplementationSpecificError,
+                ReasonString = "Unable to handle AUTH packet"
+            },
+            cancellationToken);
+
+            return CompletedTask.Instance;
+        }
+
+        var eventArgs = new MqttEnhancedAuthenticationEventArgs(authPacket, _adapter, cancellationToken);
+        return Options.EnhancedAuthenticationHandler.HandleEnhancedAuthenticationAsync(eventArgs);
     }
 
     Task ProcessReceivedDisconnectPacket(MqttDisconnectPacket disconnectPacket)
@@ -724,7 +735,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
         var pubAckPacket = await Request<MqttPubAckPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
-        return MqttClientResultFactory.PublishResult.Create(pubAckPacket);
+        return MqttClientPublishResultFactory.Create(pubAckPacket);
     }
 
     async Task<MqttClientPublishResult> PublishAtMostOnce(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -734,7 +745,7 @@ public sealed class MqttClient : Disposable, IMqttClient
             // No packet identifier is used for QoS 0 [3.3.2.2 Packet Identifier]
             await Send(publishPacket, cancellationToken).ConfigureAwait(false);
 
-            return MqttClientResultFactory.PublishResult.Create(null);
+            return MqttClientPublishResultFactory.Create(null);
         }
         catch (Exception exception)
         {
@@ -762,7 +773,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
         var pubCompPacket = await Request<MqttPubCompPacket>(pubRelPacket, cancellationToken).ConfigureAwait(false);
 
-        return MqttClientResultFactory.PublishResult.Create(pubRecPacket, pubCompPacket);
+        return MqttClientPublishResultFactory.Create(pubRecPacket, pubCompPacket);
     }
 
     async Task<MqttPacket> Receive(CancellationToken cancellationToken)
@@ -852,31 +863,29 @@ public sealed class MqttClient : Disposable, IMqttClient
             packetIdentifier = packetWithIdentifier.PacketIdentifier;
         }
 
-        using (var packetAwaitable = _packetDispatcher.AddAwaitable<TResponsePacket>(packetIdentifier))
+        using var packetAwaitable = _packetDispatcher.AddAwaitable<TResponsePacket>(packetIdentifier);
+        try
         {
-            try
+            await Send(requestPacket, cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            _logger.Warning(exception, "Error when sending {0} request packet", requestPacket.GetType().Name);
+            packetAwaitable.Fail(exception);
+        }
+
+        try
+        {
+            return await packetAwaitable.WaitOneAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            if (exception is MqttCommunicationTimedOutException)
             {
-                await Send(requestPacket, cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                _logger.Warning(exception, "Error when sending {0} request packet", requestPacket.GetType().Name);
-                packetAwaitable.Fail(exception);
+                _logger.Warning("Timeout while waiting for {0} response packet", typeof(TResponsePacket).Name);
             }
 
-            try
-            {
-                return await packetAwaitable.WaitOneAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch (Exception exception)
-            {
-                if (exception is MqttCommunicationTimedOutException)
-                {
-                    _logger.Warning("Timeout while waiting for {0} response packet", typeof(TResponsePacket).Name);
-                }
-
-                throw;
-            }
+            throw;
         }
     }
 
@@ -959,7 +968,7 @@ public sealed class MqttClient : Disposable, IMqttClient
                     await ProcessReceivedDisconnectPacket(disconnectPacket).ConfigureAwait(false);
                     break;
                 case MqttAuthPacket authPacket:
-                    await ProcessReceivedAuthPacket(authPacket).ConfigureAwait(false);
+                    await ProcessReceivedAuthPacket(authPacket, cancellationToken).ConfigureAwait(false);
                     break;
                 case MqttPingRespPacket _:
                     _packetDispatcher.TryDispatch(packet);
@@ -1018,11 +1027,13 @@ public sealed class MqttClient : Disposable, IMqttClient
 
                 if (timeWithoutPacketSent > keepAlivePeriod)
                 {
-                    using (var timeoutCancellationTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken))
-                    {
-                        timeoutCancellationTokenSource.CancelAfter(Options.Timeout);
-                        await PingAsync(timeoutCancellationTokenSource.Token).ConfigureAwait(false);
-                    }
+                    using var pingTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                    // We already reached the keep alive timeout. Due to the RFC part [MQTT-3.1.2-24] the server will wait another
+                    // 1/2 of the keep alive time. So we can also use this value as the timeout.
+                    pingTimeout.CancelAfter(keepAlivePeriod / 2);
+
+                    await PingAsync(pingTimeout.Token).ConfigureAwait(false);
                 }
 
                 // Wait a fixed time in all cases. Calculation of the remaining time is complicated
@@ -1041,9 +1052,9 @@ public sealed class MqttClient : Disposable, IMqttClient
 
             switch (exception)
             {
-                case OperationCanceledException _:
+                case OperationCanceledException:
                     return;
-                case MqttCommunicationException _:
+                case MqttCommunicationException:
                     _logger.Warning(exception, "Communication error while sending/receiving keep alive packets");
                     break;
                 default:

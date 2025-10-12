@@ -25,23 +25,21 @@ public static class Server_Intercepting_Samples
         var mqttServerFactory = new MqttServerFactory();
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
+        using var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
+        mqttServer.InterceptingPublishAsync += args =>
         {
-            mqttServer.InterceptingPublishAsync += args =>
-            {
-                // Here we only change the topic of the received application message.
-                // but also changing the payload etc. is required. Changing the QoS after
-                // transmitting is not supported and makes no sense at all.
-                args.ApplicationMessage.Topic += "/manipulated";
+            // Here we only change the topic of the received application message.
+            // but also changing the payload etc. is required. Changing the QoS after
+            // transmitting is not supported and makes no sense at all.
+            args.ApplicationMessage.Topic += "/manipulated";
 
-                return CompletedTask.Instance;
-            };
+            return CompletedTask.Instance;
+        };
 
-            await mqttServer.StartAsync();
+        await mqttServer.StartAsync();
 
-            Console.WriteLine("Press Enter to exit.");
-            Console.ReadLine();
-            await mqttServer.StopAsync();
-        }
+        Console.WriteLine("Press Enter to exit.");
+        Console.ReadLine();
+        await mqttServer.StopAsync();
     }
 }

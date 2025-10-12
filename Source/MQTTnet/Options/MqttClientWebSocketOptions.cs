@@ -13,6 +13,8 @@ public sealed class MqttClientWebSocketOptions : IMqttClientChannelOptions
 {
     public CookieContainer CookieContainer { get; set; }
 
+    public WebSocketDeflateOptions DangerousDeflateOptions { get; set; }
+
     public ICredentials Credentials { get; set; }
 
     /// <summary>
@@ -25,7 +27,7 @@ public sealed class MqttClientWebSocketOptions : IMqttClientChannelOptions
 
     public IDictionary<string, string> RequestHeaders { get; set; }
 
-    public ICollection<string> SubProtocols { get; set; } = new List<string> { "mqtt" };
+    public ICollection<string> SubProtocols { get; set; } = ["mqtt"];
 
     public MqttClientTlsOptions TlsOptions { get; set; } = new();
 

@@ -2,33 +2,31 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections;
 
-namespace MQTTnet.Server
+namespace MQTTnet.Server;
+
+public sealed class SessionDeletedEventArgs : EventArgs
 {
-    public sealed class SessionDeletedEventArgs : EventArgs
+    public SessionDeletedEventArgs(string id, string userName, IDictionary sessionItems)
     {
-        public SessionDeletedEventArgs(string id, string userName, IDictionary sessionItems)
-        {
-            Id = id ?? throw new ArgumentNullException(nameof(id));
-            UserName = userName;
-            SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
-        }
-
-        /// <summary>
-        ///     Gets the ID of the session.
-        /// </summary>
-        public string Id { get; }
-
-        /// <summary>
-        /// Gets the user name of the session.
-        /// </summary>
-        public string UserName { get; }
-
-        /// <summary>
-        ///     Gets or sets a key/value collection that can be used to share data within the scope of this session.
-        /// </summary>
-        public IDictionary SessionItems { get; }
+        Id = id ?? throw new ArgumentNullException(nameof(id));
+        UserName = userName;
+        SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
     }
+
+    /// <summary>
+    ///     Gets the ID of the session.
+    /// </summary>
+    public string Id { get; }
+
+    /// <summary>
+    /// Gets the user name of the session.
+    /// </summary>
+    public string UserName { get; }
+
+    /// <summary>
+    ///     Gets or sets a key/value collection that can be used to share data within the scope of this session.
+    /// </summary>
+    public IDictionary SessionItems { get; }
 }

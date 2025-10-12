@@ -6,58 +6,57 @@ using System;
 using System.Text;
 using MQTTnet.Diagnostics.Logger;
 
-namespace MQTTnet.TestApp
+namespace MQTTnet.TestApp;
+
+public static class MqttNetConsoleLogger
 {
-    public static class MqttNetConsoleLogger
+    static readonly object Lock = new();
+
+    public static void ForwardToConsole(MqttNetEventLogger logger)
     {
-        static readonly object _lock = new object();
+        ArgumentNullException.ThrowIfNull(logger);
 
-        public static void ForwardToConsole(MqttNetEventLogger logger)
+        logger.LogMessagePublished -= PrintToConsole;
+        logger.LogMessagePublished += PrintToConsole;
+    }
+
+    public static void PrintToConsole(string message, ConsoleColor color)
+    {
+        lock (Lock)
         {
-            ArgumentNullException.ThrowIfNull(logger);
+            var backupColor = Console.ForegroundColor;
+            Console.ForegroundColor = color;
+            Console.Write(message);
+            Console.ForegroundColor = backupColor;
+        }
+    }
 
-            logger.LogMessagePublished -= PrintToConsole;
-            logger.LogMessagePublished += PrintToConsole;
+    static void PrintToConsole(object sender, MqttNetLogMessagePublishedEventArgs e)
+    {
+        var output = new StringBuilder();
+        output.AppendLine($">> [{e.LogMessage.Timestamp:O}] [{e.LogMessage.ThreadId}] [{e.LogMessage.Source}] [{e.LogMessage.Level}]: {e.LogMessage.Message}");
+        if (e.LogMessage.Exception != null)
+        {
+            output.AppendLine(e.LogMessage.Exception.ToString());
         }
 
-        public static void PrintToConsole(string message, ConsoleColor color)
+        var color = ConsoleColor.Red;
+        switch (e.LogMessage.Level)
         {
-            lock (_lock)
-            {
-                var backupColor = Console.ForegroundColor;
-                Console.ForegroundColor = color;
-                Console.Write(message);
-                Console.ForegroundColor = backupColor;
-            }
+            case MqttNetLogLevel.Error:
+                color = ConsoleColor.Red;
+                break;
+            case MqttNetLogLevel.Warning:
+                color = ConsoleColor.Yellow;
+                break;
+            case MqttNetLogLevel.Info:
+                color = ConsoleColor.Green;
+                break;
+            case MqttNetLogLevel.Verbose:
+                color = ConsoleColor.Gray;
+                break;
         }
 
-        static void PrintToConsole(object sender, MqttNetLogMessagePublishedEventArgs e)
-        {
-            var output = new StringBuilder();
-            output.AppendLine($">> [{e.LogMessage.Timestamp:O}] [{e.LogMessage.ThreadId}] [{e.LogMessage.Source}] [{e.LogMessage.Level}]: {e.LogMessage.Message}");
-            if (e.LogMessage.Exception != null)
-            {
-                output.AppendLine(e.LogMessage.Exception.ToString());
-            }
-
-            var color = ConsoleColor.Red;
-            switch (e.LogMessage.Level)
-            {
-                case MqttNetLogLevel.Error:
-                    color = ConsoleColor.Red;
-                    break;
-                case MqttNetLogLevel.Warning:
-                    color = ConsoleColor.Yellow;
-                    break;
-                case MqttNetLogLevel.Info:
-                    color = ConsoleColor.Green;
-                    break;
-                case MqttNetLogLevel.Verbose:
-                    color = ConsoleColor.Gray;
-                    break;
-            }
-
-            PrintToConsole(output.ToString(), color);
-        }
+        PrintToConsole(output.ToString(), color);
     }
 }

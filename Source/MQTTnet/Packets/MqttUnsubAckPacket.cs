@@ -6,34 +6,33 @@ using System.Collections.Generic;
 using System.Linq;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Packets
+namespace MQTTnet.Packets;
+
+public sealed class MqttUnsubAckPacket : MqttPacketWithIdentifier
 {
-    public sealed class MqttUnsubAckPacket : MqttPacketWithIdentifier
+    /// <summary>
+    ///     Added in MQTTv5.
+    /// </summary>
+    public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; }
+
+    /// <summary>
+    ///     Added in MQTTv5.
+    /// </summary>
+    public string ReasonString { get; set; }
+
+    /// <summary>
+    ///     Added in MQTTv5.
+    /// </summary>
+    public List<MqttUserProperty> UserProperties { get; set; }
+
+    public override string ToString()
     {
-        /// <summary>
-        ///     Added in MQTTv5.
-        /// </summary>
-        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; }
-
-        /// <summary>
-        ///     Added in MQTTv5.
-        /// </summary>
-        public string ReasonString { get; set; }
-
-        /// <summary>
-        ///     Added in MQTTv5.
-        /// </summary>
-        public List<MqttUserProperty> UserProperties { get; set; }
-
-        public override string ToString()
+        var reasonCodesText = string.Empty;
+        if (ReasonCodes != null)
         {
-            var reasonCodesText = string.Empty;
-            if (ReasonCodes != null)
-            {
-                reasonCodesText = string.Join(",", ReasonCodes?.Select(f => f.ToString()));
-            }
-
-            return $"UnsubAck: [PacketIdentifier={PacketIdentifier}] [ReasonCodes={reasonCodesText}] [ReasonString={ReasonString}]";
+            reasonCodesText = string.Join(",", ReasonCodes?.Select(f => f.ToString()));
         }
+
+        return $"UnsubAck: [PacketIdentifier={PacketIdentifier}] [ReasonCodes={reasonCodesText}] [ReasonString={ReasonString}]";
     }
 }

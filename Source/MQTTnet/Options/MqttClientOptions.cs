@@ -13,7 +13,7 @@ namespace MQTTnet;
 public sealed class MqttClientOptions
 {
     /// <summary>
-    ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
+    ///     Usually the MQTT packets can be sent partially. This is done by using multiple TCP packets
     ///     or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
     ///     will close the connection when receiving such packets. If such a service is used this flag must
     ///     be set to _false_.
@@ -38,7 +38,7 @@ public sealed class MqttClientOptions
     ///     Gets or sets a value indicating whether clean sessions are used or not.
     ///     When a client connects to a broker it can connect using either a non persistent connection (clean session) or a
     ///     persistent connection.
-    ///     With a non persistent connection the broker doesn't store any subscription information or undelivered messages for
+    ///     With a non-persistent connection the broker doesn't store any subscription information or undelivered messages for
     ///     the client.
     ///     This mode is ideal when the client only publishes messages.
     ///     It can also connect as a durable client using a persistent connection.
@@ -54,7 +54,12 @@ public sealed class MqttClientOptions
 
     public IMqttClientCredentialsProvider Credentials { get; set; }
 
-    public IMqttExtendedAuthenticationExchangeHandler ExtendedAuthenticationExchangeHandler { get; set; }
+    /// <summary>
+    ///     Gets or sets the handler for AUTH packets.
+    ///     This can happen when connecting or at any time while being already connected.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public IMqttEnhancedAuthenticationHandler EnhancedAuthenticationHandler { get; set; }
 
     /// <summary>
     ///     Gets or sets the keep alive period.
@@ -80,7 +85,7 @@ public sealed class MqttClientOptions
 
     /// <summary>
     ///     Gets or sets the receive maximum.
-    ///     This gives the maximum length of the receive messages.
+    ///     This gives the maximum length of the received messages.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
     public ushort ReceiveMaximum { get; set; }

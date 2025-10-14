@@ -126,17 +126,12 @@ public sealed class MqttClient : Disposable, IMqttClient
 
             _unexpectedDisconnectPacket = null;
 
-            if (cancellationToken.CanBeCanceled)
-            {
-                connectResult = await ConnectInternal(adapter, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                // Fall back to the general timeout specified in the options if the user passed
-                // CancellationToken.None or similar.
-                using var timeout = new CancellationTokenSource(Options.Timeout);
-                connectResult = await ConnectInternal(adapter, timeout.Token).ConfigureAwait(false);
-            }
+            using var timeoutCts = cancellationToken.CanBeCanceled
+                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+                : new CancellationTokenSource();
+
+            timeoutCts.CancelAfter(Options.Timeout);
+            connectResult = await ConnectInternal(adapter, timeoutCts.Token).ConfigureAwait(false);
 
             if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
             {
@@ -211,15 +206,12 @@ public sealed class MqttClient : Disposable, IMqttClient
             // must be thrown to let the caller know that the disconnect was not clean.
             var disconnectPacket = MqttDisconnectPacketFactory.Create(options);
 
-            if (cancellationToken.CanBeCanceled)
-            {
-                await Send(disconnectPacket, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                using var timeout = new CancellationTokenSource(Options.Timeout);
-                await Send(disconnectPacket, timeout.Token).ConfigureAwait(false);
-            }
+            using var timeoutCts = cancellationToken.CanBeCanceled
+                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+                : new CancellationTokenSource();
+
+            timeoutCts.CancelAfter(Options.Timeout);
+            await Send(disconnectPacket, timeoutCts.Token).ConfigureAwait(false);
         }
         finally
         {
@@ -234,15 +226,12 @@ public sealed class MqttClient : Disposable, IMqttClient
         ThrowIfDisposed();
         ThrowIfNotConnected();
 
-        if (cancellationToken.CanBeCanceled)
-        {
-            await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            using var timeout = new CancellationTokenSource(Options.Timeout);
-            await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeout.Token).ConfigureAwait(false);
-        }
+        using var timeoutCts = cancellationToken.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+            : new CancellationTokenSource();
+
+        timeoutCts.CancelAfter(Options.Timeout);
+        await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeoutCts.Token).ConfigureAwait(false);
     }
 
     public Task<MqttClientPublishResult> PublishAsync(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken = default)
@@ -322,16 +311,12 @@ public sealed class MqttClient : Disposable, IMqttClient
         var subscribePacket = MqttSubscribePacketFactory.Create(options);
         subscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-        MqttSubAckPacket subAckPacket;
-        if (cancellationToken.CanBeCanceled)
-        {
-            subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            using var timeout = new CancellationTokenSource(Options.Timeout);
-            subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, timeout.Token).ConfigureAwait(false);
-        }
+        using var timeoutCts = cancellationToken.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+            : new CancellationTokenSource();
+
+        timeoutCts.CancelAfter(Options.Timeout);
+        var subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, timeoutCts.Token).ConfigureAwait(false);
 
         return MqttClientSubscribeResultFactory.Create(subscribePacket, subAckPacket);
     }
@@ -356,16 +341,12 @@ public sealed class MqttClient : Disposable, IMqttClient
         var unsubscribePacket = MqttUnsubscribePacketFactory.Create(options);
         unsubscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-        MqttUnsubAckPacket unsubAckPacket;
-        if (cancellationToken.CanBeCanceled)
-        {
-            unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, cancellationToken).ConfigureAwait(false);
-        }
-        else
-        {
-            using var timeout = new CancellationTokenSource(Options.Timeout);
-            unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, timeout.Token).ConfigureAwait(false);
-        }
+        using var timeoutCts = cancellationToken.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+            : new CancellationTokenSource();
+
+        timeoutCts.CancelAfter(Options.Timeout);
+        var unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, timeoutCts.Token).ConfigureAwait(false);
 
         return MqttClientUnsubscribeResultFactory.Create(unsubscribePacket, unsubAckPacket);
     }

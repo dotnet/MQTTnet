@@ -126,11 +126,7 @@ public sealed class MqttClient : Disposable, IMqttClient
 
             _unexpectedDisconnectPacket = null;
 
-            using var timeoutCts = cancellationToken.CanBeCanceled
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                : new CancellationTokenSource();
-
-            timeoutCts.CancelAfter(Options.Timeout);
+            using var timeoutCts = CreateTimeoutCancellationTokenSource(cancellationToken);
             connectResult = await ConnectInternal(adapter, timeoutCts.Token).ConfigureAwait(false);
 
             if (connectResult.ResultCode != MqttClientConnectResultCode.Success)
@@ -206,11 +202,7 @@ public sealed class MqttClient : Disposable, IMqttClient
             // must be thrown to let the caller know that the disconnect was not clean.
             var disconnectPacket = MqttDisconnectPacketFactory.Create(options);
 
-            using var timeoutCts = cancellationToken.CanBeCanceled
-                ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-                : new CancellationTokenSource();
-
-            timeoutCts.CancelAfter(Options.Timeout);
+            using var timeoutCts = CreateTimeoutCancellationTokenSource(cancellationToken);
             await Send(disconnectPacket, timeoutCts.Token).ConfigureAwait(false);
         }
         finally
@@ -226,11 +218,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         ThrowIfDisposed();
         ThrowIfNotConnected();
 
-        using var timeoutCts = cancellationToken.CanBeCanceled
-            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-            : new CancellationTokenSource();
-
-        timeoutCts.CancelAfter(Options.Timeout);
+        using var timeoutCts = CreateTimeoutCancellationTokenSource(cancellationToken);
         await Request<MqttPingRespPacket>(MqttPingReqPacket.Instance, timeoutCts.Token).ConfigureAwait(false);
     }
 
@@ -311,11 +299,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         var subscribePacket = MqttSubscribePacketFactory.Create(options);
         subscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-        using var timeoutCts = cancellationToken.CanBeCanceled
-            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-            : new CancellationTokenSource();
-
-        timeoutCts.CancelAfter(Options.Timeout);
+        using var timeoutCts = CreateTimeoutCancellationTokenSource(cancellationToken);
         var subAckPacket = await Request<MqttSubAckPacket>(subscribePacket, timeoutCts.Token).ConfigureAwait(false);
 
         return MqttClientSubscribeResultFactory.Create(subscribePacket, subAckPacket);
@@ -341,11 +325,7 @@ public sealed class MqttClient : Disposable, IMqttClient
         var unsubscribePacket = MqttUnsubscribePacketFactory.Create(options);
         unsubscribePacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
-        using var timeoutCts = cancellationToken.CanBeCanceled
-            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
-            : new CancellationTokenSource();
-
-        timeoutCts.CancelAfter(Options.Timeout);
+        using var timeoutCts = CreateTimeoutCancellationTokenSource(cancellationToken);
         var unsubAckPacket = await Request<MqttUnsubAckPacket>(unsubscribePacket, timeoutCts.Token).ConfigureAwait(false);
 
         return MqttClientUnsubscribeResultFactory.Create(unsubscribePacket, unsubAckPacket);
@@ -470,6 +450,16 @@ public sealed class MqttClient : Disposable, IMqttClient
             _packetDispatcher?.Dispose();
             _packetDispatcher = null;
         }
+    }
+
+    CancellationTokenSource CreateTimeoutCancellationTokenSource(CancellationToken cancellationToken)
+    {
+        var timeoutCts = cancellationToken.CanBeCanceled
+            ? CancellationTokenSource.CreateLinkedTokenSource(cancellationToken)
+            : new CancellationTokenSource();
+
+        timeoutCts.CancelAfter(Options.Timeout);
+        return timeoutCts;
     }
 
     MqttClientConnectionStatus CompareExchangeConnectionStatus(MqttClientConnectionStatus value, MqttClientConnectionStatus comparand)

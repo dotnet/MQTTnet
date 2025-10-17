@@ -9,8 +9,8 @@ namespace MQTTnet.Server.Internal;
 
 public sealed class MqttRetainedMessagesManager
 {
-    readonly Dictionary<string, MqttApplicationMessage> _messages = new Dictionary<string, MqttApplicationMessage>(4096);
-    readonly AsyncLock _storageAccessLock = new AsyncLock();
+    readonly Dictionary<string, MqttApplicationMessage> _messages = new(4096);
+    readonly AsyncLock _storageAccessLock = new();
 
     readonly MqttServerEventContainer _eventContainer;
     readonly MqttNetSourceLogger _logger;
@@ -61,6 +61,7 @@ public sealed class MqttRetainedMessagesManager
 
             lock (_messages)
             {
+                var hasHandlers = _eventContainer.RetainedMessageChangedEvent.HasHandlers;
                 var payload = applicationMessage.Payload;
                 var hasPayload = payload.Length > 0;
 
@@ -86,10 +87,14 @@ public sealed class MqttRetainedMessagesManager
                         }
                     }
 
+                    if (saveIsRequired && hasHandlers)
+                    {
+                        messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
+                    }
                     _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
 
-                if (saveIsRequired)
+                if (saveIsRequired && hasHandlers)
                 {
                     messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
                 }

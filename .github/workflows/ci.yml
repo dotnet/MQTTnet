@@ -23,9 +23,10 @@ jobs:
 
       - name: Load strong name certificate
         run: |
-          $secret = '${{ secrets.SNC_BASE64 }}'
-          $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
-          Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
+          echo "$SNC_BASE64" | base64 --decode > "${{ github.workspace }}/certificate.snk"
+        shell: bash
+        env:
+          SNC_BASE64: ${{ secrets.SNC_BASE64 }}
 
       - name: Build package
         run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}${{ env.PACKAGE_SUFFIX }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk

@@ -3,7 +3,7 @@ name: CI
 on: [push, pull_request]
 
 env:
-  VERSION: "5.1.0.${{github.run_number}}"
+  VERSION: "5.0.2.${{github.run_number}}"
   PACKAGE_SUFFIX: ""
 
 jobs:
@@ -21,8 +21,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Load strong name certificate
+        run: |
+          $secret = '${{ secrets.SNC_BASE64 }}'
+          $decoded = [System.Convert]::FromBase64CharArray($secret, 0, $secret.Length)
+          Set-Content -Path ${{ github.workspace }}\certificate.snk -Value $decoded -AsByteStream
+
       - name: Build package
-        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}${{ env.PACKAGE_SUFFIX }}
+        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}${{ env.PACKAGE_SUFFIX }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
 
       - name: Upload nuget packages
         uses: actions/upload-artifact@v4

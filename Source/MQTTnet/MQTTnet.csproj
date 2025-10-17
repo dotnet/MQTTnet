@@ -55,13 +55,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <None Include="..\..\Images\nuget.png">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
-    </ItemGroup>
-
-    <ItemGroup>
+        <None Include="..\..\Images\nuget.png" Pack="true" PackagePath="" />
         <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 

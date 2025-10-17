@@ -94,7 +94,7 @@ public sealed class QoS_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(1, eventArgs.Count);
+        Assert.HasCount(1, eventArgs);
 
         var firstEvent = eventArgs[0];
 

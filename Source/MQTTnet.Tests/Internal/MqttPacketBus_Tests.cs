@@ -96,13 +96,13 @@ public sealed class MqttPacketBus_Tests
         Assert.AreEqual(3, bus.TotalItemsCount);
 
         var exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Control);
-        Assert.AreEqual(0, exportedPackets.Count);
+        Assert.HasCount(0, exportedPackets);
 
         exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Health);
-        Assert.AreEqual(0, exportedPackets.Count);
+        Assert.HasCount(0, exportedPackets);
 
         exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Data);
-        Assert.AreEqual(3, exportedPackets.Count);
+        Assert.HasCount(3, exportedPackets);
 
         Assert.AreEqual(3, bus.TotalItemsCount);
     }
@@ -137,12 +137,15 @@ public sealed class MqttPacketBus_Tests
     }
 
     [TestMethod]
-    [ExpectedException(typeof(TaskCanceledException))]
-    public async Task Wait_With_Empty_Bus()
+    public Task Wait_With_Empty_Bus()
     {
-        var bus = new MqttPacketBus();
+        return Assert.ThrowsExactlyAsync<TaskCanceledException>(async () =>
+        {
+            var bus = new MqttPacketBus();
 
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-        await bus.DequeueItemAsync(timeout.Token);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            await bus.DequeueItemAsync(timeout.Token);
+        });
+
     }
 }

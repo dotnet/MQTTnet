@@ -32,19 +32,21 @@ public class CrossPlatformSocket_Tests
 
         var responseText = Encoding.UTF8.GetString(buffer, 0, length);
 
-        Assert.IsTrue(responseText.Contains("HTTP/1.1"));
+        Assert.Contains("HTTP/1.1", responseText);
     }
 
     [TestMethod]
-    [ExpectedException(typeof(OperationCanceledException))]
-    public async Task Try_Connect_Invalid_Host()
+    public Task Try_Connect_Invalid_Host()
     {
-        var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
+        return Assert.ThrowsExactlyAsync<OperationCanceledException>(async () =>
+        {
+            var crossPlatformSocket = new CrossPlatformSocket(ProtocolType.Tcp);
 
-        var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        cancellationToken.Token.Register(() => crossPlatformSocket.Dispose());
+            var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            cancellationToken.Token.Register(() => crossPlatformSocket.Dispose());
 
-        await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.github.com", 54321), cancellationToken.Token).ConfigureAwait(false);
+            await crossPlatformSocket.ConnectAsync(new DnsEndPoint("www.github.com", 54321), cancellationToken.Token);
+        });
     }
 
     // [TestMethod]

@@ -165,7 +165,7 @@ public sealed class Tls_Tests : BaseTestClass
         Assert.AreEqual(4, firstClientReceivedCount);
         Assert.AreEqual(2, secondClientReceivedCount);
 
-        await server.StopAsync().ConfigureAwait(false);
+        await server.StopAsync();
     }
 
     static async Task<IMqttClient> ConnectClientAsync(TestEnvironment testEnvironment, Func<MqttClientCertificateValidationEventArgs, bool> certValidator)
@@ -180,7 +180,7 @@ public sealed class Tls_Tests : BaseTestClass
                 });
 
         var clientOptions = clientOptionsBuilder.Build();
-        return await testEnvironment.ConnectClient(clientOptions).ConfigureAwait(false);
+        return await testEnvironment.ConnectClient(clientOptions);
     }
 
     sealed class CertificateProvider : ICertificateProvider

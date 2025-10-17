@@ -157,7 +157,7 @@ public sealed class MqttTopicFilterComparer_Tests
         if (expectedResult == MqttTopicFilterCompareResult.IsMatch)
         {
             // If it matches then the hash evaluation should also indicate a match
-            Assert.IsTrue((topicHash & filterTopicHashMask) == filterTopicHash, "Incorrect topic hash (is equal)");
+            Assert.AreEqual(topicHash & filterTopicHashMask, filterTopicHash, "Incorrect topic hash (is equal)");
         }
     }
 }

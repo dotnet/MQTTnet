@@ -16,31 +16,39 @@ namespace MQTTnet.Tests.Formatter;
 public sealed class MqttBufferReader_Tests
 {
     [TestMethod]
-    [ExpectedException(typeof(MqttProtocolViolationException), "Expected at least 4 bytes but there are only 3 bytes")]
     public void Fire_Exception_If_Not_Enough_Data()
     {
-        var buffer = new byte[] { 0, 1, 2 };
+        Assert.ThrowsExactly<MqttProtocolViolationException>(
+            () =>
+            {
+                var buffer = new byte[] { 0, 1, 2 };
 
-        var reader = new MqttBufferReader();
+                var reader = new MqttBufferReader();
 
-        reader.SetBuffer(buffer, 0, 3);
+                reader.SetBuffer(buffer, 0, 3);
 
-        // 1 byte is missing.
-        reader.ReadFourByteInteger();
+                // 1 byte is missing.
+                reader.ReadFourByteInteger();
+            },
+            "Expected at least 4 bytes but there are only 3 bytes");
     }
 
     [TestMethod]
-    [ExpectedException(typeof(MqttProtocolViolationException), "Expected at least 4 bytes but there are only 3 bytes")]
     public void Fire_Exception_If_Not_Enough_Data_With_Longer_Buffer()
     {
-        var buffer = new byte[] { 0, 1, 2, 3, 4, 5, 6 };
+        Assert.ThrowsExactly<MqttProtocolViolationException>(
+            () =>
+            {
+                var buffer = new byte[] { 0, 1, 2, 3, 4, 5, 6 };
 
-        var reader = new MqttBufferReader();
+                var reader = new MqttBufferReader();
 
-        reader.SetBuffer(buffer, 0, 3);
+                reader.SetBuffer(buffer, 0, 3);
 
-        // 1 byte is missing.
-        reader.ReadFourByteInteger();
+                // 1 byte is missing.
+                reader.ReadFourByteInteger();
+            },
+            "Expected at least 4 bytes but there are only 3 bytes");
     }
 
     [TestMethod]
@@ -68,9 +76,8 @@ public sealed class MqttBufferReader_Tests
 
         Assert.IsTrue(reader.EndOfStream);
         Assert.AreEqual(0, reader.BytesLeft);
-        Assert.AreEqual(5, remainingData.Length);
+        Assert.HasCount(5, remainingData);
     }
-
 
     [TestMethod]
     public void Read_Various_Positions_and_Offsets()

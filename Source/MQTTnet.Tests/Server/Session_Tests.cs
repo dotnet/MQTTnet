@@ -59,13 +59,13 @@ public sealed class Session_Tests : BaseTestClass
             .Build();
 
 
-        var result = await client2.ConnectAsync(options).ConfigureAwait(false);
+        var result = await client2.ConnectAsync(options);
 
         await client2.DisconnectAsync();
 
         // Session should NOT be present for MQTT v311 and initial CleanSession == true
 
-        Assert.IsTrue(!result.IsSessionPresent, "Session present");
+        Assert.IsFalse(result.IsSessionPresent, "Session present");
     }
 
     [TestMethod]
@@ -85,7 +85,7 @@ public sealed class Session_Tests : BaseTestClass
         var options = testEnvironment.CreateDefaultClientOptionsBuilder().WithClientId("Client1").WithCleanSession(false).WithSessionExpiryInterval(3).Build();
 
         var connectResult = await c1.ConnectAsync(options);
-        Assert.AreEqual(false, connectResult.IsSessionPresent);
+        Assert.IsFalse(connectResult.IsSessionPresent);
     }
 
     [TestMethod]
@@ -131,9 +131,9 @@ public sealed class Session_Tests : BaseTestClass
         await testEnvironment.ConnectClient();
 
         var sessionStatus = await testEnvironment.Server.GetSessionsAsync();
-        var session = sessionStatus.First();
+        var session = sessionStatus[0];
 
-        Assert.AreEqual(true, session.Items["can_subscribe_x"]);
+        Assert.IsTrue((bool)session.Items["can_subscribe_x"]!);
     }
 
     [TestMethod]
@@ -158,7 +158,7 @@ public sealed class Session_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(1, connectedClients.Count);
+        Assert.HasCount(1, connectedClients);
 
         var option2 = new MqttClientOptionsBuilder().WithClientId("2").WithKeepAlivePeriod(TimeSpan.FromSeconds(10));
         var sendClient = await testEnvironment.ConnectClient(option2);
@@ -166,7 +166,7 @@ public sealed class Session_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(true, hasReceive);
+        Assert.IsTrue(hasReceive);
         return;
 
         void OnReceive()
@@ -348,7 +348,7 @@ public sealed class Session_Tests : BaseTestClass
     {
         try
         {
-            var client = await testEnvironment.ConnectClient(options).ConfigureAwait(false);
+            var client = await testEnvironment.ConnectClient(options);
 
             client.ApplicationMessageReceivedAsync += _ =>
             {
@@ -357,7 +357,7 @@ public sealed class Session_Tests : BaseTestClass
             };
 
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
-            await client.SubscribeAsync("aaa", MqttQualityOfServiceLevel.AtMostOnce, timeout.Token).ConfigureAwait(false);
+            await client.SubscribeAsync("aaa", MqttQualityOfServiceLevel.AtMostOnce, timeout.Token);
 
             return client;
         }

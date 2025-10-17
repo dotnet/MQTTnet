@@ -42,20 +42,22 @@ public sealed class MqttPacketWriter_Tests
         reader.SetBuffer(buffer, 0, writer.Length);
 
         Assert.AreEqual("AString", reader.ReadString());
-        Assert.IsTrue(reader.ReadByte() == 1);
-        Assert.IsTrue(reader.ReadByte() == 0);
-        Assert.IsTrue(reader.ReadByte() == 1);
+        Assert.AreEqual(1, reader.ReadByte());
+        Assert.AreEqual(0, reader.ReadByte());
+        Assert.AreEqual(1, reader.ReadByte());
         Assert.AreEqual(1234U, reader.ReadVariableByteInteger());
         Assert.AreEqual(9876U, reader.ReadVariableByteInteger());
     }
 
     [TestMethod]
-    [ExpectedException(typeof(MqttProtocolViolationException))]
     public void Throw_If_String_Too_Long()
     {
-        var writer = new MqttBufferWriter(4096, 65535);
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() =>
+        {
+            var writer = new MqttBufferWriter(4096, 65535);
 
-        writer.WriteString(string.Empty.PadLeft(65536));
+            writer.WriteString(string.Empty.PadLeft(65536));
+        });
     }
 
     [TestMethod]

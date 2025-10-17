@@ -113,7 +113,7 @@ public sealed class Server_Tests : BaseTestClass
 
         // Session should not be present
 
-        Assert.IsTrue(!result.IsSessionPresent, "Session is present when it should not");
+        Assert.IsFalse(result.IsSessionPresent, "Session is present when it should not");
     }
 
     [TestMethod]
@@ -163,7 +163,7 @@ public sealed class Server_Tests : BaseTestClass
 
         // Session should be present
 
-        Assert.IsTrue(!result3.IsSessionPresent, "Session is present when it should not");
+        Assert.IsFalse(result3.IsSessionPresent, "Session is present when it should not");
     }
 
     [TestMethod]
@@ -194,7 +194,7 @@ public sealed class Server_Tests : BaseTestClass
 
         // Test client should be connected now
 
-        Assert.IsTrue(testClientId != null);
+        Assert.IsNotNull(testClientId);
 
         // Have the server disconnect the client with AdministrativeAction reason
 

@@ -39,7 +39,7 @@ public sealed class PacketInspection_Tests : BaseTestClass
 
         await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-        Assert.AreEqual(2, packets.Count);
+        Assert.HasCount(2, packets);
         Assert.AreEqual("Outbound:ECwABE1RVFQEAgAPACBJbnNwZWN0X0NsaWVudF9QYWNrZXRzX0NMSUVOVF9JRA==", packets[0]); // CONNECT
         Assert.AreEqual("Inbound:IAIAAA==", packets[1]); // CONNACK
     }

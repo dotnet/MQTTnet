@@ -21,80 +21,74 @@ public sealed class AsyncLock_Tests
         var @lock = new AsyncLock();
 
         // This call will not yet "release" the lock due to missing _using_.
-        var releaser = await @lock.EnterAsync().ConfigureAwait(false);
+        var releaser = await @lock.EnterAsync();
 
         var counter = 0;
 
         Debug.WriteLine("Prepared locked lock.");
 
-        _ = Task.Run(
-            async () =>
+        _ = Task.Run(async () =>
+        {
+            // SHOULD GET TIMEOUT!
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            using (await @lock.EnterAsync(timeout.Token))
             {
-                // SHOULD GET TIMEOUT!
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
-                using (await @lock.EnterAsync(timeout.Token))
-                {
-                    Debug.WriteLine("Task 1 incremented");
-                    counter++;
-                }
-            });
+                Debug.WriteLine("Task 1 incremented");
+                counter++;
+            }
+        });
 
-        _ = Task.Run(
-            async () =>
+        _ = Task.Run(async () =>
+        {
+            // SHOULD GET TIMEOUT!
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            using (await @lock.EnterAsync(timeout.Token))
             {
-                // SHOULD GET TIMEOUT!
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                using (await @lock.EnterAsync(timeout.Token))
-                {
-                    Debug.WriteLine("Task 2 incremented");
-                    counter++;
-                }
-            });
+                Debug.WriteLine("Task 2 incremented");
+                counter++;
+            }
+        });
 
-        _ = Task.Run(
-            async () =>
+        _ = Task.Run(async () =>
+        {
+            // SHOULD GET TIMEOUT!
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            using (await @lock.EnterAsync(timeout.Token))
             {
-                // SHOULD GET TIMEOUT!
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                using (await @lock.EnterAsync(timeout.Token))
-                {
-                    Debug.WriteLine("Task 3 incremented");
-                    counter++;
-                }
-            });
+                Debug.WriteLine("Task 3 incremented");
+                counter++;
+            }
+        });
 
-        _ = Task.Run(
-            async () =>
+        _ = Task.Run(async () =>
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(4));
+            using (await @lock.EnterAsync(timeout.Token))
             {
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(4));
-                using (await @lock.EnterAsync(timeout.Token))
-                {
-                    Debug.WriteLine("Task 4 incremented");
-                    counter++;
-                }
-            });
+                Debug.WriteLine("Task 4 incremented");
+                counter++;
+            }
+        });
 
-        _ = Task.Run(
-            async () =>
+        _ = Task.Run(async () =>
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            using (await @lock.EnterAsync(timeout.Token))
             {
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-                using (await @lock.EnterAsync(timeout.Token))
-                {
-                    Debug.WriteLine("Task 5 incremented");
-                    counter++;
-                }
-            });
+                Debug.WriteLine("Task 5 incremented");
+                counter++;
+            }
+        });
 
-        _ = Task.Run(
-            async () =>
+        _ = Task.Run(async () =>
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+            using (await @lock.EnterAsync(timeout.Token))
             {
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(6));
-                using (await @lock.EnterAsync(timeout.Token))
-                {
-                    Debug.WriteLine("Task 6 incremented");
-                    counter++;
-                }
-            });
+                Debug.WriteLine("Task 6 incremented");
+                counter++;
+            }
+        });
 
         Debug.WriteLine("Delay before release...");
         await Task.Delay(TimeSpan.FromSeconds(3.1));
@@ -104,6 +98,49 @@ public sealed class AsyncLock_Tests
         await Task.Delay(TimeSpan.FromSeconds(6.1));
 
         Assert.AreEqual(3, counter);
+    }
+
+    [TestMethod]
+    public void Lock_10_Parallel_Tasks_With_Dispose_Doesnt_Lockup()
+    {
+        const int ThreadsCount = 10;
+
+        var threads = new Task[ThreadsCount];
+        var @lock = new AsyncLock();
+        var globalI = 0;
+        for (var i = 0; i < ThreadsCount; i++)
+        {
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            threads[i] = Task.Run(async () =>
+                {
+                    using (await @lock.EnterAsync())
+                    {
+                        var localI = globalI;
+                        await Task.Delay(10); // Increase the chance for wrong data.
+                        localI++;
+                        globalI = localI;
+                    }
+                })
+                .ContinueWith(x =>
+                {
+                    if (globalI == 5)
+                    {
+                        @lock.Dispose();
+                        @lock = new AsyncLock();
+                    }
+
+                    if (x.Exception != null)
+                    {
+                        Debug.WriteLine(x.Exception.GetBaseException().GetType().Name);
+                    }
+                });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+        }
+
+        Task.WaitAll(threads);
+
+        // Expect only 6 because the others are failing due to disposal (if (globalI == 5)).
+        Assert.AreEqual(6, globalI);
     }
 
     [TestMethod]
@@ -118,67 +155,21 @@ public sealed class AsyncLock_Tests
         for (var i = 0; i < taskCount; i++)
         {
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            tasks[i] = Task.Run(
-                async () =>
+            tasks[i] = Task.Run(async () =>
+            {
+                using (await @lock.EnterAsync())
                 {
-                    using (await @lock.EnterAsync())
-                    {
-                        var localI = globalI;
-                        await Task.Delay(5); // Increase the chance for wrong data.
-                        localI++;
-                        globalI = localI;
-                    }
-                });
+                    var localI = globalI;
+                    await Task.Delay(5); // Increase the chance for wrong data.
+                    localI++;
+                    globalI = localI;
+                }
+            });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
         }
 
         Task.WaitAll(tasks);
         Assert.AreEqual(taskCount, globalI);
-    }
-
-    [TestMethod]
-    public void Lock_10_Parallel_Tasks_With_Dispose_Doesnt_Lockup()
-    {
-        const int ThreadsCount = 10;
-
-        var threads = new Task[ThreadsCount];
-        var @lock = new AsyncLock();
-        var globalI = 0;
-        for (var i = 0; i < ThreadsCount; i++)
-        {
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-            threads[i] = Task.Run(
-                    async () =>
-                    {
-                        using (await @lock.EnterAsync())
-                        {
-                            var localI = globalI;
-                            await Task.Delay(10); // Increase the chance for wrong data.
-                            localI++;
-                            globalI = localI;
-                        }
-                    })
-                .ContinueWith(
-                    x =>
-                    {
-                        if (globalI == 5)
-                        {
-                            @lock.Dispose();
-                            @lock = new AsyncLock();
-                        }
-
-                        if (x.Exception != null)
-                        {
-                            Debug.WriteLine(x.Exception.GetBaseException().GetType().Name);
-                        }
-                    });
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        }
-
-        Task.WaitAll(threads);
-
-        // Expect only 6 because the others are failing due to disposal (if (globalI == 5)).
-        Assert.AreEqual(6, globalI);
     }
 
     [TestMethod]
@@ -189,7 +180,7 @@ public sealed class AsyncLock_Tests
         var @lock = new AsyncLock();
         for (var i = 0; i < 100; i++)
         {
-            using (await @lock.EnterAsync().ConfigureAwait(false))
+            using (await @lock.EnterAsync())
             {
                 sum++;
             }
@@ -199,16 +190,18 @@ public sealed class AsyncLock_Tests
     }
 
     [TestMethod]
-    [ExpectedException(typeof(TaskCanceledException))]
-    public async Task Test_Cancellation()
+    public Task Test_Cancellation()
     {
-        var @lock = new AsyncLock();
+        return Assert.ThrowsExactlyAsync<TaskCanceledException>(async () =>
+        {
+            var @lock = new AsyncLock();
 
-        // This call will never "release" the lock due to missing _using_.
-        await @lock.EnterAsync().ConfigureAwait(false);
+            // This call will never "release" the lock due to missing _using_.
+            await @lock.EnterAsync();
 
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-        await @lock.EnterAsync(cts.Token).ConfigureAwait(false);
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+            await @lock.EnterAsync(cts.Token);
+        });
     }
 
     [TestMethod]
@@ -216,13 +209,13 @@ public sealed class AsyncLock_Tests
     {
         var asyncLock = new AsyncLock();
 
-        var releaser = await asyncLock.EnterAsync().ConfigureAwait(false);
+        var releaser = await asyncLock.EnterAsync();
 
         try
         {
             using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
             {
-                await asyncLock.EnterAsync(timeout.Token).ConfigureAwait(false);
+                await asyncLock.EnterAsync(timeout.Token);
             }
 
             Assert.Fail("Exception should be thrown!");
@@ -233,7 +226,7 @@ public sealed class AsyncLock_Tests
 
         releaser.Dispose();
 
-        using (await asyncLock.EnterAsync(CancellationToken.None).ConfigureAwait(false))
+        using (await asyncLock.EnterAsync(CancellationToken.None))
         {
             // When the method finished, the thread got access.
         }
@@ -245,12 +238,12 @@ public sealed class AsyncLock_Tests
         var @lock = new AsyncLock();
 
         // This call will not yet "release" the lock due to missing _using_.
-        var releaser = await @lock.EnterAsync().ConfigureAwait(false);
+        var releaser = await @lock.EnterAsync();
 
         try
         {
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-            await @lock.EnterAsync(cts.Token).ConfigureAwait(false);
+            await @lock.EnterAsync(cts.Token);
         }
         catch (OperationCanceledException)
         {
@@ -260,15 +253,15 @@ public sealed class AsyncLock_Tests
         releaser.Dispose();
 
         // Regular usage after cancellation.
-        using (await @lock.EnterAsync().ConfigureAwait(false))
+        using (await @lock.EnterAsync())
         {
         }
 
-        using (await @lock.EnterAsync().ConfigureAwait(false))
+        using (await @lock.EnterAsync())
         {
         }
 
-        using (await @lock.EnterAsync().ConfigureAwait(false))
+        using (await @lock.EnterAsync())
         {
         }
     }

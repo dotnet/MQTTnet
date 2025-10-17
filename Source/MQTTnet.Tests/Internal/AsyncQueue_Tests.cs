@@ -53,7 +53,7 @@ public class AsyncQueue_Tests
             success = (await queue.TryDequeueAsync(cancellationTokenSource.Token)).IsSuccess;
         }
 
-        Assert.AreEqual(false, success);
+        Assert.IsFalse(success);
     }
 
     [TestMethod]

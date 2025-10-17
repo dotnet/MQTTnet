@@ -82,7 +82,7 @@ public sealed class AsyncEvent_Tests
         var testClass = new TestClass();
         testClass.TestEventAsync += OnTestEventAsync;
 
-        Assert.AreEqual(true, testClass.HasTestHandlers);
+        Assert.IsTrue(testClass.HasTestHandlers);
     }
 
     [TestMethod]
@@ -90,7 +90,7 @@ public sealed class AsyncEvent_Tests
     {
         var testClass = new TestClass();
 
-        Assert.AreEqual(false, testClass.HasTestHandlers);
+        Assert.IsFalse(testClass.HasTestHandlers);
     }
 
     [TestMethod]
@@ -100,7 +100,7 @@ public sealed class AsyncEvent_Tests
         testClass.TestEventAsync += OnTestEventAsync;
         testClass.TestEventAsync -= OnTestEventAsync;
 
-        Assert.AreEqual(false, testClass.HasTestHandlers);
+        Assert.IsFalse(testClass.HasTestHandlers);
     }
 
     void OnTestEvent(EventArgs arg)

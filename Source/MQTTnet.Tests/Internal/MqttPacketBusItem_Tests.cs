@@ -30,14 +30,16 @@ public sealed class MqttPacketBusItem_Tests
     }
 
     [TestMethod]
-    [ExpectedException(typeof(TaskCanceledException))]
-    public async Task Wait_Packet_Bus_Item_After_Already_Canceled()
+    public Task Wait_Packet_Bus_Item_After_Already_Canceled()
     {
-        var item = new MqttPacketBusItem(new MqttPublishPacket());
+        return Assert.ThrowsExactlyAsync<TaskCanceledException>(async () =>
+        {
+            var item = new MqttPacketBusItem(new MqttPublishPacket());
 
-        // Finish the item before the actual
-        item.Cancel();
+            // Finish the item before the actual
+            item.Cancel();
 
-        await item.WaitAsync().ConfigureAwait(false);
+            await item.WaitAsync();
+        });
     }
 }

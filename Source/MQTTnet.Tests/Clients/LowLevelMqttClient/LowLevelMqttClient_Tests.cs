@@ -31,9 +31,9 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
 
         await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
 
-        var receivedPacket = await Authenticate(lowLevelClient).ConfigureAwait(false);
+        var receivedPacket = await Authenticate(lowLevelClient);
 
-        await lowLevelClient.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+        await lowLevelClient.DisconnectAsync(CancellationToken.None);
 
         Assert.IsNotNull(receivedPacket);
         Assert.AreEqual(MqttConnectReturnCode.ConnectionAccepted, receivedPacket.ReturnCode);
@@ -53,23 +53,27 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
     }
 
     [TestMethod]
-    [ExpectedException(typeof(MqttCommunicationException))]
-    public async Task Connect_To_Not_Existing_Broker()
+    public Task Connect_To_Not_Existing_Broker()
     {
-        var client = new MqttClientFactory().CreateLowLevelMqttClient();
-        var options = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
+        return Assert.ThrowsExactlyAsync<MqttCommunicationException>(async () =>
+        {
+            var client = new MqttClientFactory().CreateLowLevelMqttClient();
+            var options = new MqttClientOptionsBuilder().WithTcpServer("localhost").Build();
 
-        await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
+            await client.ConnectAsync(options, CancellationToken.None);
+        });
     }
 
     [TestMethod]
-    [ExpectedException(typeof(MqttCommunicationException))]
-    public async Task Connect_To_Wrong_Host()
+    public Task Connect_To_Wrong_Host()
     {
-        var client = new MqttClientFactory().CreateLowLevelMqttClient();
-        var options = new MqttClientOptionsBuilder().WithTcpServer("123.456.789.10").Build();
+        return Assert.ThrowsExactlyAsync<MqttCommunicationException>(async () =>
+        {
+            var client = new MqttClientFactory().CreateLowLevelMqttClient();
+            var options = new MqttClientOptionsBuilder().WithTcpServer("123.456.789.10").Build();
 
-        await client.ConnectAsync(options, CancellationToken.None).ConfigureAwait(false);
+            await client.ConnectAsync(options, CancellationToken.None);
+        });
     }
 
     [TestMethod]
@@ -83,7 +87,7 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
 
         var client = await testEnvironment.ConnectLowLevelClient(o => o.WithTimeout(TimeSpan.Zero));
 
-        await Authenticate(client).ConfigureAwait(false);
+        await Authenticate(client);
 
         await server.StopAsync();
 
@@ -91,9 +95,9 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
 
         try
         {
-            await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
+            await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
             await Task.Delay(2000);
-            await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None).ConfigureAwait(false);
+            await client.SendAsync(MqttPingReqPacket.Instance, CancellationToken.None);
         }
         catch (MqttCommunicationException exception)
         {
@@ -159,11 +163,11 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
 
         await lowLevelClient.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build(), CancellationToken.None);
 
-        await Authenticate(lowLevelClient).ConfigureAwait(false);
+        await Authenticate(lowLevelClient);
 
-        var receivedPacket = await Subscribe(lowLevelClient, "a").ConfigureAwait(false);
+        var receivedPacket = await Subscribe(lowLevelClient, "a");
 
-        await lowLevelClient.DisconnectAsync(CancellationToken.None).ConfigureAwait(false);
+        await lowLevelClient.DisconnectAsync(CancellationToken.None);
 
         Assert.IsNotNull(receivedPacket);
         Assert.AreEqual(MqttSubscribeReasonCode.GrantedQoS0, receivedPacket.ReasonCodes[0]);
@@ -179,10 +183,9 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
                     Username = "user",
                     Password = Encoding.UTF8.GetBytes("pass")
                 },
-                CancellationToken.None)
-            .ConfigureAwait(false);
+                CancellationToken.None);
 
-        return await client.ReceiveAsync(CancellationToken.None).ConfigureAwait(false) as MqttConnAckPacket;
+        return await client.ReceiveAsync(CancellationToken.None) as MqttConnAckPacket;
     }
 
     async Task<MqttSubAckPacket> Subscribe(ILowLevelMqttClient client, string topic)
@@ -199,9 +202,8 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
                         }
                     }
                 },
-                CancellationToken.None)
-            .ConfigureAwait(false);
+                CancellationToken.None);
 
-        return await client.ReceiveAsync(CancellationToken.None).ConfigureAwait(false) as MqttSubAckPacket;
+        return await client.ReceiveAsync(CancellationToken.None) as MqttSubAckPacket;
     }
 }

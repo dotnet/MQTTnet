@@ -63,7 +63,7 @@ public sealed class General_Tests : BaseTestClass
         await Task.Delay(500);
 
         var clientStatus = await server.GetClientsAsync();
-        Assert.AreEqual(0, clientStatus.Count);
+        Assert.IsEmpty(clientStatus);
 
         var client2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("b").WithCleanSession(false).WithSessionExpiryInterval(60));
         await client2.PublishStringAsync("x", "1");
@@ -76,8 +76,8 @@ public sealed class General_Tests : BaseTestClass
         clientStatus = await server.GetClientsAsync();
         var sessionStatus = await server.GetSessionsAsync();
 
-        Assert.AreEqual(0, clientStatus.Count);
-        Assert.AreEqual(2, sessionStatus.Count);
+        Assert.IsEmpty(clientStatus);
+        Assert.HasCount(2, sessionStatus);
 
         Assert.AreEqual(3, sessionStatus.First(s => s.Id == client1.Options.ClientId).PendingApplicationMessagesCount);
     }
@@ -244,7 +244,7 @@ public sealed class General_Tests : BaseTestClass
 
         var retainedMessages = await server.GetRetainedMessagesAsync();
 
-        Assert.AreEqual(clientCount, retainedMessages.Count);
+        Assert.HasCount(clientCount, retainedMessages);
 
         for (var i = 0; i < clientCount; i++)
         {
@@ -346,7 +346,7 @@ public sealed class General_Tests : BaseTestClass
 
         client.ConnectedAsync += async _ =>
         {
-            await client.PublishStringAsync("Connected").ConfigureAwait(false);
+            await client.PublishStringAsync("Connected");
         };
 
         client.ApplicationMessageReceivedAsync += e =>
@@ -365,7 +365,7 @@ public sealed class General_Tests : BaseTestClass
 
         await Task.Delay(500);
 
-        Assert.AreEqual(0, receivedMessages.Count);
+        Assert.IsEmpty(receivedMessages);
     }
 
     [TestMethod]
@@ -407,7 +407,7 @@ public sealed class General_Tests : BaseTestClass
                     })
                 {
                     SenderClientId = "server"
-                }).ConfigureAwait(false);
+                });
         };
 
         string receivedTopic = null;
@@ -434,19 +434,19 @@ public sealed class General_Tests : BaseTestClass
     [TestMethod]
     public async Task Publish_At_Least_Once_0x01()
     {
-        await TestPublishAsync("A/B/C", MqttQualityOfServiceLevel.AtLeastOnce, "A/B/C", MqttQualityOfServiceLevel.AtLeastOnce, 1).ConfigureAwait(false);
+        await TestPublishAsync("A/B/C", MqttQualityOfServiceLevel.AtLeastOnce, "A/B/C", MqttQualityOfServiceLevel.AtLeastOnce, 1);
     }
 
     [TestMethod]
     public async Task Publish_At_Most_Once_0x00()
     {
-        await TestPublishAsync("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "A/B/C", MqttQualityOfServiceLevel.AtMostOnce, 1).ConfigureAwait(false);
+        await TestPublishAsync("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "A/B/C", MqttQualityOfServiceLevel.AtMostOnce, 1);
     }
 
     [TestMethod]
     public async Task Publish_Exactly_Once_0x02()
     {
-        await TestPublishAsync("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, 1).ConfigureAwait(false);
+        await TestPublishAsync("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, 1);
     }
 
     [TestMethod]
@@ -502,14 +502,14 @@ public sealed class General_Tests : BaseTestClass
             return CompletedTask.Instance;
         };
 
-        await c2.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce }).ConfigureAwait(false);
-        await c3.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce }).ConfigureAwait(false);
+        await c2.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
+        await c3.SubscribeAsync(new MqttTopicFilter { Topic = "a", QualityOfServiceLevel = MqttQualityOfServiceLevel.AtLeastOnce });
 
         var message = new MqttApplicationMessageBuilder().WithTopic("a").WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce).Build();
 
         for (var i = 0; i < 500; i++)
         {
-            await c1.PublishAsync(message).ConfigureAwait(false);
+            await c1.PublishAsync(message);
         }
 
         SpinWait.SpinUntil(() => receivedMessagesCount == 1000, TimeSpan.FromSeconds(20));
@@ -526,12 +526,12 @@ public sealed class General_Tests : BaseTestClass
         var clientOptions = new MqttClientOptionsBuilder();
         var c1 = await testEnvironment.ConnectClient(clientOptions);
         await Task.Delay(500);
-        Assert.AreEqual(1, (await server.GetClientsAsync()).Count);
+        Assert.HasCount(1, await server.GetClientsAsync());
 
         await c1.DisconnectAsync();
         await Task.Delay(500);
 
-        Assert.AreEqual(0, (await server.GetClientsAsync()).Count);
+        Assert.IsEmpty(await server.GetClientsAsync());
     }
 
     [TestMethod]
@@ -600,14 +600,14 @@ public sealed class General_Tests : BaseTestClass
 
         // nothing
 
-        Assert.AreEqual(false, c1.IsConnected);
+        Assert.IsFalse(c1.IsConnected);
         await c1.TryDisconnectAsync();
-        Assert.AreEqual(false, c1.IsConnected);
+        Assert.IsFalse(c1.IsConnected);
 
         await LongTestDelay();
 
         // d
-        Assert.AreEqual(true, c2.IsConnected);
+        Assert.IsTrue(c2.IsConnected);
         await c2.DisconnectAsync();
 
         await LongTestDelay();
@@ -768,7 +768,7 @@ public sealed class General_Tests : BaseTestClass
         server.ClientConnectedAsync += async e =>
         {
             // Every client will automatically subscribe to this topic.
-            await server.SubscribeAsync(e.ClientId, "topic1").ConfigureAwait(false);
+            await server.SubscribeAsync(e.ClientId, "topic1");
         };
 
         var client = await testEnvironment.ConnectClient();
@@ -788,11 +788,11 @@ public sealed class General_Tests : BaseTestClass
 
         await client.PublishStringAsync("Hello");
         await Task.Delay(100);
-        Assert.AreEqual(0, receivedMessages.Count);
+        Assert.IsEmpty(receivedMessages);
 
         await client.PublishStringAsync("topic1");
         await Task.Delay(100);
-        Assert.AreEqual(1, receivedMessages.Count);
+        Assert.HasCount(1, receivedMessages);
     }
 
     [TestMethod]
@@ -926,7 +926,7 @@ public sealed class General_Tests : BaseTestClass
 
         // Test client should be connected now
 
-        Assert.IsTrue(testClientId != null);
+        Assert.IsNotNull(testClientId);
 
         // Have the server disconnect the client with SessionTakenOver reason; no DISCONNECT should be sent to MQTT 3.1.1 clients
 
@@ -968,12 +968,12 @@ public sealed class General_Tests : BaseTestClass
         await c2.PublishAsync(new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload([]).WithQualityOfServiceLevel(qualityOfServiceLevel).Build());
         await Task.Delay(500);
 
-        await c2.DisconnectAsync().ConfigureAwait(false);
+        await c2.DisconnectAsync();
 
         await Task.Delay(500);
         await c1.UnsubscribeAsync(topicFilter);
         await Task.Delay(500);
 
-        Assert.AreEqual(expectedReceivedMessagesCount, c1MessageHandler.ReceivedEventArgs.Count);
+        Assert.HasCount(expectedReceivedMessagesCount, c1MessageHandler.ReceivedEventArgs);
     }
 }

@@ -284,13 +284,13 @@ public sealed class MqttPacketSerialization_V3_Binary_Tests
 
         var adapter = new MqttPacketFormatterAdapter(new MqttBufferWriter(4096, 65535));
 
-        var ex = Assert.ThrowsException<MqttProtocolViolationException>(
+        var ex = Assert.ThrowsExactly<MqttProtocolViolationException>(
             () => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, [])));
         Assert.AreEqual("CONNECT packet must have at least 7 bytes.", ex.Message);
-        ex = Assert.ThrowsException<MqttProtocolViolationException>(
+        ex = Assert.ThrowsExactly<MqttProtocolViolationException>(
             () => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, new byte[7])));
         Assert.AreEqual("Protocol '' not supported.", ex.Message);
-        ex = Assert.ThrowsException<MqttProtocolViolationException>(
+        ex = Assert.ThrowsExactly<MqttProtocolViolationException>(
             () => DeserializeAndDetectVersion(adapter, WriterFactory().AddMqttHeader(MqttControlPacketType.Connect, [255, 255, 0, 0, 0, 0, 0])));
         Assert.AreEqual("Expected at least 65537 bytes but there are only 7 bytes", ex.Message);
     }

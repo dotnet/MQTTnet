@@ -54,7 +54,7 @@ public sealed class MqttSubscriptionsManager_Tests : BaseTestClass
 
         var result = CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "");
         Assert.IsTrue(result.IsSubscribed);
-        Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
+        Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, result.QualityOfServiceLevel);
     }
 
     [TestMethod]
@@ -83,7 +83,7 @@ public sealed class MqttSubscriptionsManager_Tests : BaseTestClass
         var result = CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.AtMostOnce, "");
 
         Assert.IsTrue(result.IsSubscribed);
-        Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
+        Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, result.QualityOfServiceLevel);
     }
 
     [TestMethod]
@@ -103,7 +103,7 @@ public sealed class MqttSubscriptionsManager_Tests : BaseTestClass
         var result = CheckSubscriptions("A/B/C", MqttQualityOfServiceLevel.ExactlyOnce, "");
 
         Assert.IsTrue(result.IsSubscribed);
-        Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtLeastOnce);
+        Assert.AreEqual(MqttQualityOfServiceLevel.AtLeastOnce, result.QualityOfServiceLevel);
     }
 
     [TestMethod]
@@ -188,14 +188,14 @@ public sealed class MqttSubscriptionsManager_Tests : BaseTestClass
             ]
         };
 
-        await _subscriptionsManager.Subscribe(sp, CancellationToken.None).ConfigureAwait(false);
+        await _subscriptionsManager.Subscribe(sp, CancellationToken.None);
     }
 
     void CheckIsSubscribed(string topic)
     {
         var result = CheckSubscriptions(topic, MqttQualityOfServiceLevel.AtMostOnce, "");
         Assert.IsTrue(result.IsSubscribed);
-        Assert.AreEqual(result.QualityOfServiceLevel, MqttQualityOfServiceLevel.AtMostOnce);
+        Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, result.QualityOfServiceLevel);
     }
 
     void CheckIsNotSubscribed(string topic)

@@ -48,7 +48,7 @@ public sealed class Load_Tests : BaseTestClass
 
                         var connAckPacket = packet as MqttConnAckPacket;
 
-                        Assert.IsTrue(connAckPacket != null);
+                        Assert.IsNotNull(connAckPacket);
                         Assert.AreEqual(MqttConnectReasonCode.Success, connAckPacket.ReasonCode);
 
                         var publishPacket = new MqttPublishPacket();
@@ -57,7 +57,7 @@ public sealed class Load_Tests : BaseTestClass
                         {
                             publishPacket.Topic = j.ToString();
 
-                            await client.SendAsync(publishPacket, CancellationToken.None).ConfigureAwait(false);
+                            await client.SendAsync(publishPacket, CancellationToken.None);
                         }
 
                         await client.DisconnectAsync(CancellationToken.None);
@@ -105,7 +105,7 @@ public sealed class Load_Tests : BaseTestClass
                     {
                         var message = applicationMessageBuilder.WithTopic("t/" + j).Build();
 
-                        await client.PublishAsync(message).ConfigureAwait(false);
+                        await client.PublishAsync(message);
                     }
 
                     await client.DisconnectAsync();
@@ -144,7 +144,7 @@ public sealed class Load_Tests : BaseTestClass
                     {
                         var message = applicationMessageBuilder.WithTopic(j.ToString()).Build();
 
-                        await client.PublishAsync(message).ConfigureAwait(false);
+                        await client.PublishAsync(message);
                     }
 
                     await client.DisconnectAsync();

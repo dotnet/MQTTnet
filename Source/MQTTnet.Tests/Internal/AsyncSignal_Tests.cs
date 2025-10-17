@@ -16,36 +16,40 @@ namespace MQTTnet.Tests.Internal;
 public sealed class AsyncSignal_Tests
 {
     [TestMethod]
-    [ExpectedException(typeof(TaskCanceledException))]
-    public async Task Cancel_If_No_Signal()
+    public Task Cancel_If_No_Signal()
     {
-        var asyncSignal = new AsyncSignal();
+        return Assert.ThrowsExactlyAsync<TaskCanceledException>(async () =>
+        {
+            var asyncSignal = new AsyncSignal();
 
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-        await asyncSignal.WaitAsync(timeout.Token);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            await asyncSignal.WaitAsync(timeout.Token);
 
-        Assert.Fail("There is no signal. So we must fail here!");
+            Assert.Fail("There is no signal. So we must fail here!");
+        });
     }
 
     [TestMethod]
-    [ExpectedException(typeof(ObjectDisposedException))]
-    public async Task Dispose_Properly()
+    public Task Dispose_Properly()
     {
-        var asyncSignal = new AsyncSignal();
+        return Assert.ThrowsExactlyAsync<ObjectDisposedException>(async () =>
+        {
+            var asyncSignal = new AsyncSignal();
 
-        // The timeout will not be reached but another task will kill the async signal.
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(999));
-        _ = Task.Run(
-            async () =>
-            {
-                await Task.Delay(2000, CancellationToken.None);
-                asyncSignal.Dispose();
-            },
-            CancellationToken.None);
+            // The timeout will not be reached but another task will kill the async signal.
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(999));
+            _ = Task.Run(
+                async () =>
+                {
+                    await Task.Delay(2000, CancellationToken.None);
+                    asyncSignal.Dispose();
+                },
+                CancellationToken.None);
 
-        await asyncSignal.WaitAsync(timeout.Token);
+            await asyncSignal.WaitAsync(timeout.Token);
 
-        Assert.Fail("There is no signal. So we must fail here!");
+            Assert.Fail("There is no signal. So we must fail here!");
+        });
     }
 
     [TestMethod]
@@ -97,26 +101,28 @@ public sealed class AsyncSignal_Tests
 
         stopwatch.Stop();
 
-        Assert.IsTrue(stopwatch.ElapsedMilliseconds > 900);
+        Assert.IsGreaterThan(900, stopwatch.ElapsedMilliseconds);
     }
 
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
-    public async Task Fail_For_Two_Waiters()
+    public Task Fail_For_Two_Waiters()
     {
-        var asyncSignal = new AsyncSignal();
+        return Assert.ThrowsExactlyAsync<InvalidOperationException>(async () =>
+        {
+            var asyncSignal = new AsyncSignal();
 
-        // This thread will wait properly because it is the first waiter.
-        _ = Task.Run(
-            async () =>
-            {
-                await asyncSignal.WaitAsync().ConfigureAwait(false);
-            },
-            CancellationToken.None);
+            // This thread will wait properly because it is the first waiter.
+            _ = Task.Run(
+                async () =>
+                {
+                    await asyncSignal.WaitAsync();
+                },
+                CancellationToken.None);
 
-        await Task.Delay(1000);
+            await Task.Delay(1000);
 
-        // Now the current thread must fail because there is already a waiter.
-        await asyncSignal.WaitAsync().ConfigureAwait(false);
+            // Now the current thread must fail because there is already a waiter.
+            await asyncSignal.WaitAsync();
+        });
     }
 }

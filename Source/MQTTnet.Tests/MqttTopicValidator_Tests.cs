@@ -13,24 +13,21 @@ namespace MQTTnet.Tests;
 public sealed class MqttTopicValidator_Tests
 {
     [TestMethod]
-    [ExpectedException(typeof(MqttProtocolViolationException))]
     public void Invalid_Topic_Empty()
     {
-        MqttTopicValidator.ThrowIfInvalid(string.Empty);
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() => MqttTopicValidator.ThrowIfInvalid(string.Empty));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(MqttProtocolViolationException))]
     public void Invalid_Topic_Hash()
     {
-        MqttTopicValidator.ThrowIfInvalid("/a/#/c");
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() => MqttTopicValidator.ThrowIfInvalid("/a/#/c"));
     }
 
     [TestMethod]
-    [ExpectedException(typeof(MqttProtocolViolationException))]
     public void Invalid_Topic_Plus()
     {
-        MqttTopicValidator.ThrowIfInvalid("/a/+/c");
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() => MqttTopicValidator.ThrowIfInvalid("/a/+/c"));
     }
 
     [TestMethod]

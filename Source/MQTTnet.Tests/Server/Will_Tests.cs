@@ -13,7 +13,7 @@ public sealed class Will_Tests : BaseTestClass
     public async Task Intercept_Will_Message()
     {
         using var testEnvironment = CreateTestEnvironment();
-        var server = await testEnvironment.StartServer().ConfigureAwait(false);
+        var server = await testEnvironment.StartServer();
 
         MqttApplicationMessage willMessage = null;
         server.InterceptingPublishAsync += eventArgs =>
@@ -22,12 +22,12 @@ public sealed class Will_Tests : BaseTestClass
             return CompletedTask.Instance;
         };
 
-        await testEnvironment.ConnectClient(new MqttClientOptionsBuilder()).ConfigureAwait(false);
+        await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
         var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will").WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce);
-        var takeOverClient = await testEnvironment.ConnectClient(clientOptions).ConfigureAwait(false);
+        var takeOverClient = await testEnvironment.ConnectClient(clientOptions);
         takeOverClient.Dispose(); // Dispose will not send a DISCONNECT pattern first so the will message must be sent.
 
-        await LongTestDelay().ConfigureAwait(false);
+        await LongTestDelay();
 
         Assert.IsNotNull(willMessage);
     }
@@ -38,19 +38,19 @@ public sealed class Will_Tests : BaseTestClass
         using var testEnvironment = CreateTestEnvironment();
         await testEnvironment.StartServer();
 
-        var receiver = await testEnvironment.ConnectClient().ConfigureAwait(false);
+        var receiver = await testEnvironment.ConnectClient();
 
         var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
 
         await receiver.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
         var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will");
-        var sender = await testEnvironment.ConnectClient(clientOptions).ConfigureAwait(false);
-        await sender.DisconnectAsync().ConfigureAwait(false);
+        var sender = await testEnvironment.ConnectClient(clientOptions);
+        await sender.DisconnectAsync();
 
-        await LongTestDelay().ConfigureAwait(false);
+        await LongTestDelay();
 
-        Assert.AreEqual(0, receivedMessages.ReceivedEventArgs.Count);
+        Assert.IsEmpty(receivedMessages.ReceivedEventArgs);
     }
 
     [TestMethod]
@@ -59,16 +59,16 @@ public sealed class Will_Tests : BaseTestClass
         using var testEnvironment = CreateTestEnvironment();
         await testEnvironment.StartServer();
 
-        var receiver = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder()).ConfigureAwait(false);
+        var receiver = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder());
         var receivedMessages = testEnvironment.CreateApplicationMessageHandler(receiver);
         await receiver.SubscribeAsync(new MqttTopicFilterBuilder().WithTopic("#").Build());
 
         var clientOptions = new MqttClientOptionsBuilder().WithWillTopic("My/last/will").WithWillQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce);
-        var takeOverClient = await testEnvironment.ConnectClient(clientOptions).ConfigureAwait(false);
+        var takeOverClient = await testEnvironment.ConnectClient(clientOptions);
         takeOverClient.Dispose(); // Dispose will not send a DISCONNECT pattern first so the will message must be sent.
 
-        await LongTestDelay().ConfigureAwait(false);
+        await LongTestDelay();
 
-        Assert.AreEqual(1, receivedMessages.ReceivedEventArgs.Count);
+        Assert.HasCount(1, receivedMessages.ReceivedEventArgs);
     }
 }

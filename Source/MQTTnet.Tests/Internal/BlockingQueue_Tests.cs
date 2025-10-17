@@ -76,7 +76,7 @@ public class BlockingQueue_Tests
         await Task.Delay(100);
 
         Assert.AreEqual(0, queue.Count);
-        Assert.AreEqual(null, item);
+        Assert.IsNull(item);
 
         queue.Enqueue("x");
 
@@ -112,18 +112,21 @@ public class BlockingQueue_Tests
     }
 
     [TestMethod]
-    [ExpectedException(typeof(OperationCanceledException))]
     public void Use_Disposed_Queue()
     {
-        var queue = new BlockingQueue<int>();
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-        Task.Run(() =>
+        Assert.ThrowsExactly<OperationCanceledException>(() =>
         {
-            Thread.Sleep(1000);
-            queue.Dispose();
-        });
+
+            var queue = new BlockingQueue<int>();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+            Task.Run(() =>
+            {
+                Thread.Sleep(1000);
+                queue.Dispose();
+            });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 
-        queue.Dequeue(new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token);
+            queue.Dequeue(new CancellationTokenSource(TimeSpan.FromSeconds(2)).Token);
+        });
     }
 }

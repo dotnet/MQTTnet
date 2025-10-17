@@ -25,16 +25,16 @@ public sealed class KeepAlive_Tests : BaseTestClass
         var client = await testEnvironment.ConnectLowLevelClient(o => o
             .WithTimeout(TimeSpan.FromSeconds(1))
             .WithTimeout(TimeSpan.Zero)
-            .WithProtocolVersion(MqttProtocolVersion.V500)).ConfigureAwait(false);
+            .WithProtocolVersion(MqttProtocolVersion.V500));
 
         await client.SendAsync(new MqttConnectPacket
         {
             CleanSession = true,
             ClientId = "Disconnect_Client_DueTo_KeepAlive",
             KeepAlivePeriod = 1
-        }, CancellationToken.None).ConfigureAwait(false);
+        }, CancellationToken.None);
 
-        var responsePacket = await client.ReceiveAsync(CancellationToken.None).ConfigureAwait(false);
+        var responsePacket = await client.ReceiveAsync(CancellationToken.None);
         Assert.IsTrue(responsePacket is MqttConnAckPacket);
 
         for (var i = 0; i < 6; i++)
@@ -60,7 +60,7 @@ public sealed class KeepAlive_Tests : BaseTestClass
 
         var disconnectPacket = responsePacket as MqttDisconnectPacket;
 
-        Assert.IsTrue(disconnectPacket != null);
-        Assert.AreEqual(disconnectPacket.ReasonCode, MqttDisconnectReasonCode.KeepAliveTimeout);
+        Assert.IsNotNull(disconnectPacket);
+        Assert.AreEqual(MqttDisconnectReasonCode.KeepAliveTimeout, disconnectPacket.ReasonCode);
     }
 }

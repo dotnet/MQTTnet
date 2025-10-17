@@ -20,7 +20,7 @@ public sealed class MqttPacketSerialization_V3_Tests
     public void Serialize_Full_MqttAuthPacket_V311()
     {
         var authPacket = new MqttAuthPacket();
-        Assert.ThrowsException<MqttProtocolViolationException>(() => MqttPacketSerializationHelper.EncodeAndDecodePacket(authPacket, MqttProtocolVersion.V311));
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() => MqttPacketSerializationHelper.EncodeAndDecodePacket(authPacket, MqttProtocolVersion.V311));
     }
 
     [TestMethod]
@@ -53,24 +53,24 @@ public sealed class MqttPacketSerialization_V3_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connAckPacket, MqttProtocolVersion.V311);
 
         CollectionAssert.AreEqual(null, deserialized.AuthenticationData); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.AuthenticationMethod); // Not supported in v3.1.1
         //Assert.AreEqual(connAckPacket.ReasonCode, deserialized.ReasonCode);
-        Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ReasonString); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.ReceiveMaximum); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.ResponseInformation); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.RetainAvailable); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ResponseInformation); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.RetainAvailable); // Not supported in v3.1.1
         Assert.AreEqual(MqttConnectReturnCode.ConnectionRefusedNotAuthorized, deserialized.ReturnCode);
-        Assert.AreEqual(null, deserialized.ServerReference); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.AssignedClientIdentifier); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ServerReference); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.AssignedClientIdentifier); // Not supported in v3.1.1
         Assert.AreEqual(connAckPacket.IsSessionPresent, deserialized.IsSessionPresent);
         Assert.AreEqual(0U, deserialized.MaximumPacketSize); // Not supported in v3.1.1
         Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, deserialized.MaximumQoS); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.ServerKeepAlive); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.SessionExpiryInterval); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.SharedSubscriptionAvailable); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.SubscriptionIdentifiersAvailable); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.SharedSubscriptionAvailable); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.SubscriptionIdentifiersAvailable); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.TopicAliasMaximum); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.WildcardSubscriptionAvailable);
+        Assert.IsFalse(deserialized.WildcardSubscriptionAvailable);
         Assert.IsNull(deserialized.UserProperties); // Not supported in v3.1.1
     }
 
@@ -104,24 +104,24 @@ public sealed class MqttPacketSerialization_V3_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connAckPacket, MqttProtocolVersion.V310);
 
         CollectionAssert.AreEqual(null, deserialized.AuthenticationData); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.AuthenticationMethod); // Not supported in v3.1.1
         //Assert.AreEqual(connAckPacket.ReasonCode, deserialized.ReasonCode);
-        Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ReasonString); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.ReceiveMaximum); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.ResponseInformation); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.RetainAvailable); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ResponseInformation); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.RetainAvailable); // Not supported in v3.1.1
         Assert.AreEqual(MqttConnectReturnCode.ConnectionRefusedNotAuthorized, deserialized.ReturnCode);
-        Assert.AreEqual(null, deserialized.ServerReference); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.AssignedClientIdentifier); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.IsSessionPresent); // Not supported in v3.1.0 <- !
+        Assert.IsNull(deserialized.ServerReference); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.AssignedClientIdentifier); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.IsSessionPresent); // Not supported in v3.1.0 <- !
         Assert.AreEqual(0U, deserialized.MaximumPacketSize); // Not supported in v3.1.1
         Assert.AreEqual(MqttQualityOfServiceLevel.AtMostOnce, deserialized.MaximumQoS); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.ServerKeepAlive); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.SessionExpiryInterval); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.SharedSubscriptionAvailable); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.SubscriptionIdentifiersAvailable); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.SharedSubscriptionAvailable); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.SubscriptionIdentifiersAvailable); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.TopicAliasMaximum); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.WildcardSubscriptionAvailable);
+        Assert.IsFalse(deserialized.WildcardSubscriptionAvailable);
         Assert.IsNull(deserialized.UserProperties); // Not supported in v3.1.1
     }
 
@@ -164,7 +164,7 @@ public sealed class MqttPacketSerialization_V3_Tests
         CollectionAssert.AreEqual(connectPacket.Password, deserialized.Password);
         Assert.AreEqual(connectPacket.ClientId, deserialized.ClientId);
         CollectionAssert.AreEqual(null, deserialized.AuthenticationData); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.AuthenticationMethod); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.AuthenticationMethod); // Not supported in v3.1.1
         Assert.AreEqual(connectPacket.CleanSession, deserialized.CleanSession);
         Assert.AreEqual(0L, deserialized.ReceiveMaximum); // Not supported in v3.1.1
         Assert.AreEqual(connectPacket.WillFlag, deserialized.WillFlag);
@@ -203,8 +203,8 @@ public sealed class MqttPacketSerialization_V3_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(disconnectPacket, MqttProtocolVersion.V311);
 
         Assert.AreEqual(disconnectPacket.ReasonCode, deserialized.ReasonCode);
-        Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.ServerReference); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ReasonString); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ServerReference); // Not supported in v3.1.1
         Assert.AreEqual(0U, deserialized.SessionExpiryInterval); // Not supported in v3.1.1
         CollectionAssert.AreEqual(null, deserialized.UserProperties);
     }
@@ -244,7 +244,7 @@ public sealed class MqttPacketSerialization_V3_Tests
 
         Assert.AreEqual(pubAckPacket.PacketIdentifier, deserialized.PacketIdentifier);
         Assert.AreEqual(MqttPubAckReasonCode.Success, deserialized.ReasonCode); // Not supported in v3.1.1
-        Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ReasonString); // Not supported in v3.1.1
         CollectionAssert.AreEqual(null, deserialized.UserProperties);
     }
 
@@ -297,8 +297,8 @@ public sealed class MqttPacketSerialization_V3_Tests
         CollectionAssert.AreEqual(publishPacket.Payload.ToArray(), deserialized.Payload.ToArray());
         Assert.AreEqual(publishPacket.QualityOfServiceLevel, deserialized.QualityOfServiceLevel);
         Assert.AreEqual(publishPacket.Topic, deserialized.Topic);
-        Assert.AreEqual(null, deserialized.ResponseTopic); // Not supported in v3.1.1.
-        Assert.AreEqual(null, deserialized.ContentType); // Not supported in v3.1.1.
+        Assert.IsNull(deserialized.ResponseTopic); // Not supported in v3.1.1.
+        Assert.IsNull(deserialized.ContentType); // Not supported in v3.1.1.
         CollectionAssert.AreEqual(null, deserialized.CorrelationData); // Not supported in v3.1.1.
         Assert.AreEqual(0U, deserialized.TopicAlias); // Not supported in v3.1.1.
         CollectionAssert.AreEqual(null, deserialized.SubscriptionIdentifiers); // Not supported in v3.1.1
@@ -361,8 +361,8 @@ public sealed class MqttPacketSerialization_V3_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(subAckPacket, MqttProtocolVersion.V311);
 
         Assert.AreEqual(subAckPacket.PacketIdentifier, deserialized.PacketIdentifier);
-        Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
-        Assert.AreEqual(subAckPacket.ReasonCodes.Count, deserialized.ReasonCodes.Count);
+        Assert.IsNull(deserialized.ReasonString); // Not supported in v3.1.1
+        Assert.HasCount(subAckPacket.ReasonCodes.Count, deserialized.ReasonCodes);
         Assert.AreEqual(subAckPacket.ReasonCodes[0], deserialized.ReasonCodes[0]);
         CollectionAssert.AreEqual(null, deserialized.UserProperties); // Not supported in v3.1.1
     }
@@ -392,11 +392,11 @@ public sealed class MqttPacketSerialization_V3_Tests
 
         Assert.AreEqual(subscribePacket.PacketIdentifier, deserialized.PacketIdentifier);
         Assert.AreEqual(0U, deserialized.SubscriptionIdentifier); // Not supported in v3.1.1
-        Assert.AreEqual(1, deserialized.TopicFilters.Count);
+        Assert.HasCount(1, deserialized.TopicFilters);
         Assert.AreEqual(subscribePacket.TopicFilters[0].Topic, deserialized.TopicFilters[0].Topic);
-        Assert.AreEqual(false, deserialized.TopicFilters[0].NoLocal); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.TopicFilters[0].NoLocal); // Not supported in v3.1.1
         Assert.AreEqual(MqttRetainHandling.SendAtSubscribe, deserialized.TopicFilters[0].RetainHandling); // Not supported in v3.1.1
-        Assert.AreEqual(false, deserialized.TopicFilters[0].RetainAsPublished); // Not supported in v3.1.1
+        Assert.IsFalse(deserialized.TopicFilters[0].RetainAsPublished); // Not supported in v3.1.1
         Assert.AreEqual(subscribePacket.TopicFilters[0].QualityOfServiceLevel, deserialized.TopicFilters[0].QualityOfServiceLevel);
         CollectionAssert.AreEqual(null, deserialized.UserProperties); // Not supported in v3.1.1
     }
@@ -415,7 +415,7 @@ public sealed class MqttPacketSerialization_V3_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(unsubAckPacket, MqttProtocolVersion.V311);
 
         Assert.AreEqual(unsubAckPacket.PacketIdentifier, deserialized.PacketIdentifier);
-        Assert.AreEqual(null, deserialized.ReasonString); // Not supported in v3.1.1
+        Assert.IsNull(deserialized.ReasonString); // Not supported in v3.1.1
         CollectionAssert.AreEqual(null, deserialized.ReasonCodes); // Not supported in v3.1.1
         CollectionAssert.AreEqual(null, deserialized.UserProperties); // Not supported in v3.1.1
     }
@@ -433,7 +433,7 @@ public sealed class MqttPacketSerialization_V3_Tests
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(unsubscribePacket, MqttProtocolVersion.V311);
 
         Assert.AreEqual(unsubscribePacket.PacketIdentifier, deserialized.PacketIdentifier);
-        Assert.AreEqual(unsubscribePacket.TopicFilters.Count, deserialized.TopicFilters.Count);
+        Assert.HasCount(unsubscribePacket.TopicFilters.Count, deserialized.TopicFilters);
         Assert.AreEqual(unsubscribePacket.TopicFilters[0], deserialized.TopicFilters[0]);
         CollectionAssert.AreEqual(null, deserialized.UserProperties);
     }

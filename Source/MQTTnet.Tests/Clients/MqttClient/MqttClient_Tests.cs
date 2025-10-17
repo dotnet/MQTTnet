@@ -83,17 +83,19 @@ public sealed class MqttClient_Tests : BaseTestClass
     }
 
     [TestMethod]
-    [ExpectedException(typeof(InvalidOperationException))]
-    public async Task Connect_Multiple_Times_Should_Fail()
+    public Task Connect_Multiple_Times_Should_Fail()
     {
-        using var testEnvironment = CreateTestEnvironment();
-        await testEnvironment.StartServer();
+        return Assert.ThrowsExactlyAsync<InvalidOperationException>(async () =>
+        {
+            using var testEnvironment = CreateTestEnvironment();
+            await testEnvironment.StartServer();
 
-        var clientOptions = testEnvironment.CreateDefaultClientOptions();
-        var client = testEnvironment.CreateClient();
+            var clientOptions = testEnvironment.CreateDefaultClientOptions();
+            var client = testEnvironment.CreateClient();
 
-        await client.ConnectAsync(clientOptions);
-        await client.ConnectAsync(clientOptions);
+            await client.ConnectAsync(clientOptions);
+            await client.ConnectAsync(clientOptions);
+        });
     }
 
     [TestMethod]
@@ -208,8 +210,8 @@ public sealed class MqttClient_Tests : BaseTestClass
 
         Assert.IsTrue(clients[99].TryPingAsync().GetAwaiter().GetResult());
 
-        Assert.AreEqual(1, clientStatus.Count);
-        Assert.AreEqual(1, sessionStatus.Count);
+        Assert.HasCount(1, clientStatus);
+        Assert.HasCount(1, sessionStatus);
 
         var receiveClient = clients[99];
         object receivedPayload = null;
@@ -317,10 +319,10 @@ public sealed class MqttClient_Tests : BaseTestClass
         var client = await testEnvironment.ConnectClient();
 
         var result = await client.PublishStringAsync("a", "a");
-        Assert.AreEqual(null, result.PacketIdentifier);
+        Assert.IsNull(result.PacketIdentifier);
 
         result = await client.PublishStringAsync("b", "b");
-        Assert.AreEqual(null, result.PacketIdentifier);
+        Assert.IsNull(result.PacketIdentifier);
 
         result = await client.PublishStringAsync("a", "a", MqttQualityOfServiceLevel.AtLeastOnce);
         Assert.AreEqual((ushort)1, result.PacketIdentifier);
@@ -470,7 +472,7 @@ public sealed class MqttClient_Tests : BaseTestClass
         var client1 = await testEnvironment.ConnectClient();
         client1.ApplicationMessageReceivedAsync += async _ =>
         {
-            await client1.PublishStringAsync(client2Topic, expectedClient2Message, MqttQualityOfServiceLevel.AtLeastOnce).ConfigureAwait(false);
+            await client1.PublishStringAsync(client2Topic, expectedClient2Message, MqttQualityOfServiceLevel.AtLeastOnce);
         };
 
         await client1.SubscribeAsync(client1Topic, MqttQualityOfServiceLevel.AtLeastOnce);
@@ -494,7 +496,7 @@ public sealed class MqttClient_Tests : BaseTestClass
 
         await Task.Delay(500);
 
-        Assert.AreEqual(2, client2TopicResults.Count);
+        Assert.HasCount(2, client2TopicResults);
         Assert.AreEqual(expectedClient2Message, client2TopicResults[0]);
         Assert.AreEqual(expectedClient2Message, client2TopicResults[1]);
     }
@@ -526,7 +528,7 @@ public sealed class MqttClient_Tests : BaseTestClass
 
         await Task.Delay(500);
 
-        Assert.AreEqual(1, receivedMessages.Count);
+        Assert.HasCount(1, receivedMessages);
         Assert.IsFalse(receivedMessages[0].Retain); // Must be false even if set above!
     }
 
@@ -572,7 +574,7 @@ public sealed class MqttClient_Tests : BaseTestClass
             Interlocked.Increment(ref tries);
 
             await Task.Delay(100);
-            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build()).ConfigureAwait(false);
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).Build());
         };
 
         try
@@ -830,7 +832,7 @@ public sealed class MqttClient_Tests : BaseTestClass
 
         await Task.Delay(500);
 
-        Assert.AreEqual(1, receivedMessages.Count);
+        Assert.HasCount(1, receivedMessages);
         Assert.AreEqual("DA|18RS00SC00XI0000RV00R100R200R300R400L100L200L300L400Y100Y200AC0102031800BELK0000BM0000|", receivedMessages.First().ConvertPayloadToString());
     }
 

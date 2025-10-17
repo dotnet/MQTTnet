@@ -27,9 +27,9 @@ public sealed class Cross_Version_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(1, receivedApplicationMessages.ReceivedEventArgs.Count);
-        Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.Topic);
-        Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.ConvertPayloadToString());
+        Assert.HasCount(1, receivedApplicationMessages.ReceivedEventArgs);
+        Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs[0].ApplicationMessage.Topic);
+        Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs[0].ApplicationMessage.ConvertPayloadToString());
     }
 
     [TestMethod]
@@ -55,8 +55,8 @@ public sealed class Cross_Version_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(1, receivedApplicationMessages.ReceivedEventArgs.Count);
-        Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.Topic);
-        Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs.First().ApplicationMessage.ConvertPayloadToString());
+        Assert.HasCount(1, receivedApplicationMessages.ReceivedEventArgs);
+        Assert.AreEqual("My/Message", receivedApplicationMessages.ReceivedEventArgs[0].ApplicationMessage.Topic);
+        Assert.AreEqual("My_Payload", receivedApplicationMessages.ReceivedEventArgs[0].ApplicationMessage.ConvertPayloadToString());
     }
 }

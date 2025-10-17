@@ -48,7 +48,7 @@ public sealed class Subscription_Identifier_Tests : BaseTestClass
 
         applicationMessageHandler.AssertReceivedCountEquals(1);
 
-        Assert.IsTrue(applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers.Contains(456));
+        Assert.Contains(456u, applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers);
     }
 
     [TestMethod]
@@ -80,7 +80,7 @@ public sealed class Subscription_Identifier_Tests : BaseTestClass
 
         applicationMessageHandler.AssertReceivedCountEquals(1);
 
-        Assert.IsTrue(applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers.Contains(456));
-        Assert.IsTrue(applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers.Contains(789));
+        Assert.Contains(456u, applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers);
+        Assert.Contains(789u, applicationMessageHandler.ReceivedEventArgs[0].ApplicationMessage.SubscriptionIdentifiers);
     }
 }

@@ -35,8 +35,8 @@ public sealed class Events_Tests : BaseTestClass
 
         Assert.IsNotNull(eventArgs);
 
-        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Connected_Event)));
-        Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
+        Assert.StartsWith(nameof(Fire_Client_Connected_Event), eventArgs.ClientId);
+        Assert.Contains("127.0.0.1", eventArgs.RemoteEndPoint.ToString()!);
         Assert.AreEqual(MqttProtocolVersion.V311, eventArgs.ProtocolVersion);
         Assert.AreEqual("TheUser", eventArgs.UserName);
         Assert.AreEqual("ThePassword", eventArgs.Password);
@@ -62,8 +62,8 @@ public sealed class Events_Tests : BaseTestClass
 
         Assert.IsNotNull(eventArgs);
 
-        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Disconnected_Event)));
-        Assert.IsTrue(eventArgs.RemoteEndPoint.ToString().Contains("127.0.0.1"));
+        Assert.StartsWith(nameof(Fire_Client_Disconnected_Event), eventArgs.ClientId);
+        Assert.Contains("127.0.0.1", eventArgs.RemoteEndPoint.ToString()!);
         Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
 
         Assert.AreEqual("TheUser", eventArgs.UserName);
@@ -90,7 +90,7 @@ public sealed class Events_Tests : BaseTestClass
 
         Assert.IsNotNull(eventArgs);
 
-        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Subscribed_Event)));
+        Assert.StartsWith(nameof(Fire_Client_Subscribed_Event), eventArgs.ClientId);
         Assert.AreEqual("The/Topic", eventArgs.TopicFilter.Topic);
         Assert.AreEqual(MqttQualityOfServiceLevel.AtLeastOnce, eventArgs.TopicFilter.QualityOfServiceLevel);
         Assert.AreEqual("TheUser", eventArgs.UserName);
@@ -116,7 +116,7 @@ public sealed class Events_Tests : BaseTestClass
 
         Assert.IsNotNull(eventArgs);
 
-        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Client_Unsubscribed_Event)));
+        Assert.StartsWith(nameof(Fire_Client_Unsubscribed_Event), eventArgs.ClientId);
         Assert.AreEqual("The/Topic", eventArgs.TopicFilter);
         Assert.AreEqual("TheUser", eventArgs.UserName);
     }
@@ -141,7 +141,7 @@ public sealed class Events_Tests : BaseTestClass
 
         Assert.IsNotNull(eventArgs);
 
-        Assert.IsTrue(eventArgs.ClientId.StartsWith(nameof(Fire_Application_Message_Received_Event)));
+        Assert.StartsWith(nameof(Fire_Application_Message_Received_Event), eventArgs.ClientId);
         Assert.AreEqual("The_Topic", eventArgs.ApplicationMessage.Topic);
         Assert.AreEqual("The_Payload", eventArgs.ApplicationMessage.ConvertPayloadToString());
         Assert.AreEqual("TheUser", eventArgs.UserName);

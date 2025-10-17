@@ -87,10 +87,6 @@ public sealed class MqttRetainedMessagesManager
                         }
                     }
 
-                    if (saveIsRequired && hasHandlers)
-                    {
-                        messagesForSave = new List<MqttApplicationMessage>(_messages.Values);
-                    }
                     _logger.Verbose("Client '{0}' set retained message for topic '{1}'.", clientId, applicationMessage.Topic);
                 }
 
@@ -102,10 +98,13 @@ public sealed class MqttRetainedMessagesManager
 
             if (saveIsRequired)
             {
-                using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
+                if (_eventContainer.RetainedMessageChangedEvent.HasHandlers)
                 {
-                    var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
-                    await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    using (await _storageAccessLock.EnterAsync().ConfigureAwait(false))
+                    {
+                        var eventArgs = new RetainedMessageChangedEventArgs(clientId, applicationMessage, messagesForSave);
+                        await _eventContainer.RetainedMessageChangedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+                    }
                 }
             }
         }

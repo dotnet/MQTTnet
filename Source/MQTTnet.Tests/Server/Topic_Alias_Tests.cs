@@ -28,7 +28,7 @@ public sealed class Topic_Alias_Tests : BaseTestClass
             .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
             .Build());
 
-        Assert.AreEqual(connectResult.TopicAliasMaximum, ushort.MaxValue);
+        Assert.AreEqual(ushort.MaxValue, connectResult.TopicAliasMaximum);
     }
 
     [TestMethod]
@@ -69,7 +69,7 @@ public sealed class Topic_Alias_Tests : BaseTestClass
 
         await Task.Delay(500);
 
-        Assert.AreEqual(3, receivedTopics.Count);
+        Assert.HasCount(3, receivedTopics);
         CollectionAssert.AllItemsAreNotNull(receivedTopics);
         Assert.IsTrue(receivedTopics.All(t => t.Equals("this_is_the_topic")));
     }

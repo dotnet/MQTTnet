@@ -40,12 +40,12 @@ public sealed class Injection_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(1, messageReceivedHandler1.ReceivedEventArgs.Count);
+        Assert.HasCount(1, messageReceivedHandler1.ReceivedEventArgs);
         Assert.AreEqual(injectResult.PacketIdentifier, messageReceivedHandler1.ReceivedEventArgs[0].PacketIdentifier);
         Assert.AreEqual("InjectedOne", messageReceivedHandler1.ReceivedEventArgs[0].ApplicationMessage.Topic);
 
         // The second receiver should NOT receive the message.
-        Assert.AreEqual(0, messageReceivedHandler2.ReceivedEventArgs.Count);
+        Assert.IsEmpty(messageReceivedHandler2.ReceivedEventArgs);
     }
 
     [TestMethod]
@@ -228,12 +228,12 @@ public sealed class Injection_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(1, messageReceivedHandler1.ReceivedEventArgs.Count);
+        Assert.HasCount(1, messageReceivedHandler1.ReceivedEventArgs);
         Assert.AreEqual(injectResult.PacketIdentifier, messageReceivedHandler1.ReceivedEventArgs[0].PacketIdentifier);
         Assert.AreEqual("InjectedOne", messageReceivedHandler1.ReceivedEventArgs[0].ApplicationMessage.Topic);
 
         // The second receiver should NOT receive the message.
-        Assert.AreEqual(0, messageReceivedHandler2.ReceivedEventArgs.Count);
+        Assert.IsEmpty(messageReceivedHandler2.ReceivedEventArgs);
     }
 
     [TestMethod]
@@ -312,9 +312,9 @@ public sealed class Injection_Tests : BaseTestClass
 
         // Due to the DropNewMessage strategy the third message delivery will fail.
         // As a result, no existing messages in the queue will be dropped (evicted).
-        Assert.AreEqual(firstMessageTask.Status, TaskStatus.WaitingForActivation);
-        Assert.AreEqual(secondMessageTask.Status, TaskStatus.WaitingForActivation);
-        Assert.AreEqual(thirdMessageTask.Status, TaskStatus.Faulted);
+        Assert.AreEqual(TaskStatus.WaitingForActivation, firstMessageTask.Status);
+        Assert.AreEqual(TaskStatus.WaitingForActivation, secondMessageTask.Status);
+        Assert.AreEqual(TaskStatus.Faulted, thirdMessageTask.Status);
         Assert.IsTrue(thirdMessageTask.Exception?.InnerException is MqttPendingMessagesOverflowException);
 
         Assert.IsFalse(firstMessageEvicted);
@@ -398,10 +398,10 @@ public sealed class Injection_Tests : BaseTestClass
 
         // Due to the DropOldestQueuedMessage strategy, the second message delivery will fail
         // to make room for the third one.
-        Assert.AreEqual(firstMessageTask.Status, TaskStatus.WaitingForActivation);
-        Assert.AreEqual(secondMessageTask.Status, TaskStatus.Faulted);
+        Assert.AreEqual(TaskStatus.WaitingForActivation, firstMessageTask.Status);
+        Assert.AreEqual(TaskStatus.Faulted, secondMessageTask.Status);
         Assert.IsTrue(secondMessageTask.Exception?.InnerException is MqttPendingMessagesOverflowException);
-        Assert.AreEqual(thirdMessageTask.Status, TaskStatus.WaitingForActivation);
+        Assert.AreEqual(TaskStatus.WaitingForActivation, thirdMessageTask.Status);
 
         Assert.IsFalse(firstMessageEvicted);
         Assert.IsTrue(secondMessageEvicted);
@@ -427,7 +427,7 @@ public sealed class Injection_Tests : BaseTestClass
 
         await LongTestDelay();
 
-        Assert.AreEqual(1, messageReceivedHandler.ReceivedEventArgs.Count);
+        Assert.HasCount(1, messageReceivedHandler.ReceivedEventArgs);
         Assert.AreEqual("InjectedOne", messageReceivedHandler.ReceivedEventArgs[0].ApplicationMessage.Topic);
     }
 

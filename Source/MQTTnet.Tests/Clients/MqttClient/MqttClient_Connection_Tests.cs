@@ -21,29 +21,35 @@ namespace MQTTnet.Tests.Clients.MqttClient;
 public sealed class MqttClient_Connection_Tests : BaseTestClass
 {
     [TestMethod]
-    [ExpectedException(typeof(MqttCommunicationException))]
-    public async Task Connect_To_Invalid_Server_Port_Not_Opened()
+    public Task Connect_To_Invalid_Server_Port_Not_Opened()
     {
-        var client = new MqttClientFactory().CreateMqttClient();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
-        await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).Build(), timeout.Token);
+        return Assert.ThrowsExactlyAsync<MqttCommunicationException>(async () =>
+        {
+            var client = new MqttClientFactory().CreateMqttClient();
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).Build(), timeout.Token);
+        });
     }
 
     [TestMethod]
-    [ExpectedException(typeof(OperationCanceledException))]
-    public async Task Connect_To_Invalid_Server_Wrong_IP()
+    public Task Connect_To_Invalid_Server_Wrong_IP()
     {
-        var client = new MqttClientFactory().CreateMqttClient();
-        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-        await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build(), timeout.Token);
+        return Assert.ThrowsExactlyAsync<OperationCanceledException>(async () =>
+        {
+            var client = new MqttClientFactory().CreateMqttClient();
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build(), timeout.Token);
+        });
     }
 
     [TestMethod]
-    [ExpectedException(typeof(MqttCommunicationException))]
-    public async Task Connect_To_Invalid_Server_Wrong_Protocol()
+    public Task Connect_To_Invalid_Server_Wrong_Protocol()
     {
-        var client = new MqttClientFactory().CreateMqttClient();
-        await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("http://127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(2)).Build()).ConfigureAwait(false);
+        return Assert.ThrowsExactlyAsync<MqttCommunicationException>(async () =>
+        {
+            var client = new MqttClientFactory().CreateMqttClient();
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("http://127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(2)).Build());
+        });
     }
 
     [TestMethod]
@@ -150,7 +156,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
 
         Assert.IsNotNull(eventArgs);
         Assert.IsNotNull(eventArgs.UserProperties);
-        Assert.AreEqual(1, eventArgs.UserProperties.Count);
+        Assert.HasCount(1, eventArgs.UserProperties);
         Assert.AreEqual("test_name", eventArgs.UserProperties[0].Name);
         Assert.AreEqual("test_value", eventArgs.UserProperties[0].Value);
     }
@@ -173,7 +179,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
 
             var response = await eventArgs.ReceiveAsync(eventArgs.CancellationToken);
 
-            Assert.AreEqual(Encoding.UTF8.GetString(response.AuthenticationData), "reply context token");
+            Assert.AreEqual("reply context token", Encoding.UTF8.GetString(response.AuthenticationData));
 
             // No further data is required, but we have to fulfil the exchange.
             sendOptions = new SendMqttEnhancedAuthenticationDataOptions
@@ -181,7 +187,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
                 Data = []
             };
 
-            await eventArgs.SendAsync(sendOptions, eventArgs.CancellationToken).ConfigureAwait(false);
+            await eventArgs.SendAsync(sendOptions, eventArgs.CancellationToken);
         }
     }
 
@@ -197,13 +203,13 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
             {
                 var result = await args.ExchangeEnhancedAuthenticationAsync(new ExchangeEnhancedAuthenticationOptions(), args.CancellationToken);
 
-                Assert.AreEqual(Encoding.UTF8.GetString(result.AuthenticationData), "initial context token");
+                Assert.AreEqual("initial context token", Encoding.UTF8.GetString(result.AuthenticationData));
 
                 var authOptions = testEnvironment.ServerFactory.CreateExchangeExtendedAuthenticationOptionsBuilder().WithAuthenticationData("reply context token").Build();
 
                 result =  await args.ExchangeEnhancedAuthenticationAsync(authOptions, args.CancellationToken);
 
-                Assert.AreEqual(Encoding.UTF8.GetString(result.AuthenticationData), "");
+                Assert.AreEqual(string.Empty, Encoding.UTF8.GetString(result.AuthenticationData));
 
                 args.ResponseAuthenticationData = "outcome of authentication"u8.ToArray();
             }
@@ -271,8 +277,8 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
 
         Assert.IsNotNull(response);
         Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);
-        Assert.AreEqual(response.UserProperties[0].Name, "Property");
-        Assert.AreEqual(response.UserProperties[0].Value, "Value");
+        Assert.AreEqual("Property", response.UserProperties[0].Name);
+        Assert.AreEqual("Value", response.UserProperties[0].Value);
     }
 
     [TestMethod]

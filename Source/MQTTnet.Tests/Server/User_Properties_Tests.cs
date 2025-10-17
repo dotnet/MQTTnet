@@ -52,6 +52,6 @@ public class Feature_Tests
 
         Assert.IsNotNull(receivedMessage);
         Assert.AreEqual("A", receivedMessage.Topic);
-        Assert.AreEqual(4, receivedMessage.UserProperties.Count);
+        Assert.HasCount(4, receivedMessage.UserProperties);
     }
 }

@@ -5,53 +5,52 @@
 using System;
 using MQTTnet.Exceptions;
 
-namespace MQTTnet.Protocol
+namespace MQTTnet.Protocol;
+
+public static class MqttTopicValidator
 {
-    public static class MqttTopicValidator
+    public static void ThrowIfInvalid(MqttApplicationMessage applicationMessage)
     {
-        public static void ThrowIfInvalid(MqttApplicationMessage applicationMessage)
-        {
-            ArgumentNullException.ThrowIfNull(applicationMessage);
+        ArgumentNullException.ThrowIfNull(applicationMessage);
 
-            if (applicationMessage.TopicAlias == 0)
-            {
-                ThrowIfInvalid(applicationMessage.Topic);
-            }
+        if (applicationMessage.TopicAlias == 0)
+        {
+            ThrowIfInvalid(applicationMessage.Topic);
+        }
+    }
+
+    public static void ThrowIfInvalid(string topic)
+    {
+        if (string.IsNullOrEmpty(topic))
+        {
+            throw new MqttProtocolViolationException("Topic should not be empty.");
         }
 
-        public static void ThrowIfInvalid(string topic)
+        foreach (var @char in topic)
         {
-            if (string.IsNullOrEmpty(topic))
+            if (@char == '+')
             {
-                throw new MqttProtocolViolationException("Topic should not be empty.");
+                throw new MqttProtocolViolationException("The character '+' is not allowed in topics.");
             }
 
-            foreach (var @char in topic)
+            if (@char == '#')
             {
-                if (@char == '+')
-                {
-                    throw new MqttProtocolViolationException("The character '+' is not allowed in topics.");
-                }
-
-                if (@char == '#')
-                {
-                    throw new MqttProtocolViolationException("The character '#' is not allowed in topics.");
-                }
+                throw new MqttProtocolViolationException("The character '#' is not allowed in topics.");
             }
         }
+    }
 
-        public static void ThrowIfInvalidSubscribe(string topic)
+    public static void ThrowIfInvalidSubscribe(string topic)
+    {
+        if (string.IsNullOrEmpty(topic))
         {
-            if (string.IsNullOrEmpty(topic))
-            {
-                throw new MqttProtocolViolationException("Topic should not be empty.");
-            }
+            throw new MqttProtocolViolationException("Topic should not be empty.");
+        }
 
-            var indexOfHash = topic.IndexOf("#", StringComparison.Ordinal);
-            if (indexOfHash != -1 && indexOfHash != topic.Length - 1)
-            {
-                throw new MqttProtocolViolationException("The character '#' is only allowed as last character");
-            }
+        var indexOfHash = topic.IndexOf('#', StringComparison.Ordinal);
+        if (indexOfHash != -1 && indexOfHash != topic.Length - 1)
+        {
+            throw new MqttProtocolViolationException("The character '#' is only allowed as last character");
         }
     }
 }

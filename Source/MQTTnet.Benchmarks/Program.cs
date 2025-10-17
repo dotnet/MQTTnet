@@ -5,138 +5,135 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using BenchmarkDotNet.Loggers;
 using BenchmarkDotNet.Running;
-using MQTTnet.Diagnostics;
 
-namespace MQTTnet.Benchmarks
+namespace MQTTnet.Benchmarks;
+
+public static class Program
 {
-    public static class Program
+    static int _selectedBenchmarkIndex;
+    static List<Type> _benchmarks;
+
+    public static void Main(string[] arguments)
     {
-        static int _selectedBenchmarkIndex;
-        static List<Type> _benchmarks;
+        _benchmarks = CollectBenchmarks();
+        HandleArguments(arguments);
 
-        public static void Main(string[] arguments)
+        while (true)
         {
-            _benchmarks = CollectBenchmarks();
-            HandleArguments(arguments);
+            RenderMenu();
 
-            while (true)
+            var key = Console.ReadKey(true);
+
+            if (key.Key == ConsoleKey.DownArrow)
             {
-                RenderMenu();
-
-                var key = Console.ReadKey(true);
-
-                if (key.Key == ConsoleKey.DownArrow)
+                _selectedBenchmarkIndex++;
+                if (_selectedBenchmarkIndex > _benchmarks.Count - 1)
                 {
-                    _selectedBenchmarkIndex++;
-                    if (_selectedBenchmarkIndex > _benchmarks.Count - 1)
-                    {
-                        _selectedBenchmarkIndex = 0;
-                    }
-                }
-                else if (key.Key == ConsoleKey.UpArrow)
-                {
-                    _selectedBenchmarkIndex--;
-                    if (_selectedBenchmarkIndex < 0)
-                    {
-                        _selectedBenchmarkIndex = _benchmarks.Count - 1;
-                    }
-                }
-                else if (key.Key == ConsoleKey.Escape)
-                {
-                    Environment.Exit(0);
-                }
-                else if (key.Key == ConsoleKey.Enter)
-                {
-                    break;
+                    _selectedBenchmarkIndex = 0;
                 }
             }
-
-            BenchmarkRunner.Run(_benchmarks[_selectedBenchmarkIndex]);
-
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Press any key to exit");
-            Console.ReadLine();
-        }
-
-        static List<Type> CollectBenchmarks()
-        {
-            var benchmarks = new List<Type>();
-
-            var types = typeof(Program).Assembly.GetExportedTypes();
-            foreach (var type in types)
+            else if (key.Key == ConsoleKey.UpArrow)
             {
-                if (typeof(BaseBenchmark).IsAssignableFrom(type))
+                _selectedBenchmarkIndex--;
+                if (_selectedBenchmarkIndex < 0)
                 {
-                    if (type != typeof(BaseBenchmark))
-                    {
-                        benchmarks.Add(type);
-                    }
+                    _selectedBenchmarkIndex = _benchmarks.Count - 1;
                 }
             }
-
-            return benchmarks.OrderBy(b => b.Name).ToList();
-        }
-
-        static void HandleArguments(string[] arguments)
-        {
-            if (arguments.Length == 0)
+            else if (key.Key == ConsoleKey.Escape)
             {
-                return;
+                Environment.Exit(0);
             }
-
-            // Allow for preselection to avoid developer frustration.
-
-            if (int.TryParse(arguments[0], out var benchmarkIndex))
+            else if (key.Key == ConsoleKey.Enter)
             {
-                _selectedBenchmarkIndex = benchmarkIndex;
-                return;
-            }
-
-            _selectedBenchmarkIndex = _benchmarks.FindIndex(b => b.Name.Equals(arguments[0]));
-
-            if (_selectedBenchmarkIndex < 0)
-            {
-                _selectedBenchmarkIndex = 0;
-            }
-
-            if (_selectedBenchmarkIndex > _benchmarks.Count - 1)
-            {
-                _selectedBenchmarkIndex = _benchmarks.Count - 1;
+                break;
             }
         }
 
-        static void RenderMenu()
+        BenchmarkRunner.Run(_benchmarks[_selectedBenchmarkIndex]);
+
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("Press any key to exit");
+        Console.ReadLine();
+    }
+
+    static List<Type> CollectBenchmarks()
+    {
+        var benchmarks = new List<Type>();
+
+        var types = typeof(Program).Assembly.GetExportedTypes();
+        foreach (var type in types)
         {
-            Console.Clear();
-
-            Console.WriteLine($"MQTTnet - Benchmarks");
-            Console.WriteLine("-----------------------------------------------");
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("Press arrow keys for benchmark selection");
-            Console.WriteLine("Press Enter for benchmark execution");
-            Console.WriteLine("Press Esc for exit");
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine();
-
-            for (var index = 0; index < _benchmarks.Count; index++)
+            if (typeof(BaseBenchmark).IsAssignableFrom(type))
             {
-                var benchmark = _benchmarks[index];
-
-                if (_selectedBenchmarkIndex == index)
+                if (type != typeof(BaseBenchmark))
                 {
-                    Console.Write("-> ");
+                    benchmarks.Add(type);
                 }
-                else
-                {
-                    Console.Write("   ");
-                }
+            }
+        }
 
-                Console.WriteLine(benchmark.Name);
+        return benchmarks.OrderBy(b => b.Name).ToList();
+    }
+
+    static void HandleArguments(string[] arguments)
+    {
+        if (arguments.Length == 0)
+        {
+            return;
+        }
+
+        // Allow for preselection to avoid developer frustration.
+
+        if (int.TryParse(arguments[0], out var benchmarkIndex))
+        {
+            _selectedBenchmarkIndex = benchmarkIndex;
+            return;
+        }
+
+        _selectedBenchmarkIndex = _benchmarks.FindIndex(b => b.Name.Equals(arguments[0]));
+
+        if (_selectedBenchmarkIndex < 0)
+        {
+            _selectedBenchmarkIndex = 0;
+        }
+
+        if (_selectedBenchmarkIndex > _benchmarks.Count - 1)
+        {
+            _selectedBenchmarkIndex = _benchmarks.Count - 1;
+        }
+    }
+
+    static void RenderMenu()
+    {
+        Console.Clear();
+
+        Console.WriteLine($"MQTTnet - Benchmarks");
+        Console.WriteLine("-----------------------------------------------");
+        Console.ForegroundColor = ConsoleColor.Yellow;
+        Console.WriteLine("Press arrow keys for benchmark selection");
+        Console.WriteLine("Press Enter for benchmark execution");
+        Console.WriteLine("Press Esc for exit");
+        Console.ForegroundColor = ConsoleColor.White;
+        Console.WriteLine();
+
+        for (var index = 0; index < _benchmarks.Count; index++)
+        {
+            var benchmark = _benchmarks[index];
+
+            if (_selectedBenchmarkIndex == index)
+            {
+                Console.Write("-> ");
+            }
+            else
+            {
+                Console.Write("   ");
             }
 
-            Console.WriteLine();
+            Console.WriteLine(benchmark.Name);
         }
+
+        Console.WriteLine();
     }
 }

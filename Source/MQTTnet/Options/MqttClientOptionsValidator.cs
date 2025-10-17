@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Linq;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;
 
@@ -25,12 +24,12 @@ public static class MqttClientOptionsValidator
             return;
         }
 
-        if (options.WillContentType?.Any() == true)
+        if (options.WillContentType?.Length > 0)
         {
             Throw(nameof(options.WillContentType));
         }
 
-        if (options.UserProperties?.Any() == true)
+        if (options.UserProperties?.Count > 0)
         {
             Throw(nameof(options.UserProperties));
         }
@@ -59,12 +58,12 @@ public static class MqttClientOptionsValidator
 
         // Authentication relevant properties.
 
-        if (options.AuthenticationData?.Any() == true)
+        if (options.AuthenticationData?.Length > 0)
         {
             Throw(nameof(options.AuthenticationData));
         }
 
-        if (options.AuthenticationMethod?.Any() == true)
+        if (options.AuthenticationMethod?.Length > 0)
         {
             Throw(nameof(options.AuthenticationMethod));
         }
@@ -76,17 +75,17 @@ public static class MqttClientOptionsValidator
             Throw(nameof(options.WillPayloadFormatIndicator));
         }
 
-        if (options.WillContentType?.Any() == true)
+        if (options.WillContentType?.Length > 0)
         {
             Throw(nameof(options.WillContentType));
         }
 
-        if (options.WillCorrelationData?.Any() == true)
+        if (options.WillCorrelationData?.Length > 0)
         {
             Throw(nameof(options.WillCorrelationData));
         }
 
-        if (options.WillResponseTopic?.Any() == true)
+        if (options.WillResponseTopic?.Length > 0)
         {
             Throw(nameof(options.WillResponseTopic));
         }
@@ -101,7 +100,7 @@ public static class MqttClientOptionsValidator
             Throw(nameof(options.WillMessageExpiryInterval));
         }
 
-        if (options.WillUserProperties?.Any() == true)
+        if (options.WillUserProperties?.Count > 0)
         {
             Throw(nameof(options.WillUserProperties));
         }

@@ -25,28 +25,26 @@ public static class Server_Diagnostics_Samples
         var mqttServerFactory = new MqttServerFactory();
         var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
 
-        using (var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions))
+        using var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
+        // Attach the event handler.
+        mqttServer.ClientAcknowledgedPublishPacketAsync += e =>
         {
-            // Attach the event handler.
-            mqttServer.ClientAcknowledgedPublishPacketAsync += e =>
-            {
-                Console.WriteLine($"Client '{e.ClientId}' acknowledged packet {e.PublishPacket.PacketIdentifier} with topic '{e.PublishPacket.Topic}'");
+            Console.WriteLine($"Client '{e.ClientId}' acknowledged packet {e.PublishPacket.PacketIdentifier} with topic '{e.PublishPacket.Topic}'");
 
-                // It is also possible to read additional data from the client response. This requires casting the response packet.
-                var qos1AcknowledgePacket = e.AcknowledgePacket as MqttPubAckPacket;
-                Console.WriteLine($"QoS 1 reason code: {qos1AcknowledgePacket?.ReasonCode}");
+            // It is also possible to read additional data from the client response. This requires casting the response packet.
+            var qos1AcknowledgePacket = e.AcknowledgePacket as MqttPubAckPacket;
+            Console.WriteLine($"QoS 1 reason code: {qos1AcknowledgePacket?.ReasonCode}");
 
-                var qos2AcknowledgePacket = e.AcknowledgePacket as MqttPubCompPacket;
-                Console.WriteLine($"QoS 2 reason code: {qos1AcknowledgePacket?.ReasonCode}");
-                return CompletedTask.Instance;
-            };
+            var qos2AcknowledgePacket = e.AcknowledgePacket as MqttPubCompPacket;
+            Console.WriteLine($"QoS 2 reason code: {qos2AcknowledgePacket?.ReasonCode}");
+            return CompletedTask.Instance;
+        };
 
-            await mqttServer.StartAsync();
+        await mqttServer.StartAsync();
 
-            Console.WriteLine("Press Enter to exit.");
-            Console.ReadLine();
+        Console.WriteLine("Press Enter to exit.");
+        Console.ReadLine();
 
-            await mqttServer.StopAsync();
-        }
+        await mqttServer.StopAsync();
     }
 }

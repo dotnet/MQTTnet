@@ -439,10 +439,8 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 }
             }
 
-            using (var timeout = new CancellationTokenSource(_options.DefaultCommunicationTimeout))
-            {
-                await channelAdapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
-            }
+            using var timeout = new CancellationTokenSource(_options.DefaultCommunicationTimeout);
+            await channelAdapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
         }
     }
 
@@ -673,14 +671,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     {
         try
         {
-            using (var timeoutToken = new CancellationTokenSource(_options.DefaultCommunicationTimeout))
-            using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, cancellationToken))
+            using var timeoutToken = new CancellationTokenSource(_options.DefaultCommunicationTimeout);
+            using var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, cancellationToken);
+            var firstPacket = await channelAdapter.ReceivePacketAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
+            if (firstPacket is MqttConnectPacket connectPacket)
             {
-                var firstPacket = await channelAdapter.ReceivePacketAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
-                if (firstPacket is MqttConnectPacket connectPacket)
-                {
-                    return connectPacket;
-                }
+                return connectPacket;
             }
         }
         catch (OperationCanceledException)

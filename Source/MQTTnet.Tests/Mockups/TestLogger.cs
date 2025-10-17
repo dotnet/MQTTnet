@@ -5,22 +5,21 @@
 using System;
 using MQTTnet.Diagnostics.Logger;
 
-namespace MQTTnet.Tests.Mockups
+namespace MQTTnet.Tests.Mockups;
+
+public sealed class TestLogger : IMqttNetLogger
 {
-    public sealed class TestLogger : IMqttNetLogger
+    public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
+
+    public bool IsEnabled { get; } = true;
+
+    public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
     {
-        public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
-
-        public bool IsEnabled { get; } = true;
-
-        public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+        LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(new MqttNetLogMessage
         {
-            LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(new MqttNetLogMessage
-            {
-                Level = logLevel,
-                Message = string.Format(message, parameters),
-                Exception = exception
-            }));
-        }
+            Level = logLevel,
+            Message = string.Format(message, parameters),
+            Exception = exception
+        }));
     }
 }

@@ -12,34 +12,28 @@ using System.Threading.Tasks;
 
 namespace MQTTnet.AspNetCore;
 
-public class SocketAwaitable : ICriticalNotifyCompletion
+public class SocketAwaitable(PipeScheduler ioScheduler) : ICriticalNotifyCompletion
 {
-    static readonly Action _callbackCompleted = () =>
+    static readonly Action CallbackCompleted = () =>
     {
     };
 
-    readonly PipeScheduler _ioScheduler;
     int _bytesTransferred;
 
     Action _callback;
     SocketError _error;
 
-    public SocketAwaitable(PipeScheduler ioScheduler)
-    {
-        _ioScheduler = ioScheduler;
-    }
-
-    public bool IsCompleted => ReferenceEquals(_callback, _callbackCompleted);
+    public bool IsCompleted => ReferenceEquals(_callback, CallbackCompleted);
 
     public void Complete(int bytesTransferred, SocketError socketError)
     {
         _error = socketError;
         _bytesTransferred = bytesTransferred;
-        var continuation = Interlocked.Exchange(ref _callback, _callbackCompleted);
+        var continuation = Interlocked.Exchange(ref _callback, CallbackCompleted);
 
         if (continuation != null)
         {
-            _ioScheduler.Schedule(state => ((Action)state)(), continuation);
+            ioScheduler.Schedule(state => ((Action)state)(), continuation);
         }
     }
 
@@ -50,7 +44,7 @@ public class SocketAwaitable : ICriticalNotifyCompletion
 
     public int GetResult()
     {
-        Debug.Assert(ReferenceEquals(_callback, _callbackCompleted));
+        Debug.Assert(ReferenceEquals(_callback, CallbackCompleted));
 
         _callback = null;
 
@@ -64,7 +58,7 @@ public class SocketAwaitable : ICriticalNotifyCompletion
 
     public void OnCompleted(Action continuation)
     {
-        if (ReferenceEquals(_callback, _callbackCompleted) || ReferenceEquals(Interlocked.CompareExchange(ref _callback, continuation, null), _callbackCompleted))
+        if (ReferenceEquals(_callback, CallbackCompleted) || ReferenceEquals(Interlocked.CompareExchange(ref _callback, continuation, null), CallbackCompleted))
         {
             Task.Run(continuation);
         }

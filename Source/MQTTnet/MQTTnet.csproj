@@ -31,7 +31,7 @@
         <RepositoryType>git</RepositoryType>
         <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</PackageTags>
         <NeutralLanguage>en-US</NeutralLanguage>
-        <EnableNETAnalyzers>false</EnableNETAnalyzers>
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <PackageIcon>nuget.png</PackageIcon>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
@@ -45,6 +45,7 @@
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">

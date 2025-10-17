@@ -6,131 +6,127 @@ using System;
 using System.Collections.Generic;
 using MQTTnet.Packets;
 
-namespace MQTTnet.PacketDispatcher
+namespace MQTTnet.PacketDispatcher;
+
+public sealed class MqttPacketDispatcher : IDisposable
 {
-    public sealed class MqttPacketDispatcher : IDisposable
+    readonly List<IMqttPacketAwaitable> _waiters = [];
+
+    bool _isDisposed;
+
+    public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttPacket
     {
-        readonly List<IMqttPacketAwaitable> _waiters = new List<IMqttPacketAwaitable>();
+        var awaitable = new MqttPacketAwaitable<TResponsePacket>(packetIdentifier, this);
 
-        bool _isDisposed;
-
-        public MqttPacketAwaitable<TResponsePacket> AddAwaitable<TResponsePacket>(ushort packetIdentifier) where TResponsePacket : MqttPacket
+        lock (_waiters)
         {
-            var awaitable = new MqttPacketAwaitable<TResponsePacket>(packetIdentifier, this);
-
-            lock (_waiters)
-            {
-                _waiters.Add(awaitable);
-            }
-
-            return awaitable;
+            _waiters.Add(awaitable);
         }
 
-        public void CancelAll()
+        return awaitable;
+    }
+
+    public void CancelAll()
+    {
+        lock (_waiters)
         {
-            lock (_waiters)
+            foreach (var awaitable in _waiters)
             {
-                foreach (var awaitable in _waiters)
+                awaitable.Cancel();
+            }
+
+            _waiters.Clear();
+        }
+    }
+
+    public void Dispose()
+    {
+        Dispose(new ObjectDisposedException(nameof(MqttPacketDispatcher)));
+    }
+
+    public void Dispose(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+
+        lock (_waiters)
+        {
+            FailAll(exception);
+
+            // Make sure that no task can start waiting after this instance is already disposed.
+            // This will prevent unexpected freezes.
+            _isDisposed = true;
+        }
+    }
+
+    public void FailAll(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+
+        lock (_waiters)
+        {
+            foreach (var awaitable in _waiters)
+            {
+                awaitable.Fail(exception);
+            }
+
+            _waiters.Clear();
+        }
+    }
+
+    public void RemoveAwaitable(IMqttPacketAwaitable awaitable)
+    {
+        ArgumentNullException.ThrowIfNull(awaitable);
+
+        lock (_waiters)
+        {
+            _waiters.Remove(awaitable);
+        }
+    }
+
+    public bool TryDispatch(MqttPacket packet)
+    {
+        ArgumentNullException.ThrowIfNull(packet);
+
+        ushort identifier = 0;
+        if (packet is MqttPacketWithIdentifier packetWithIdentifier)
+        {
+            identifier = packetWithIdentifier.PacketIdentifier;
+        }
+
+        var packetType = packet.GetType();
+        var waiters = new List<IMqttPacketAwaitable>();
+
+        lock (_waiters)
+        {
+            ThrowIfDisposed();
+
+            for (var i = _waiters.Count - 1; i >= 0; i--)
+            {
+                var entry = _waiters[i];
+
+                // Note: The PingRespPacket will also arrive here and has NO identifier but there
+                // is code which waits for it. So the code must be able to deal with filters which
+                // are referring to the type only (identifier is 0)!
+                if (entry.Filter.Type != packetType || entry.Filter.Identifier != identifier)
                 {
-                    awaitable.Cancel();
+                    continue;
                 }
 
-                _waiters.Clear();
+                waiters.Add(entry);
+                _waiters.RemoveAt(i);
             }
         }
 
-        public void Dispose()
+        foreach (var matchingEntry in waiters)
         {
-            Dispose(new ObjectDisposedException(nameof(MqttPacketDispatcher)));
+            matchingEntry.Complete(packet);
         }
 
-        public void Dispose(Exception exception)
-        {
-            ArgumentNullException.ThrowIfNull(exception);
+        return waiters.Count > 0;
+    }
 
-            lock (_waiters)
-            {
-                FailAll(exception);
-
-                // Make sure that no task can start waiting after this instance is already disposed.
-                // This will prevent unexpected freezes.
-                _isDisposed = true;
-            }
-        }
-
-        public void FailAll(Exception exception)
-        {
-            ArgumentNullException.ThrowIfNull(exception);
-
-            lock (_waiters)
-            {
-                foreach (var awaitable in _waiters)
-                {
-                    awaitable.Fail(exception);
-                }
-
-                _waiters.Clear();
-            }
-        }
-
-        public void RemoveAwaitable(IMqttPacketAwaitable awaitable)
-        {
-            ArgumentNullException.ThrowIfNull(awaitable);
-
-            lock (_waiters)
-            {
-                _waiters.Remove(awaitable);
-            }
-        }
-
-        public bool TryDispatch(MqttPacket packet)
-        {
-            ArgumentNullException.ThrowIfNull(packet);
-
-            ushort identifier = 0;
-            if (packet is MqttPacketWithIdentifier packetWithIdentifier)
-            {
-                identifier = packetWithIdentifier.PacketIdentifier;
-            }
-
-            var packetType = packet.GetType();
-            var waiters = new List<IMqttPacketAwaitable>();
-
-            lock (_waiters)
-            {
-                ThrowIfDisposed();
-
-                for (var i = _waiters.Count - 1; i >= 0; i--)
-                {
-                    var entry = _waiters[i];
-
-                    // Note: The PingRespPacket will also arrive here and has NO identifier but there
-                    // is code which waits for it. So the code must be able to deal with filters which
-                    // are referring to the type only (identifier is 0)!
-                    if (entry.Filter.Type != packetType || entry.Filter.Identifier != identifier)
-                    {
-                        continue;
-                    }
-
-                    waiters.Add(entry);
-                    _waiters.RemoveAt(i);
-                }
-            }
-
-            foreach (var matchingEntry in waiters)
-            {
-                matchingEntry.Complete(packet);
-            }
-
-            return waiters.Count > 0;
-        }
-
-        void ThrowIfDisposed()
-        {
-            if (_isDisposed)
-            {
-                throw new ObjectDisposedException(nameof(MqttPacketDispatcher));
-            }
-        }
+    void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
     }
 }

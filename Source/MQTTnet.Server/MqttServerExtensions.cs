@@ -29,9 +29,9 @@ public static class MqttServerExtensions
         ArgumentNullException.ThrowIfNull(topic);
 
         var payloadBuffer = EmptyBuffer.Array;
-        if (payload is string stringPayload)
+        if (payload != null)
         {
-            payloadBuffer = Encoding.UTF8.GetBytes(stringPayload);
+            payloadBuffer = Encoding.UTF8.GetBytes(payload);
         }
 
         return server.InjectApplicationMessage(

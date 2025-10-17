@@ -5,91 +5,90 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests.Factory
+namespace MQTTnet.Tests.Factory;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class MqttFactory_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class MqttFactory_Tests : BaseTestClass
+    [TestMethod]
+    public void Create_ApplicationMessageBuilder()
     {
+        var factory = new MqttClientFactory();
+        var builder = factory.CreateApplicationMessageBuilder();
 
-        [TestMethod]
-        public void Create_ApplicationMessageBuilder()
-        {
-            var factory = new MqttClientFactory();
-            var builder = factory.CreateApplicationMessageBuilder();
+        Assert.IsNotNull(builder);
+    }
 
-            Assert.IsNotNull(builder);
-        }
+    [TestMethod]
+    public void Create_ClientOptionsBuilder()
+    {
+        var factory = new MqttClientFactory();
+        var builder = factory.CreateClientOptionsBuilder();
 
-        [TestMethod]
-        public void Create_ClientOptionsBuilder()
-        {
-            var factory = new MqttClientFactory();
-            var builder = factory.CreateClientOptionsBuilder();
+        Assert.IsNotNull(builder);
+    }
 
-            Assert.IsNotNull(builder);
-        }
+    [TestMethod]
+    public void Create_ServerOptionsBuilder()
+    {
+        var factory = new MqttServerFactory();
+        var builder = factory.CreateServerOptionsBuilder();
 
-        [TestMethod]
-        public void Create_ServerOptionsBuilder()
-        {
-            var factory = new MqttServerFactory();
-            var builder = factory.CreateServerOptionsBuilder();
+        Assert.IsNotNull(builder);
+    }
 
-            Assert.IsNotNull(builder);
-        }
+    [TestMethod]
+    public void Create_SubscribeOptionsBuilder()
+    {
+        var factory = new MqttClientFactory();
+        var builder = factory.CreateSubscribeOptionsBuilder();
 
-        [TestMethod]
-        public void Create_SubscribeOptionsBuilder()
-        {
-            var factory = new MqttClientFactory();
-            var builder = factory.CreateSubscribeOptionsBuilder();
+        Assert.IsNotNull(builder);
+    }
 
-            Assert.IsNotNull(builder);
-        }
+    [TestMethod]
+    public void Create_UnsubscribeOptionsBuilder()
+    {
+        var factory = new MqttClientFactory();
+        var builder = factory.CreateUnsubscribeOptionsBuilder();
 
-        [TestMethod]
-        public void Create_UnsubscribeOptionsBuilder()
-        {
-            var factory = new MqttClientFactory();
-            var builder = factory.CreateUnsubscribeOptionsBuilder();
+        Assert.IsNotNull(builder);
+    }
 
-            Assert.IsNotNull(builder);
-        }
+    [TestMethod]
+    public void Create_TopicFilterBuilder()
+    {
+        var factory = new MqttClientFactory();
+        var builder = factory.CreateTopicFilterBuilder();
 
-        [TestMethod]
-        public void Create_TopicFilterBuilder()
-        {
-            var factory = new MqttClientFactory();
-            var builder = factory.CreateTopicFilterBuilder();
+        Assert.IsNotNull(builder);
+    }
 
-            Assert.IsNotNull(builder);
-        }
+    [TestMethod]
+    public void Create_MqttServer()
+    {
+        var factory = new MqttServerFactory();
+        var server = factory.CreateMqttServer(new MqttServerOptionsBuilder().Build());
 
-        [TestMethod]
-        public void Create_MqttServer()
-        {
-            var factory = new MqttServerFactory();
-            var server = factory.CreateMqttServer(new MqttServerOptionsBuilder().Build());
+        Assert.IsNotNull(server);
+    }
 
-            Assert.IsNotNull(server);
-        }
+    [TestMethod]
+    public void Create_MqttClient()
+    {
+        var factory = new MqttClientFactory();
+        var client = factory.CreateMqttClient();
 
-        [TestMethod]
-        public void Create_MqttClient()
-        {
-            var factory = new MqttClientFactory();
-            var client = factory.CreateMqttClient();
+        Assert.IsNotNull(client);
+    }
 
-            Assert.IsNotNull(client);
-        }
+    [TestMethod]
+    public void Create_LowLevelMqttClient()
+    {
+        var factory = new MqttClientFactory();
+        var client = factory.CreateLowLevelMqttClient();
 
-        [TestMethod]
-        public void Create_LowLevelMqttClient()
-        {
-            var factory = new MqttClientFactory();
-            var client = factory.CreateLowLevelMqttClient();
-
-            Assert.IsNotNull(client);
-        }
+        Assert.IsNotNull(client);
     }
 }

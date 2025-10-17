@@ -6,40 +6,39 @@ using System;
 using System.Threading.Tasks;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public sealed class MqttPacketBusItem
 {
-    public sealed class MqttPacketBusItem
+    readonly AsyncTaskCompletionSource<MqttPacket> _promise = new();
+
+    public MqttPacketBusItem(MqttPacket packet)
     {
-        readonly AsyncTaskCompletionSource<MqttPacket> _promise = new AsyncTaskCompletionSource<MqttPacket>();
+        Packet = packet ?? throw new ArgumentNullException(nameof(packet));
+    }
 
-        public MqttPacketBusItem(MqttPacket packet)
-        {
-            Packet = packet ?? throw new ArgumentNullException(nameof(packet));
-        }
+    public event EventHandler Completed;
 
-        public event EventHandler Completed;
+    public MqttPacket Packet { get; }
 
-        public MqttPacket Packet { get; }
+    public void Cancel()
+    {
+        _promise.TrySetCanceled();
+    }
 
-        public void Cancel()
-        {
-            _promise.TrySetCanceled();
-        }
+    public void Complete()
+    {
+        _promise.TrySetResult(Packet);
+        Completed?.Invoke(this, EventArgs.Empty);
+    }
 
-        public void Complete()
-        {
-            _promise.TrySetResult(Packet);
-            Completed?.Invoke(this, EventArgs.Empty);
-        }
+    public void Fail(Exception exception)
+    {
+        _promise.TrySetException(exception);
+    }
 
-        public void Fail(Exception exception)
-        {
-            _promise.TrySetException(exception);
-        }
-
-        public Task<MqttPacket> WaitAsync()
-        {
-            return _promise.Task;
-        }
+    public Task<MqttPacket> WaitAsync()
+    {
+        return _promise.Task;
     }
 }

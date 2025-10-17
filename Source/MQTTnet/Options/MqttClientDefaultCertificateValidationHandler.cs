@@ -18,7 +18,7 @@ public sealed class MqttClientDefaultCertificateValidationHandler
         }
 
         if (eventArgs.Chain.ChainStatus.Any(
-                c => c.Status == X509ChainStatusFlags.RevocationStatusUnknown || c.Status == X509ChainStatusFlags.Revoked || c.Status == X509ChainStatusFlags.OfflineRevocation))
+                c => c.Status is X509ChainStatusFlags.RevocationStatusUnknown or X509ChainStatusFlags.Revoked or X509ChainStatusFlags.OfflineRevocation))
         {
             if (eventArgs.ClientOptions?.TlsOptions?.IgnoreCertificateRevocationErrors != true)
             {

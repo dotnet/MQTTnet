@@ -4,12 +4,11 @@
 
 using System;
 
-namespace MQTTnet.PacketDispatcher
+namespace MQTTnet.PacketDispatcher;
+
+public sealed class MqttPacketAwaitableFilter
 {
-    public sealed class MqttPacketAwaitableFilter
-    {
-        public Type Type { get; set; }
-        
-        public ushort Identifier { get; set; }
-    }
+    public Type Type { get; set; }
+
+    public ushort Identifier { get; set; }
 }

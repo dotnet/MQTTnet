@@ -4,10 +4,9 @@
 
 using System.Threading.Tasks;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public static class CompletedTask
 {
-    public static class CompletedTask
-    {
-        public static readonly Task Instance = Task.CompletedTask;
-    }
+    public static readonly Task Instance = Task.CompletedTask;
 }

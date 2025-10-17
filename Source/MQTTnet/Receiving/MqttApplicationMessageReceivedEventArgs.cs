@@ -71,7 +71,7 @@ public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     /// <summary>
     ///     Gets or sets the user properties which will be sent to the server in the ACK packet etc.
     /// </summary>
-    public List<MqttUserProperty> ResponseUserProperties { get; } = new();
+    public List<MqttUserProperty> ResponseUserProperties { get; } = [];
 
     public object Tag { get; set; }
 

@@ -12,135 +12,134 @@ using MQTTnet.Exceptions;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 
-namespace MQTTnet.LowLevelClient
+namespace MQTTnet.LowLevelClient;
+
+public sealed class LowLevelMqttClient : ILowLevelMqttClient
 {
-    public sealed class LowLevelMqttClient : ILowLevelMqttClient
+    readonly IMqttClientAdapterFactory _clientAdapterFactory;
+    readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new();
+    readonly MqttNetSourceLogger _logger;
+    readonly IMqttNetLogger _rootLogger;
+
+    IMqttChannelAdapter _adapter;
+
+    public LowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory, IMqttNetLogger logger)
     {
-        readonly IMqttClientAdapterFactory _clientAdapterFactory;
-        readonly AsyncEvent<InspectMqttPacketEventArgs> _inspectPacketEvent = new AsyncEvent<InspectMqttPacketEventArgs>();
-        readonly MqttNetSourceLogger _logger;
-        readonly IMqttNetLogger _rootLogger;
+        _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
 
-        IMqttChannelAdapter _adapter;
+        _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _logger = logger.WithSource(nameof(LowLevelMqttClient));
+    }
 
-        public LowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory, IMqttNetLogger logger)
+    public event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync
+    {
+        add => _inspectPacketEvent.AddHandler(value);
+        remove => _inspectPacketEvent.RemoveHandler(value);
+    }
+
+    public bool IsConnected => _adapter != null;
+
+    public async Task ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(options);
+
+        if (_adapter != null)
         {
-            _clientAdapterFactory = clientAdapterFactory ?? throw new ArgumentNullException(nameof(clientAdapterFactory));
-
-            _rootLogger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _logger = logger.WithSource(nameof(LowLevelMqttClient));
+            throw new InvalidOperationException("Low level MQTT client is already connected. Disconnect first before connecting again.");
         }
 
-        public event Func<InspectMqttPacketEventArgs, Task> InspectPacketAsync
+        MqttPacketInspector packetInspector = null;
+        if (_inspectPacketEvent.HasHandlers)
         {
-            add => _inspectPacketEvent.AddHandler(value);
-            remove => _inspectPacketEvent.RemoveHandler(value);
+            packetInspector = new MqttPacketInspector(_inspectPacketEvent, _rootLogger);
         }
 
-        public bool IsConnected => _adapter != null;
+        var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, packetInspector, _rootLogger);
 
-        public async Task ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken)
+        try
         {
-            ArgumentNullException.ThrowIfNull(options);
-
-            if (_adapter != null)
-            {
-                throw new InvalidOperationException("Low level MQTT client is already connected. Disconnect first before connecting again.");
-            }
-
-            MqttPacketInspector packetInspector = null;
-            if (_inspectPacketEvent.HasHandlers)
-            {
-                packetInspector = new MqttPacketInspector(_inspectPacketEvent, _rootLogger);
-            }
-
-            var newAdapter = _clientAdapterFactory.CreateClientAdapter(options, packetInspector, _rootLogger);
-
-            try
-            {
-                _logger.Verbose("Trying to connect with server '{0}'", options.ChannelOptions);
-                await newAdapter.ConnectAsync(cancellationToken).ConfigureAwait(false);
-                _logger.Verbose("Connection with server established");
-            }
-            catch (Exception)
-            {
-                _adapter?.Dispose();
-                throw;
-            }
-
-            _adapter = newAdapter;
+            _logger.Verbose("Trying to connect with server '{0}'", options.ChannelOptions);
+            await newAdapter.ConnectAsync(cancellationToken).ConfigureAwait(false);
+            _logger.Verbose("Connection with server established");
         }
-
-        public async Task DisconnectAsync(CancellationToken cancellationToken)
-        {
-            var adapter = _adapter;
-            if (adapter == null)
-            {
-                throw new InvalidOperationException("Low level MQTT client is not connected.");
-            }
-
-            try
-            {
-                await adapter.DisconnectAsync(cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                Dispose();
-                throw;
-            }
-        }
-
-        public void Dispose()
+        catch
         {
             _adapter?.Dispose();
-            _adapter = null;
+            throw;
         }
 
-        public async Task<MqttPacket> ReceiveAsync(CancellationToken cancellationToken)
+        _adapter = newAdapter;
+    }
+
+    public async Task DisconnectAsync(CancellationToken cancellationToken)
+    {
+        var adapter = _adapter;
+        if (adapter == null)
         {
-            var adapter = _adapter;
-            if (adapter == null)
-            {
-                throw new InvalidOperationException("Low level MQTT client is not connected.");
-            }
-
-            try
-            {
-                var receivedPacket = await adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
-                if (receivedPacket == null)
-                {
-                    // Graceful socket close.
-                    throw new MqttCommunicationException("The connection is closed.");
-                }
-
-                return receivedPacket;
-            }
-            catch
-            {
-                Dispose();
-                throw;
-            }
+            throw new InvalidOperationException("Low level MQTT client is not connected.");
         }
 
-        public async Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
+        try
         {
-            ArgumentNullException.ThrowIfNull(packet);
+            await adapter.DisconnectAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            Dispose();
+            throw;
+        }
+    }
 
-            var adapter = _adapter;
-            if (adapter == null)
+    public void Dispose()
+    {
+        _adapter?.Dispose();
+        _adapter = null;
+    }
+
+    public async Task<MqttPacket> ReceiveAsync(CancellationToken cancellationToken)
+    {
+        var adapter = _adapter;
+        if (adapter == null)
+        {
+            throw new InvalidOperationException("Low level MQTT client is not connected.");
+        }
+
+        try
+        {
+            var receivedPacket = await adapter.ReceivePacketAsync(cancellationToken).ConfigureAwait(false);
+            if (receivedPacket == null)
             {
-                throw new InvalidOperationException("Low level MQTT client is not connected.");
+                // Graceful socket close.
+                throw new MqttCommunicationException("The connection is closed.");
             }
 
-            try
-            {
-                await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
-            }
-            catch
-            {
-                Dispose();
-                throw;
-            }
+            return receivedPacket;
+        }
+        catch
+        {
+            Dispose();
+            throw;
+        }
+    }
+
+    public async Task SendAsync(MqttPacket packet, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(packet);
+
+        var adapter = _adapter;
+        if (adapter == null)
+        {
+            throw new InvalidOperationException("Low level MQTT client is not connected.");
+        }
+
+        try
+        {
+            await adapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            Dispose();
+            throw;
         }
     }
 }

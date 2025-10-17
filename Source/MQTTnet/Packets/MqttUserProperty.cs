@@ -18,9 +18,9 @@ public sealed class MqttUserProperty
 
     public string Value { get; }
 
-    public override bool Equals(object other)
+    public override bool Equals(object obj)
     {
-        return Equals(other as MqttUserProperty);
+        return Equals(obj as MqttUserProperty);
     }
 
     public bool Equals(MqttUserProperty other)

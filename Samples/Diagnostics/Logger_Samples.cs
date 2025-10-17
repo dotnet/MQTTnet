@@ -26,17 +26,15 @@ public static class Logger_Samples
             .WithTcpServer("broker.hivemq.com")
             .Build();
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
-        {
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            Console.WriteLine("MQTT client is connected.");
+        Console.WriteLine("MQTT client is connected.");
 
-            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
-                .Build();
+        var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
+            .Build();
 
-            await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
-        }
+        await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
     }
 
     public static async Task Use_Event_Logger()
@@ -50,7 +48,7 @@ public static class Logger_Samples
         // The logger ID is optional but can be set do distinguish different logger instances.
         var mqttEventLogger = new MqttNetEventLogger("MyCustomLogger");
 
-        mqttEventLogger.LogMessagePublished += (sender, args) =>
+        mqttEventLogger.LogMessagePublished += (_, args) =>
         {
             var output = new StringBuilder();
             output.AppendLine($">> [{args.LogMessage.Timestamp:O}] [{args.LogMessage.ThreadId}] [{args.LogMessage.Source}] [{args.LogMessage.Level}]: {args.LogMessage.Message}");
@@ -68,17 +66,15 @@ public static class Logger_Samples
             .WithTcpServer("broker.hivemq.com")
             .Build();
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
-        {
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            Console.WriteLine("MQTT client is connected.");
+        Console.WriteLine("MQTT client is connected.");
 
-            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
-                .Build();
+        var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
+            .Build();
 
-            await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
-        }
+        await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
     }
 
     sealed class MyLogger : IMqttNetLogger

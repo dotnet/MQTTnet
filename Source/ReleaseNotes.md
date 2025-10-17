@@ -3,3 +3,4 @@
 * Server: Improved performance of retained messages when no event handler is attached (#2093, thanks to @zhaowgit)
 * Marked all projects as AOT compatible
 * Restored the strong name of the nugets
+* Embedded license file in all nugets (#2197, thanks to @JensNordenbro)

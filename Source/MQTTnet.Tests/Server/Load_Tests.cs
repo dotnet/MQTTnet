@@ -1,3 +1,5 @@
+#if DEBUG
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,9 +11,8 @@ using MQTTnet.Protocol;
 namespace MQTTnet.Tests.Server;
 
 // ReSharper disable InconsistentNaming
-#if DEBUG
+
 [TestClass]
-#endif
 public sealed class Load_Tests : BaseTestClass
 {
     [TestMethod]
@@ -157,3 +158,5 @@ public sealed class Load_Tests : BaseTestClass
         Assert.IsTrue(result);
     }
 }
+
+#endif

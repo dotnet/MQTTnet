@@ -29,7 +29,7 @@ jobs:
           SNC_BASE64: ${{ secrets.SNC_BASE64 }}
 
       - name: Build package
-        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}${{ env.PACKAGE_SUFFIX }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}\certificate.snk
+        run: dotnet build MQTTnet.sln --configuration Release /p:FileVersion=${{ env.VERSION }} /p:AssemblyVersion=${{ env.VERSION }} /p:PackageVersion=${{ env.VERSION }}${{ env.PACKAGE_SUFFIX }} /p:SignAssembly=true /p:AssemblyOriginatorKeyFile=${{ github.workspace }}/certificate.snk
 
       - name: Upload nuget packages
         uses: actions/upload-artifact@v4

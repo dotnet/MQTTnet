@@ -189,16 +189,9 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                         continue;
                     }
 
-                    if (_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
+                    if (await ShouldSkipEnqueue(senderId, session.Id, applicationMessage))
                     {
-                        var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, session.Id, applicationMessage);
-                        await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-
-                        if (!eventArgs.AcceptEnqueue)
-                        {
-                            // Continue checking the other subscriptions
-                            continue;
-                        }
+                        continue;
                     }
 
                     var publishPacketCopy = MqttPublishPacketFactory.Create(applicationMessage);
@@ -311,25 +304,6 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         return Task.FromResult((IList<MqttClientStatus>)result);
     }
 
-    public Task<MqttSessionStatus> GetSessionStatus(string id)
-    {
-        _sessionsManagementLock.EnterReadLock();
-        try
-        {
-            if (!_sessionsStorage.TryGetSession(id, out var session))
-            {
-                throw new InvalidOperationException($"Session with ID '{id}' not found.");
-            }
-
-            var sessionStatus = new MqttSessionStatus(session);
-            return Task.FromResult(sessionStatus);
-        }
-        finally
-        {
-            _sessionsManagementLock.ExitReadLock();
-        }
-    }
-
     public Task<IList<MqttSessionStatus>> GetSessionsStatus()
     {
         var result = new List<MqttSessionStatus>();
@@ -349,6 +323,25 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
 
         return Task.FromResult((IList<MqttSessionStatus>)result);
+    }
+
+    public Task<MqttSessionStatus> GetSessionStatus(string id)
+    {
+        _sessionsManagementLock.EnterReadLock();
+        try
+        {
+            if (!_sessionsStorage.TryGetSession(id, out var session))
+            {
+                throw new InvalidOperationException($"Session with ID '{id}' not found.");
+            }
+
+            var sessionStatus = new MqttSessionStatus(session);
+            return Task.FromResult(sessionStatus);
+        }
+        finally
+        {
+            _sessionsManagementLock.ExitReadLock();
+        }
     }
 
     public async Task HandleClientConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
@@ -512,6 +505,11 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         {
             foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
             {
+                if (await ShouldSkipEnqueue(string.Empty, clientId, retainedMessageMatch.ApplicationMessage))
+                {
+                    continue;
+                }
+
                 var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
                 clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
             }
@@ -734,6 +732,19 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             default:
                 throw new NotSupportedException();
         }
+    }
+
+    async Task<bool> ShouldSkipEnqueue(string senderId, string clientId, MqttApplicationMessage applicationMessage)
+    {
+        if (!_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
+        {
+            return false;
+        }
+
+        var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, clientId, applicationMessage);
+        await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+
+        return !eventArgs.AcceptEnqueue;
     }
 
     async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)

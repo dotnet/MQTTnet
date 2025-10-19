@@ -22,6 +22,8 @@ public interface IMqttChannelAdapter : IDisposable
 
     EndPoint RemoteEndPoint { get; }
 
+    EndPoint LocalEndPoint { get; }
+
     bool IsSecureConnection { get; }
 
     MqttPacketFormatterAdapter PacketFormatterAdapter { get; }

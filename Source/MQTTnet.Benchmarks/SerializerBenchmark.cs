@@ -79,6 +79,8 @@ public class SerializerBenchmark : BaseBenchmark
 
         public EndPoint RemoteEndPoint { get; set; }
 
+        public EndPoint LocalEndPoint { get; set; }
+
         public bool IsSecureConnection { get; } = false;
 
         public X509Certificate2 ClientCertificate { get; set; }

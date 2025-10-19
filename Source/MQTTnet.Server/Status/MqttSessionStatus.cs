@@ -58,7 +58,7 @@ public sealed class MqttSessionStatus
 
         await packetBusItem.WaitAsync().ConfigureAwait(false);
 
-        var injectResult = new InjectMqttApplicationMessageResult()
+        var injectResult = new InjectMqttApplicationMessageResult
         {
             PacketIdentifier = publishPacket.PacketIdentifier
         };

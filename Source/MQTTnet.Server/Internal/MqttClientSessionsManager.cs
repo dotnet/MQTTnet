@@ -189,7 +189,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                         continue;
                     }
 
-                    if (await ShouldSkipEnqueue(senderId, session.Id, applicationMessage))
+                    if (await _eventContainer.ShouldSkipEnqueue(senderId, session.Id, applicationMessage))
                     {
                         continue;
                     }
@@ -501,18 +501,20 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
         var subscribeResult = await clientSession.Subscribe(fakeSubscribePacket, CancellationToken.None).ConfigureAwait(false);
 
-        if (subscribeResult.RetainedMessages != null)
+        if (subscribeResult.RetainedMessages == null)
         {
-            foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
-            {
-                if (await ShouldSkipEnqueue(string.Empty, clientId, retainedMessageMatch.ApplicationMessage))
-                {
-                    continue;
-                }
+            return;
+        }
 
-                var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
-                clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+        foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+        {
+            if (await _eventContainer.ShouldSkipEnqueue(string.Empty, clientId, retainedMessageMatch.ApplicationMessage))
+            {
+                continue;
             }
+
+            var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
+            clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
         }
     }
 
@@ -732,19 +734,6 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             default:
                 throw new NotSupportedException();
         }
-    }
-
-    async Task<bool> ShouldSkipEnqueue(string senderId, string clientId, MqttApplicationMessage applicationMessage)
-    {
-        if (!_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
-        {
-            return false;
-        }
-
-        var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, clientId, applicationMessage);
-        await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-
-        return !eventArgs.AcceptEnqueue;
     }
 
     async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)

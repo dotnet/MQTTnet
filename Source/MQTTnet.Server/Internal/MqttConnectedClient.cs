@@ -284,13 +284,20 @@ public sealed class MqttConnectedClient : IDisposable
             return;
         }
 
-        if (subscribeResult.RetainedMessages != null)
+        if (subscribeResult.RetainedMessages == null)
         {
-            foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+            return;
+        }
+
+        foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+        {
+            if (await _eventContainer.ShouldSkipEnqueue(string.Empty, Id, retainedMessageMatch.ApplicationMessage))
             {
-                var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
-                Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+                continue;
             }
+
+            var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
+            Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
         }
     }
 

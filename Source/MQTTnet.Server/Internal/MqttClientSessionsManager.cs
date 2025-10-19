@@ -736,6 +736,19 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
     }
 
+    async Task<bool> ShouldSkipEnqueue(string senderId, string clientId, MqttApplicationMessage applicationMessage)
+    {
+        if (!_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
+        {
+            return false;
+        }
+
+        var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, clientId, applicationMessage);
+        await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+
+        return !eventArgs.AcceptEnqueue;
+    }
+
     async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
     {
         // TODO: Load session items from persisted sessions in the future.

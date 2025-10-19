@@ -54,6 +54,8 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
     public EndPoint RemoteEndPoint => _channel.RemoteEndPoint;
 
+    public EndPoint LocalEndPoint => _channel.LocalEndPoint;
+
     public bool IsSecureConnection => _channel.IsSecureConnection;
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }

@@ -14,8 +14,28 @@ namespace MQTTnet.Tests.Server;
 
 // ReSharper disable InconsistentNaming
 [TestClass]
-public sealed class Security_Tests : BaseTestClass
+public class Security_Tests : BaseTestClass
 {
+    [TestMethod]
+    public async Task Deny_Connection()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        testEnvironment.IgnoreClientLogErrors = true;
+
+        var server = await testEnvironment.StartServer();
+
+        server.ValidatingConnectionAsync += e =>
+        {
+            e.ReasonCode = MqttConnectReasonCode.NotAuthorized;
+            return CompletedTask.Instance;
+        };
+
+        var client = testEnvironment.CreateClient();
+        var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptions());
+
+        Assert.AreEqual(MqttClientConnectResultCode.NotAuthorized, response.ResultCode);
+    }
+
     [TestMethod]
     public async Task Do_Not_Affect_Authorized_Clients()
     {

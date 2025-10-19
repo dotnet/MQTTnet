@@ -39,6 +39,8 @@ public sealed class MqttWebSocketChannel : IMqttChannel
 
     public EndPoint RemoteEndPoint { get; }
 
+    public EndPoint LocalEndPoint { get; }
+
     public bool IsSecureConnection { get; private set; }
 
     public async Task ConnectAsync(CancellationToken cancellationToken)

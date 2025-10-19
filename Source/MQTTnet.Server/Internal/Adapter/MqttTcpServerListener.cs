@@ -211,7 +211,7 @@ public sealed class MqttTcpServerListener : IDisposable
             var clientHandler = ClientHandler;
             if (clientHandler != null)
             {
-                var tcpChannel = new MqttTcpChannel(stream, remoteEndPoint, clientCertificate);
+                var tcpChannel = new MqttTcpChannel(stream, _localEndPoint, remoteEndPoint, clientCertificate);
                 var bufferWriter = new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax);
                 var packetFormatterAdapter = new MqttPacketFormatterAdapter(bufferWriter);
 

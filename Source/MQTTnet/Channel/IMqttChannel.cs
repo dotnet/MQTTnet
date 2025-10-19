@@ -14,7 +14,10 @@ namespace MQTTnet.Channel;
 public interface IMqttChannel : IDisposable
 {
     X509Certificate2 ClientCertificate { get; }
+
     EndPoint RemoteEndPoint { get; }
+
+    EndPoint LocalEndPoint { get; }
 
     bool IsSecureConnection { get; }
 

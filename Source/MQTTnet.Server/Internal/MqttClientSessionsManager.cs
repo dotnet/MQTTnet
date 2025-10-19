@@ -189,7 +189,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                         continue;
                     }
 
-                    if (await ShouldSkipEnqueue(senderId, session.Id, applicationMessage))
+                    if (await _eventContainer.ShouldSkipEnqueue(senderId, session.Id, applicationMessage))
                     {
                         continue;
                     }
@@ -501,18 +501,20 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
         var subscribeResult = await clientSession.Subscribe(fakeSubscribePacket, CancellationToken.None).ConfigureAwait(false);
 
-        if (subscribeResult.RetainedMessages != null)
+        if (subscribeResult.RetainedMessages == null)
         {
-            foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
-            {
-                if (await ShouldSkipEnqueue(string.Empty, clientId, retainedMessageMatch.ApplicationMessage))
-                {
-                    continue;
-                }
+            return;
+        }
 
-                var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
-                clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+        foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+        {
+            if (await _eventContainer.ShouldSkipEnqueue(string.Empty, clientId, retainedMessageMatch.ApplicationMessage))
+            {
+                continue;
             }
+
+            var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
+            clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
         }
     }
 

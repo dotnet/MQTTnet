@@ -24,4 +24,9 @@ public abstract class BaseTestClass
     {
         return Task.Delay(TimeSpan.FromSeconds(1));
     }
+
+    protected Task MediumTestDelay()
+    {
+        return Task.Delay(TimeSpan.FromSeconds(0.5));
+    }
 }

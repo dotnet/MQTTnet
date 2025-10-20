@@ -1,5 +1,6 @@
 * Core: Used new language features across the entire library
 * Core: Performance improvements
+* Core: Added validations for variable byte integers which do not match the .NET uint perfectly
 * Server: Improved performance of retained messages when no event handler is attached (#2093, thanks to @zhaowgit)
 * Server: The event `InterceptingClientEnqueue` is now also called for retained messages (BREAKING CHANGE!)
 * Server: The local end point is now also exposed in the channel adapter (#2179)

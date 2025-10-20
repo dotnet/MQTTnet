@@ -20,12 +20,12 @@ public abstract class BaseTestClass
         return new TestEnvironment(TestContext, protocolVersion, trackUnobservedTaskException);
     }
 
-    protected Task LongTestDelay()
+    public static Task LongTestDelay()
     {
         return Task.Delay(TimeSpan.FromSeconds(1));
     }
 
-    protected Task MediumTestDelay()
+    public static Task MediumTestDelay()
     {
         return Task.Delay(TimeSpan.FromSeconds(0.5));
     }

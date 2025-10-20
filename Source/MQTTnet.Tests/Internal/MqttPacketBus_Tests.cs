@@ -35,15 +35,15 @@ public sealed class MqttPacketBus_Tests
 
         Assert.AreEqual(9, bus.TotalItemsCount);
 
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+        Assert.IsInstanceOfType<MqttPublishPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttSubAckPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttPingRespPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttPublishPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttSubAckPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttPingRespPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttPublishPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttSubAckPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
+        Assert.IsInstanceOfType<MqttPingRespPacket>(bus.DequeueItemAsync(CancellationToken.None).Result.Packet);
 
         Assert.AreEqual(0, bus.TotalItemsCount);
     }

@@ -8,6 +8,7 @@
 // ReSharper disable EmptyConstructor
 // ReSharper disable MemberCanBeMadeStatic.Local
 
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,14 +53,14 @@ public static class Server_ASP_NET_Samples
             // Inject other services via constructor.
         }
 
-        public Task OnClientConnected(ClientConnectedEventArgs eventArgs)
+        public static Task OnClientConnected(ClientConnectedEventArgs eventArgs)
         {
             Console.WriteLine($"Client '{eventArgs.ClientId}' connected.");
             return Task.CompletedTask;
         }
 
 
-        public Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
+        public static Task ValidateConnection(ValidatingConnectionEventArgs eventArgs)
         {
             Console.WriteLine($"Client '{eventArgs.ClientId}' wants to connect. Accepting!");
             return Task.CompletedTask;
@@ -68,6 +69,7 @@ public static class Server_ASP_NET_Samples
 
     sealed class Startup
     {
+        [SuppressMessage("Performance", "CA1822:Mark members as static")]
         public void Configure(IApplicationBuilder app, IWebHostEnvironment environment, MqttController mqttController)
         {
             app.UseRouting();
@@ -88,11 +90,12 @@ public static class Server_ASP_NET_Samples
                      * Attach event handlers etc. if required.
                      */
 
-                    server.ValidatingConnectionAsync += mqttController.ValidateConnection;
-                    server.ClientConnectedAsync += mqttController.OnClientConnected;
+                    server.ValidatingConnectionAsync += MqttController.ValidateConnection;
+                    server.ClientConnectedAsync += MqttController.OnClientConnected;
                 });
         }
 
+        [SuppressMessage("Performance", "CA1822:Mark members as static")]
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddHostedMqttServer(

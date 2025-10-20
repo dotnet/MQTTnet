@@ -188,7 +188,7 @@ public sealed class LowLevelMqttClient_Tests : BaseTestClass
         return await client.ReceiveAsync(CancellationToken.None) as MqttConnAckPacket;
     }
 
-    async Task<MqttSubAckPacket> Subscribe(ILowLevelMqttClient client, string topic)
+    static async Task<MqttSubAckPacket> Subscribe(ILowLevelMqttClient client, string topic)
     {
         await client.SendAsync(
                 new MqttSubscribePacket

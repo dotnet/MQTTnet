@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace MQTTnet.AspTestApp.Pages;
 
-public class IndexModel : PageModel
+public partial class IndexModel : PageModel
 {
     readonly ILogger<IndexModel> _logger;
 
@@ -17,6 +17,9 @@ public class IndexModel : PageModel
 
     public void OnGet()
     {
-        _logger.LogDebug("OnGet");
+        LogOnGet();
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "OnGet")]
+    private partial void LogOnGet();
 }

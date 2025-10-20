@@ -84,13 +84,13 @@ public sealed class MqttTopicTemplate : IEquatable<MqttTopicTemplate>
         {
             var filter = TopicFilter;
             // append slash if neccessary
-            if (filter.Length > 0 && !filter.EndsWith(MqttTopicFilterComparer.LevelSeparator.ToString()) && !filter.EndsWith(MqttTopicFilterComparer.MultiLevelWildcard.ToString()))
+            if (filter.Length > 0 && !filter.EndsWith(MqttTopicFilterComparer.LevelSeparator) && !filter.EndsWith(MqttTopicFilterComparer.MultiLevelWildcard))
             {
                 filter += MqttTopicFilterComparer.LevelSeparator;
             }
 
             // append hash if neccessary
-            if (!filter.EndsWith(MqttTopicFilterComparer.MultiLevelWildcard.ToString()))
+            if (!filter.EndsWith(MqttTopicFilterComparer.MultiLevelWildcard))
             {
                 filter += MqttTopicFilterComparer.MultiLevelWildcard;
             }
@@ -161,12 +161,12 @@ public sealed class MqttTopicTemplate : IEquatable<MqttTopicTemplate>
             return new MqttTopicTemplate(MqttTopicFilterComparer.MultiLevelWildcard.ToString());
         }
 
-        if (root.Contains(MqttTopicFilterComparer.LevelSeparator) && !root.EndsWith(MqttTopicFilterComparer.LevelSeparator.ToString()) && !root.EndsWith("}"))
+        if (root.Contains(MqttTopicFilterComparer.LevelSeparator) && !root.EndsWith(MqttTopicFilterComparer.LevelSeparator.ToString(), StringComparison.InvariantCulture) && !root.EndsWith('}'))
         {
             root = root.Substring(0, root.LastIndexOf(MqttTopicFilterComparer.LevelSeparator) + 1);
         }
 
-        if (root.EndsWith(MqttTopicFilterComparer.LevelSeparator.ToString()))
+        if (root.EndsWith(MqttTopicFilterComparer.LevelSeparator.ToString(), StringComparison.InvariantCulture))
         {
             root += MqttTopicFilterComparer.SingleLevelWildcard;
         }

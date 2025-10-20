@@ -31,7 +31,7 @@ public sealed class MemoryMqttChannel : IMqttChannel
 
     public EndPoint LocalEndPoint { get; set; }
 
-    public bool IsSecureConnection { get; } = false;
+    public bool IsSecureConnection { get; }
 
     public X509Certificate2 ClientCertificate { get; set; }
 
@@ -60,5 +60,6 @@ public sealed class MemoryMqttChannel : IMqttChannel
 
     public void Dispose()
     {
+        _stream.Dispose();
     }
 }

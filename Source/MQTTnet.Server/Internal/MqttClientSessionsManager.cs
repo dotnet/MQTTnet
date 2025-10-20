@@ -131,7 +131,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         // Allow the user to intercept application message...
         if (_eventContainer.InterceptingPublishEvent.HasHandlers)
         {
-            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderUserName, senderSessionItems);
+            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, senderId, senderUserName, senderSessionItems, cancellationToken);
             if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
             {
                 // This can happen if a topic alias us used but the topic is
@@ -437,7 +437,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
     }
 
-    public void OnSubscriptionsAdded(MqttSession clientSession, List<string> topics)
+    public void OnSubscriptionsAdded(MqttSession clientSession, List<string> subscriptionsTopics)
     {
         _sessionsManagementLock.EnterWriteLock();
         try
@@ -448,7 +448,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 _subscriberSessions.Add(clientSession);
             }
 
-            foreach (var topic in topics)
+            foreach (var topic in subscriptionsTopics)
             {
                 clientSession.AddSubscribedTopic(topic);
             }

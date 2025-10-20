@@ -81,7 +81,7 @@ public sealed class SocketConnection : ConnectionContext
         IsConnected = true;
     }
 
-    static Exception ConnectionAborted()
+    static MqttCommunicationException ConnectionAborted()
     {
         return new MqttCommunicationException("Connection Aborted");
     }
@@ -218,12 +218,16 @@ public sealed class SocketConnection : ConnectionContext
 
             var flushTask = _application.Output.FlushAsync();
 
+            FlushResult result;
             if (!flushTask.IsCompleted)
             {
-                await flushTask;
+                result = await flushTask;
+            }
+            else
+            {
+                result = flushTask.GetAwaiter().GetResult();
             }
 
-            var result = flushTask.GetAwaiter().GetResult();
             if (result.IsCompleted)
             {
                 // Pipe consumer is shut down, do we stop writing

@@ -71,7 +71,7 @@ public class MqttTcpChannel_Tests
             }
             catch (Exception exception)
             {
-                Assert.IsInstanceOfType(exception, typeof(SocketException));
+                Assert.IsInstanceOfType<SocketException>(exception);
                 Assert.AreEqual(SocketError.OperationAborted, ((SocketException)exception).SocketErrorCode);
             }
         }

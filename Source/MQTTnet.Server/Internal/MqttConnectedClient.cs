@@ -156,7 +156,7 @@ public sealed class MqttConnectedClient : IDisposable
                 // TODO: Maybe adding a configuration option is requested in the future.
                 if (disconnectOptions != null)
                 {
-                    if (disconnectOptions.ReasonCode != MqttDisconnectReasonCode.NormalDisconnection || disconnectOptions.UserProperties?.Any() == true ||
+                    if (disconnectOptions.ReasonCode != MqttDisconnectReasonCode.NormalDisconnection || disconnectOptions.UserProperties?.Count > 0 ||
                         !string.IsNullOrEmpty(disconnectOptions.ReasonString) || !string.IsNullOrEmpty(disconnectOptions.ServerReference))
                     {
                         // It is very important to send the DISCONNECT packet here BEFORE cancelling the
@@ -349,7 +349,7 @@ public sealed class MqttConnectedClient : IDisposable
             return packet;
         }
 
-        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, UserName, RemoteEndPoint, packet, Session.Items);
+        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(Id, UserName, RemoteEndPoint, packet, Session.Items, cancellationToken);
         await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
 
         if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
@@ -395,7 +395,7 @@ public sealed class MqttConnectedClient : IDisposable
 
                 if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
                 {
-                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, UserName, RemoteEndPoint, currentPacket, Session.Items);
+                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(Id, UserName, RemoteEndPoint, currentPacket, Session.Items, cancellationToken);
                     await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                     currentPacket = interceptingPacketEventArgs.Packet;
                     processPacket = interceptingPacketEventArgs.ProcessPacket;

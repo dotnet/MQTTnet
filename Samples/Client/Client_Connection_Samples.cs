@@ -490,7 +490,7 @@ m/XriWr/Cq4h/JfB7NTsezVslgkBaoU=
         }
     }
 
-    class SampleClientKerberosAuthenticationHandler : IMqttEnhancedAuthenticationHandler
+    sealed class SampleClientKerberosAuthenticationHandler : IMqttEnhancedAuthenticationHandler
     {
         public async Task HandleEnhancedAuthenticationAsync(MqttEnhancedAuthenticationEventArgs eventArgs)
         {

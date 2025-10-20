@@ -92,7 +92,7 @@ public static class Program
             return;
         }
 
-        _selectedBenchmarkIndex = _benchmarks.FindIndex(b => b.Name.Equals(arguments[0]));
+        _selectedBenchmarkIndex = _benchmarks.FindIndex(b => b.Name.Equals(arguments[0], StringComparison.Ordinal));
 
         if (_selectedBenchmarkIndex < 0)
         {

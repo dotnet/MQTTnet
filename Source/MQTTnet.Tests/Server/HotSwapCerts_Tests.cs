@@ -295,10 +295,10 @@ public sealed class HotSwapCerts_Tests
         }
     }
 
-    class HotSwappableClientCertProvider : IMqttClientCertificatesProvider, IDisposable
+    sealed class HotSwappableClientCertProvider : IMqttClientCertificatesProvider, IDisposable
     {
         X509Certificate2Collection _certificates;
-        ConcurrentBag<X509Certificate2> _serverCerts = new ConcurrentBag<X509Certificate2>();
+        ConcurrentBag<X509Certificate2> _serverCerts = new();
 
         public HotSwappableClientCertProvider()
         {

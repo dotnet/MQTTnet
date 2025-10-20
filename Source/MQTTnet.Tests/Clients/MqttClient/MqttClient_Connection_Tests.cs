@@ -73,7 +73,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
         catch (Exception exception)
         {
             Assert.IsNotNull(exception);
-            Assert.IsInstanceOfType(exception, typeof(MqttCommunicationException));
+            Assert.IsInstanceOfType<MqttCommunicationException>(exception);
         }
 
         await LongTestDelay(); // disconnected handler is called async
@@ -161,7 +161,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
         Assert.AreEqual("test_value", eventArgs.UserProperties[0].Value);
     }
 
-    class TestClientKerberosAuthenticationHandler : IMqttEnhancedAuthenticationHandler
+    sealed class TestClientKerberosAuthenticationHandler : IMqttEnhancedAuthenticationHandler
     {
         public async Task HandleEnhancedAuthenticationAsync(MqttEnhancedAuthenticationEventArgs eventArgs)
         {

@@ -8,7 +8,7 @@ namespace MQTTnet.Server;
 
 public sealed class InterceptingPublishEventArgs : EventArgs
 {
-    public InterceptingPublishEventArgs(MqttApplicationMessage applicationMessage, CancellationToken cancellationToken, string clientId, string userName, IDictionary sessionItems)
+    public InterceptingPublishEventArgs(MqttApplicationMessage applicationMessage, string clientId, string userName, IDictionary sessionItems, CancellationToken cancellationToken)
     {
         ApplicationMessage = applicationMessage ?? throw new ArgumentNullException(nameof(applicationMessage));
         CancellationToken = cancellationToken;
@@ -30,11 +30,6 @@ public sealed class InterceptingPublishEventArgs : EventArgs
     /// </summary>
     public string ClientId { get; }
 
-    /// <summary>
-    /// Gets the user name of the client.
-    /// </summary>
-    public string UserName { get; }
-
     public bool CloseConnection { get; set; }
 
     /// <summary>
@@ -45,10 +40,15 @@ public sealed class InterceptingPublishEventArgs : EventArgs
     /// <summary>
     ///     Gets the response which will be sent to the client via the PUBACK etc. packets.
     /// </summary>
-    public PublishResponse Response { get; } = new PublishResponse();
+    public PublishResponse Response { get; } = new();
 
     /// <summary>
     ///     Gets or sets a key/value collection that can be used to share data within the scope of this session.
     /// </summary>
     public IDictionary SessionItems { get; }
+
+    /// <summary>
+    ///     Gets the user name of the client.
+    /// </summary>
+    public string UserName { get; }
 }

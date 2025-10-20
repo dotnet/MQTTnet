@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Globalization;
 using System.Reflection;
 
 Console.BackgroundColor = ConsoleColor.White;
@@ -28,7 +29,7 @@ Console.Write("Please choose sample class (press Enter to continue): ");
 Console.ResetColor();
 
 var input = Console.ReadLine();
-var selectedIndex = int.Parse(input ?? "0");
+var selectedIndex = int.Parse(input ?? "0", CultureInfo.InvariantCulture);
 var selectedSampleClass = sampleClasses[selectedIndex];
 var sampleMethods = selectedSampleClass.GetMethods(BindingFlags.Static | BindingFlags.Public).OrderBy(m => m.Name).ToList();
 
@@ -45,7 +46,7 @@ Console.Write("Please choose sample (press Enter to continue): ");
 Console.ResetColor();
 
 input = Console.ReadLine();
-selectedIndex = int.Parse(input ?? "0");
+selectedIndex = int.Parse(input ?? "0", CultureInfo.InvariantCulture);
 var selectedSampleMethod = sampleMethods[selectedIndex];
 
 Console.WriteLine();
@@ -58,7 +59,7 @@ try
 {
     if (selectedSampleMethod.Invoke(null, null) is Task task)
     {
-        await task;    
+        await task;
     }
 }
 catch (Exception exception)

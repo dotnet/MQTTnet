@@ -6,6 +6,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
 
+using System.Globalization;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
@@ -161,7 +162,7 @@ public static class Server_Simple_Samples
         return server;
     }
 
-    class ConsoleLogger : IMqttNetLogger
+    sealed class ConsoleLogger : IMqttNetLogger
     {
         readonly object _consoleSyncRoot = new();
 
@@ -191,7 +192,7 @@ public static class Server_Simple_Samples
 
             if (parameters?.Length > 0)
             {
-                message = string.Format(message, parameters);
+                message = string.Format(CultureInfo.InvariantCulture, message, parameters);
             }
 
             lock (_consoleSyncRoot)

@@ -1,9 +1,58 @@
 <Project>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <Product>MQTTnet</Product>
+        <Authors>The contributors of MQTTnet</Authors>
+        <Company>The contributors of MQTTnet</Company>
+        <Copyright>Copyright (c) .NET Foundation and Contributors</Copyright>
 
-  <PropertyGroup>
-    <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-  </PropertyGroup>
+        <DelaySign>false</DelaySign>
+        <SignAssembly>false</SignAssembly>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <ImplicitUsings>enable</ImplicitUsings>
 
+        <NeutralLanguage>en-US</NeutralLanguage>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
+
+        <NuGetAuditMode>all</NuGetAuditMode>
+        <NuGetAudit>true</NuGetAudit>
+        <NuGetAuditLevel>low</NuGetAuditLevel>
+
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
+        <AnalysisLevel>latest</AnalysisLevel>
+        <AnalysisMode>recommended</AnalysisMode>
+        <AnalysisModeStyle>default</AnalysisModeStyle>
+
+        <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(GeneratePackageOnBuild)'=='true'">
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageIcon>nuget.png</PackageIcon>
+        <PackageProjectUrl>https://github.com/dotnet/MQTTnet</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/dotnet/MQTTnet.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(GeneratePackageOnBuild)'=='true'">
+        <None Include="README.md" Pack="true" PackagePath="" Condition="Exists('README.md')" />
+        <None Include="..\..\Images\nuget.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(IncludeSymbols)'=='true'">
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    </ItemGroup>
 </Project>

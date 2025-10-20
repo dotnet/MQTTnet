@@ -287,7 +287,7 @@ public sealed class MqttBufferReader_Tests
 
 
     // Helper class to build up a reference to elements of various types in a buffer
-    class ElementReference
+    sealed class ElementReference
     {
         public enum BufferElementType
         {

@@ -1,6 +1,7 @@
 #if DEBUG
 
 using System;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -56,7 +57,7 @@ public sealed class Load_Tests : BaseTestClass
 
                         for (var j = 0; j < 1000; j++)
                         {
-                            publishPacket.Topic = j.ToString();
+                            publishPacket.Topic = j.ToString(CultureInfo.InvariantCulture);
 
                             await client.SendAsync(publishPacket, CancellationToken.None);
                         }
@@ -143,7 +144,7 @@ public sealed class Load_Tests : BaseTestClass
 
                     for (var j = 0; j < 1000; j++)
                     {
-                        var message = applicationMessageBuilder.WithTopic(j.ToString()).Build();
+                        var message = applicationMessageBuilder.WithTopic(j.ToString(CultureInfo.InvariantCulture)).Build();
 
                         await client.PublishAsync(message);
                     }

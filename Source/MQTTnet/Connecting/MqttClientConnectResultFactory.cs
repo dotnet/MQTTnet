@@ -10,9 +10,9 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet;
 
-public sealed class MqttClientConnectResultFactory
+public static class MqttClientConnectResultFactory
 {
-    public MqttClientConnectResult Create(MqttConnAckPacket connAckPacket, MqttProtocolVersion protocolVersion)
+    public static MqttClientConnectResult Create(MqttConnAckPacket connAckPacket, MqttProtocolVersion protocolVersion)
     {
         ArgumentNullException.ThrowIfNull(connAckPacket);
 
@@ -26,41 +26,16 @@ public sealed class MqttClientConnectResultFactory
 
     static MqttClientConnectResultCode ConvertReturnCodeToResultCode(MqttConnectReturnCode connectReturnCode)
     {
-        switch (connectReturnCode)
+        return connectReturnCode switch
         {
-            case MqttConnectReturnCode.ConnectionAccepted:
-            {
-                return MqttClientConnectResultCode.Success;
-            }
-
-            case MqttConnectReturnCode.ConnectionRefusedUnacceptableProtocolVersion:
-            {
-                return MqttClientConnectResultCode.UnsupportedProtocolVersion;
-            }
-
-            case MqttConnectReturnCode.ConnectionRefusedNotAuthorized:
-            {
-                return MqttClientConnectResultCode.NotAuthorized;
-            }
-
-            case MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword:
-            {
-                return MqttClientConnectResultCode.BadUserNameOrPassword;
-            }
-
-            case MqttConnectReturnCode.ConnectionRefusedIdentifierRejected:
-            {
-                return MqttClientConnectResultCode.ClientIdentifierNotValid;
-            }
-
-            case MqttConnectReturnCode.ConnectionRefusedServerUnavailable:
-            {
-                return MqttClientConnectResultCode.ServerUnavailable;
-            }
-
-            default:
-                throw new MqttProtocolViolationException("Received unexpected return code.");
-        }
+            MqttConnectReturnCode.ConnectionAccepted => MqttClientConnectResultCode.Success,
+            MqttConnectReturnCode.ConnectionRefusedUnacceptableProtocolVersion => MqttClientConnectResultCode.UnsupportedProtocolVersion,
+            MqttConnectReturnCode.ConnectionRefusedNotAuthorized => MqttClientConnectResultCode.NotAuthorized,
+            MqttConnectReturnCode.ConnectionRefusedBadUsernameOrPassword => MqttClientConnectResultCode.BadUserNameOrPassword,
+            MqttConnectReturnCode.ConnectionRefusedIdentifierRejected => MqttClientConnectResultCode.ClientIdentifierNotValid,
+            MqttConnectReturnCode.ConnectionRefusedServerUnavailable => MqttClientConnectResultCode.ServerUnavailable,
+            _ => throw new MqttProtocolViolationException("Received unexpected return code.")
+        };
     }
 
     static MqttClientConnectResult CreateForMqtt311(MqttConnAckPacket connAckPacket)

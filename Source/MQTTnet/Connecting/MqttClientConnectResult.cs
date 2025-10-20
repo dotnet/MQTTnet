@@ -14,59 +14,57 @@ public sealed class MqttClientConnectResult
     ///     Gets the client identifier which was chosen by the server.
     ///     MQTTv5 only.
     /// </summary>
-    public string AssignedClientIdentifier { get; internal set; }
+    public string AssignedClientIdentifier { get; init; }
 
     /// <summary>
     ///     Gets the authentication data.
     ///     MQTTv5 only.
     /// </summary>
-    public byte[] AuthenticationData { get; internal set; }
+    public byte[] AuthenticationData { get; init; }
 
     /// <summary>
     ///     Gets the authentication method.
     ///     MQTTv5 only.
     /// </summary>
-    public string AuthenticationMethod { get; internal set; }
+    public string AuthenticationMethod { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether a session was already available or not.
-    ///     MQTTv5 only.
     /// </summary>
-    public bool IsSessionPresent { get; internal set; }
+    public bool IsSessionPresent { get; init; }
 
-    public uint? MaximumPacketSize { get; internal set; }
+    public uint? MaximumPacketSize { get; init; }
 
     /// <summary>
     ///     Gets the maximum QoS which is supported by the server.
     ///     MQTTv5 only.
     /// </summary>
-    public MqttQualityOfServiceLevel MaximumQoS { get; internal set; }
+    public MqttQualityOfServiceLevel MaximumQoS { get; init; }
 
     /// <summary>
     ///     Gets the reason string.
     ///     MQTTv5 only.
     /// </summary>
-    public string ReasonString { get; internal set; }
+    public string ReasonString { get; init; }
 
-    public ushort? ReceiveMaximum { get; internal set; }
+    public ushort? ReceiveMaximum { get; init; }
 
     /// <summary>
     ///     Gets the response information.
     ///     MQTTv5 only.
     /// </summary>
-    public string ResponseInformation { get; internal set; }
+    public string ResponseInformation { get; init; }
 
     /// <summary>
     ///     Gets the result code.
-    ///     MQTTv5 only.
     /// </summary>
-    public MqttClientConnectResultCode ResultCode { get; internal set; }
+    public MqttClientConnectResultCode ResultCode { get; init; }
 
     /// <summary>
     ///     Gets whether the server supports retained messages.
     ///     MQTTv5 only.
     /// </summary>
-    public bool RetainAvailable { get; internal set; }
+    public bool RetainAvailable { get; init; }
 
     /// <summary>
     ///     MQTTv5 only.
@@ -74,33 +72,33 @@ public sealed class MqttClientConnectResult
     ///     keep alive interval from the client CONNECT packet.
     ///     A value of 0 indicates that the feature is not used.
     /// </summary>
-    public ushort ServerKeepAlive { get; internal set; }
+    public ushort ServerKeepAlive { get; init; }
 
     /// <summary>
     ///     Gets an alternate server which should be used instead of the current one.
     ///     MQTTv5 only.
     /// </summary>
-    public string ServerReference { get; internal set; }
+    public string ServerReference { get; init; }
 
-    public uint? SessionExpiryInterval { get; internal set; }
+    public uint? SessionExpiryInterval { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether the shared subscriptions are available or not.
     ///     MQTTv5 only.
     /// </summary>
-    public bool SharedSubscriptionAvailable { get; internal set; }
+    public bool SharedSubscriptionAvailable { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether the subscription identifiers are available or not.
     ///     MQTTv5 only.
     /// </summary>
-    public bool SubscriptionIdentifiersAvailable { get; internal set; }
+    public bool SubscriptionIdentifiersAvailable { get; init; }
 
     /// <summary>
     ///     Gets the maximum value for a topic alias. 0 means not supported.
     ///     MQTTv5 only.
     /// </summary>
-    public ushort TopicAliasMaximum { get; internal set; }
+    public ushort TopicAliasMaximum { get; init; }
 
     /// <summary>
     ///     Gets the user properties.
@@ -111,11 +109,11 @@ public sealed class MqttClientConnectResult
     ///     The feature is very similar to the HTTP header concept.
     ///     MQTTv5 only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; internal set; }
+    public List<MqttUserProperty> UserProperties { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether wildcards can be used in subscriptions at the current server.
     ///     MQTTv5 only.
     /// </summary>
-    public bool WildcardSubscriptionAvailable { get; internal set; }
+    public bool WildcardSubscriptionAvailable { get; init; }
 }

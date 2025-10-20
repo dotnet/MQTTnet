@@ -12,6 +12,7 @@ using MQTTnet.Implementations;
 
 namespace MQTTnet.Tests;
 
+// ReSharper disable InconsistentNaming
 [TestClass]
 public class MqttTcpChannel_Tests
 {
@@ -44,7 +45,7 @@ public class MqttTcpChannel_Tests
             using var clientSocket = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
             await clientSocket.ConnectAsync(remoteEndPoint, CancellationToken.None);
 
-            var tcpChannel = new MqttTcpChannel(clientSocket.GetStream(), remoteEndPoint, null);
+            var tcpChannel = new MqttTcpChannel(clientSocket.GetStream(), new DnsEndPoint("localhost", 50000), remoteEndPoint, null);
 
             await Task.Delay(100, ct.Token);
 

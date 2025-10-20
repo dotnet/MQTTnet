@@ -4,24 +4,16 @@
 
 using System;
 
-namespace MQTTnet.Diagnostics.Logger
+namespace MQTTnet.Diagnostics.Logger;
+
+public sealed class MqttNetSourceLogger(IMqttNetLogger logger, string source)
 {
-    public sealed class MqttNetSourceLogger
+    readonly IMqttNetLogger _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+    public bool IsEnabled => _logger.IsEnabled;
+
+    public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
     {
-        readonly IMqttNetLogger _logger;
-        readonly string _source;
-
-        public MqttNetSourceLogger(IMqttNetLogger logger, string source)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _source = source;
-        }
-
-        public bool IsEnabled => _logger.IsEnabled;
-        
-        public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
-        {
-            _logger.Publish(logLevel, _source, message, parameters, exception);
-        }
+        _logger.Publish(logLevel, source, message, parameters, exception);
     }
 }

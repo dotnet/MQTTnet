@@ -33,13 +33,11 @@ public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapte
         }
 
         var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
-        using (var adapter = new MqttConnectionContext(formatter, connection))
+        using var adapter = new MqttConnectionContext(formatter, connection);
+        var clientHandler = ClientHandler;
+        if (clientHandler != null)
         {
-            var clientHandler = ClientHandler;
-            if (clientHandler != null)
-            {
-                await clientHandler(adapter).ConfigureAwait(false);
-            }
+            await clientHandler(adapter).ConfigureAwait(false);
         }
     }
 

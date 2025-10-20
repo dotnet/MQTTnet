@@ -101,7 +101,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         {
             if (_eventContainer.SessionDeletedEvent.HasHandlers && session != null)
             {
-                var eventArgs = new SessionDeletedEventArgs(clientId, session.Items);
+                var eventArgs = new SessionDeletedEventArgs(clientId, session.UserName, session.Items);
                 await _eventContainer.SessionDeletedEvent.TryInvokeAsync(eventArgs, _logger).ConfigureAwait(false);
             }
         }
@@ -117,6 +117,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public async Task<DispatchApplicationMessageResult> DispatchApplicationMessage(
         string senderId,
+        string senderUserName,
         IDictionary senderSessionItems,
         MqttApplicationMessage applicationMessage,
         CancellationToken cancellationToken)
@@ -130,7 +131,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         // Allow the user to intercept application message...
         if (_eventContainer.InterceptingPublishEvent.HasHandlers)
         {
-            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderSessionItems);
+            var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, cancellationToken, senderId, senderUserName, senderSessionItems);
             if (string.IsNullOrEmpty(interceptingPublishEventArgs.ApplicationMessage.Topic))
             {
                 // This can happen if a topic alias us used but the topic is
@@ -188,16 +189,9 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                         continue;
                     }
 
-                    if (_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
+                    if (await _eventContainer.ShouldSkipEnqueue(senderId, session.Id, applicationMessage))
                     {
-                        var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, session.Id, applicationMessage);
-                        await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-
-                        if (!eventArgs.AcceptEnqueue)
-                        {
-                            // Continue checking the other subscriptions
-                            continue;
-                        }
+                        continue;
                     }
 
                     var publishPacketCopy = MqttPublishPacketFactory.Create(applicationMessage);
@@ -331,6 +325,25 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         return Task.FromResult((IList<MqttSessionStatus>)result);
     }
 
+    public Task<MqttSessionStatus> GetSessionStatus(string id)
+    {
+        _sessionsManagementLock.EnterReadLock();
+        try
+        {
+            if (!_sessionsStorage.TryGetSession(id, out var session))
+            {
+                throw new InvalidOperationException($"Session with ID '{id}' not found.");
+            }
+
+            var sessionStatus = new MqttSessionStatus(session);
+            return Task.FromResult(sessionStatus);
+        }
+        finally
+        {
+            _sessionsManagementLock.ExitReadLock();
+        }
+    }
+
     public async Task HandleClientConnectionAsync(IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
     {
         MqttConnectedClient connectedClient = null;
@@ -344,7 +357,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 return;
             }
 
-            var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter).ConfigureAwait(false);
+            var validatingConnectionEventArgs = await ValidateConnection(connectPacket, channelAdapter, cancellationToken).ConfigureAwait(false);
             var connAckPacket = MqttConnAckPacketFactory.Create(validatingConnectionEventArgs);
 
             if (validatingConnectionEventArgs.ReasonCode != MqttConnectReasonCode.Success)
@@ -408,16 +421,19 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 if (connectedClient.Id != null && !connectedClient.IsTakenOver && _eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
                     var disconnectType = connectedClient.DisconnectPacket != null ? MqttClientDisconnectType.Clean : MqttClientDisconnectType.NotClean;
-                    var eventArgs = new ClientDisconnectedEventArgs(connectedClient.Id, connectedClient.DisconnectPacket, disconnectType, endpoint, connectedClient.Session.Items);
+                    var eventArgs = new ClientDisconnectedEventArgs(
+                        connectedClient.ConnectPacket,
+                        connectedClient.DisconnectPacket,
+                        disconnectType,
+                        endpoint,
+                        connectedClient.Session.Items);
 
                     await _eventContainer.ClientDisconnectedEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
                 }
             }
 
-            using (var timeout = new CancellationTokenSource(_options.DefaultCommunicationTimeout))
-            {
-                await channelAdapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
-            }
+            using var timeout = new CancellationTokenSource(_options.DefaultCommunicationTimeout);
+            await channelAdapter.DisconnectAsync(timeout.Token).ConfigureAwait(false);
         }
     }
 
@@ -485,13 +501,20 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
         var subscribeResult = await clientSession.Subscribe(fakeSubscribePacket, CancellationToken.None).ConfigureAwait(false);
 
-        if (subscribeResult.RetainedMessages != null)
+        if (subscribeResult.RetainedMessages == null)
         {
-            foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+            return;
+        }
+
+        foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+        {
+            if (await _eventContainer.ShouldSkipEnqueue(string.Empty, clientId, retainedMessageMatch.ApplicationMessage))
             {
-                var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
-                clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+                continue;
             }
+
+            var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
+            clientSession.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
         }
     }
 
@@ -592,7 +615,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 if (_eventContainer.ClientDisconnectedEvent.HasHandlers)
                 {
                     var eventArgs = new ClientDisconnectedEventArgs(
-                        oldConnectedClient.Id,
+                        oldConnectedClient.ConnectPacket,
                         null,
                         MqttClientDisconnectType.Takeover,
                         oldConnectedClient.RemoteEndPoint,
@@ -648,14 +671,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     {
         try
         {
-            using (var timeoutToken = new CancellationTokenSource(_options.DefaultCommunicationTimeout))
-            using (var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, cancellationToken))
+            using var timeoutToken = new CancellationTokenSource(_options.DefaultCommunicationTimeout);
+            using var effectiveCancellationToken = CancellationTokenSource.CreateLinkedTokenSource(timeoutToken.Token, cancellationToken);
+            var firstPacket = await channelAdapter.ReceivePacketAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
+            if (firstPacket is MqttConnectPacket connectPacket)
             {
-                var firstPacket = await channelAdapter.ReceivePacketAsync(effectiveCancellationToken.Token).ConfigureAwait(false);
-                if (firstPacket is MqttConnectPacket connectPacket)
-                {
-                    return connectPacket;
-                }
+                return connectPacket;
             }
         }
         catch (OperationCanceledException)
@@ -715,11 +736,24 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
     }
 
-    async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter)
+    async Task<bool> ShouldSkipEnqueue(string senderId, string clientId, MqttApplicationMessage applicationMessage)
+    {
+        if (!_eventContainer.InterceptingClientEnqueueEvent.HasHandlers)
+        {
+            return false;
+        }
+
+        var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderId, clientId, applicationMessage);
+        await _eventContainer.InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+
+        return !eventArgs.AcceptEnqueue;
+    }
+
+    async Task<ValidatingConnectionEventArgs> ValidateConnection(MqttConnectPacket connectPacket, IMqttChannelAdapter channelAdapter, CancellationToken cancellationToken)
     {
         // TODO: Load session items from persisted sessions in the future.
         var sessionItems = new ConcurrentDictionary<object, object>();
-        var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter, sessionItems);
+        var eventArgs = new ValidatingConnectionEventArgs(connectPacket, channelAdapter, sessionItems, cancellationToken);
         await _eventContainer.ValidatingConnectionEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
         // Check the client ID and set a random one if supported.

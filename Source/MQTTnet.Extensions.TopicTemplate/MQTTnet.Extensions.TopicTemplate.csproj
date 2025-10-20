@@ -16,10 +16,30 @@
         <PackageTags>MQTT Message Queue Telemetry MQTTClient Messaging Routing AsyncAPI Template</PackageTags>
         <PackageIcon>nuget.png</PackageIcon>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>1591;NETSDK1138</NoWarn>
+        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="README.md">
+            <Pack>True</Pack>
+            <PackagePath>\</PackagePath>
+        </None>
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="..\..\Images\nuget.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+        <PackageReference Include="System.ValueTuple" Version="4.6.1" />
+    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />

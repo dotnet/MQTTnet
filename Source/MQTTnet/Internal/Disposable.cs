@@ -4,38 +4,34 @@
 
 using System;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public abstract class Disposable : IDisposable
 {
-    public abstract class Disposable : IDisposable
+    protected bool IsDisposed { get; private set; }
+
+    protected void ThrowIfDisposed()
     {
-        protected bool IsDisposed { get; private set; }
+        ObjectDisposedException.ThrowIf(IsDisposed, GetType());
+    }
 
-        protected void ThrowIfDisposed()
+    protected virtual void Dispose(bool disposing)
+    {
+    }
+
+    // This code added to correctly implement the disposable pattern.
+    public void Dispose()
+    {
+        // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+
+        if (IsDisposed)
         {
-            if (IsDisposed)
-            {
-                throw new ObjectDisposedException(GetType().Name);
-            }
+            return;
         }
 
-        protected virtual void Dispose(bool disposing)
-        {
-        }
+        IsDisposed = true;
 
-        // This code added to correctly implement the disposable pattern.
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-
-            if (IsDisposed)
-            {
-                return;
-            }
-
-            IsDisposed = true;
-
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
+        Dispose(true);
+        GC.SuppressFinalize(this);
     }
 }

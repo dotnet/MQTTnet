@@ -40,22 +40,65 @@ public sealed class MqttSessionStatus
         return _session.DeleteAsync();
     }
 
-    public Task DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+    /// <summary>
+    /// Delivers an application message immediately to the session.
+    /// </summary>
+    /// <param name="applicationMessage">The application message to deliver.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The result contains the <see cref="InjectMqttApplicationMessageResult"/> that includes the packet identifier of the enqueued message.
+    /// </returns>
+    public async Task<InjectMqttApplicationMessageResult> DeliverApplicationMessageAsync(MqttApplicationMessage applicationMessage)
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
-        var packetBusItem = new MqttPacketBusItem(MqttPublishPacketFactory.Create(applicationMessage));
+        var publishPacket = MqttPublishPacketFactory.Create(applicationMessage);
+        var packetBusItem = new MqttPacketBusItem(publishPacket);
         _session.EnqueueDataPacket(packetBusItem);
 
-        return packetBusItem.WaitAsync();
+        await packetBusItem.WaitAsync().ConfigureAwait(false);
+
+        var injectResult = new InjectMqttApplicationMessageResult
+        {
+            PacketIdentifier = publishPacket.PacketIdentifier
+        };
+
+        return injectResult;
     }
 
-    public Task EnqueueApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+    /// <summary>
+    /// Attempts to enqueue an application message to the session's send buffer.
+    /// </summary>
+    /// <param name="applicationMessage">The application message to enqueue.</param>
+    /// <param name="injectResult"><see cref="InjectMqttApplicationMessageResult"/> that includes the packet identifier of the enqueued message.</param>
+    /// <returns><c>true</c> if the message was successfully enqueued; otherwise, <c>false</c>.</returns>
+    /// <remarks>
+    /// When <see cref="MqttServerOptions.PendingMessagesOverflowStrategy"/> is set to <see cref="MqttPendingMessagesOverflowStrategy.DropOldestQueuedMessage"/>,
+    /// this method always returns <c>true</c>.
+    /// However, an existing message in the queue may be <b>dropped later</b> to make room for the newly enqueued message.
+    /// Such dropped messages can be tracked by subscribing to <see cref="MqttServer.QueuedApplicationMessageOverwrittenAsync"/> event.
+    /// </remarks>
+    public bool TryEnqueueApplicationMessage(MqttApplicationMessage applicationMessage, out InjectMqttApplicationMessageResult injectResult)
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
-        _session.EnqueueDataPacket(new MqttPacketBusItem(MqttPublishPacketFactory.Create(applicationMessage)));
+        var publishPacket = MqttPublishPacketFactory.Create(applicationMessage);
+        var enqueueDataPacketResult = _session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
 
+        if (enqueueDataPacketResult != EnqueueDataPacketResult.Enqueued)
+        {
+            injectResult = null;
+            return false;
+        }
+
+        injectResult = new InjectMqttApplicationMessageResult() { PacketIdentifier = publishPacket.PacketIdentifier };
+        return true;
+    }
+
+    [Obsolete("This method is obsolete. Use TryEnqueueApplicationMessage instead.")]
+    public Task EnqueueApplicationMessageAsync(MqttApplicationMessage applicationMessage)
+    {
+        TryEnqueueApplicationMessage(applicationMessage, out _);
         return CompletedTask.Instance;
     }
 }

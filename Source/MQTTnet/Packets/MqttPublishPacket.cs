@@ -21,7 +21,7 @@ public sealed class MqttPublishPacket : MqttPacketWithIdentifier
 
     public MqttPayloadFormatIndicator PayloadFormatIndicator { get; set; } = MqttPayloadFormatIndicator.Unspecified;
 
-    public ArraySegment<byte> PayloadSegment { set { Payload = new ReadOnlySequence<byte>(value); } }
+    public ArraySegment<byte> PayloadSegment { set => Payload = new ReadOnlySequence<byte>(value); }
 
     public ReadOnlySequence<byte> Payload { get; set; }
 

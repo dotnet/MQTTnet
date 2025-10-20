@@ -5,78 +5,73 @@
 using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Implementations;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests.Server;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class Connection_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class Connection_Tests : BaseTestClass
+    [TestMethod]
+    public async Task Close_Idle_Connection_On_Connect()
     {
-        [TestMethod]
-        public async Task Close_Idle_Connection_On_Connect()
+        using var testEnvironment = CreateTestEnvironment();
+        await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
+
+        var client = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
+        await client.ConnectAsync(new DnsEndPoint("localhost", testEnvironment.ServerPort), CancellationToken.None);
+
+        // Don't send anything. The server should close the connection.
+        await Task.Delay(TimeSpan.FromSeconds(3));
+
+        try
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
+            if (receivedBytes == 0)
             {
-                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
-
-                var client = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
-                await client.ConnectAsync(new DnsEndPoint("localhost", testEnvironment.ServerPort), CancellationToken.None);
-
-                // Don't send anything. The server should close the connection.
-                await Task.Delay(TimeSpan.FromSeconds(3));
-
-                try
-                {
-                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
-                    if (receivedBytes == 0)
-                    {
-                        return;
-                    }
-
-                    Assert.Fail("Receive should throw an exception.");
-                }
-                catch (SocketException)
-                {
-                }
+                return;
             }
+
+            Assert.Fail("Receive should throw an exception.");
         }
-
-        [TestMethod]
-        public async Task Send_Garbage()
+        catch (SocketException)
         {
-            using (var testEnvironment = CreateTestEnvironment())
+        }
+    }
+
+    [TestMethod]
+    public async Task Send_Garbage()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
+
+        // Send an invalid packet and ensure that the server will close the connection and stay in a waiting state
+        // forever. This is security related.
+        var client = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
+        await client.ConnectAsync(new DnsEndPoint("localhost", testEnvironment.ServerPort), CancellationToken.None);
+
+        var buffer = "Garbage"u8.ToArray();
+        await client.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
+
+        await Task.Delay(TimeSpan.FromSeconds(3));
+
+        try
+        {
+            var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
+            if (receivedBytes == 0)
             {
-                await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithDefaultCommunicationTimeout(TimeSpan.FromSeconds(1)));
-
-                // Send an invalid packet and ensure that the server will close the connection and stay in a waiting state
-                // forever. This is security related.
-                var client = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
-                await client.ConnectAsync(new DnsEndPoint("localhost", testEnvironment.ServerPort), CancellationToken.None);
-
-                var buffer = Encoding.UTF8.GetBytes("Garbage");
-                await client.SendAsync(new ArraySegment<byte>(buffer), SocketFlags.None);
-
-                await Task.Delay(TimeSpan.FromSeconds(3));
-
-                try
-                {
-                    var receivedBytes = await client.ReceiveAsync(new ArraySegment<byte>(new byte[10]), SocketFlags.Partial);
-                    if (receivedBytes == 0)
-                    {
-                        return;
-                    }
-
-                    Assert.Fail("Receive should throw an exception.");
-                }
-                catch (SocketException)
-                {
-                }
+                return;
             }
+
+            Assert.Fail("Receive should throw an exception.");
+        }
+        catch (SocketException)
+        {
         }
     }
 }

@@ -8,52 +8,49 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
-using MQTTnet.Protocol;
 using MQTTnet.Server;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests.Server;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class Unsubscribe_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class Unsubscribe_Tests : BaseTestClass
+    [TestMethod]
+    public Task Disconnect_While_Unsubscribing()
     {
-        [TestMethod]
-        [ExpectedException(typeof(MqttClientDisconnectedException))]
-        public async Task Disconnect_While_Unsubscribing()
+        return Assert.ThrowsExactlyAsync<MqttClientDisconnectedException>(async () =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                var server = await testEnvironment.StartServer();
+            using var testEnvironment = CreateTestEnvironment();
+            var server = await testEnvironment.StartServer();
 
-                // The client will be disconnect directly after subscribing!
-                server.ClientUnsubscribedTopicAsync += ev => server.DisconnectClientAsync(ev.ClientId, MqttDisconnectReasonCode.NormalDisconnection);
+            // The client will be disconnected directly after subscribing!
+            server.ClientUnsubscribedTopicAsync += ev => server.DisconnectClientAsync(ev.ClientId);
 
-                var client = await testEnvironment.ConnectClient();
-                await client.SubscribeAsync("#");
-                await client.UnsubscribeAsync("#");
-            }
-        }
+            var client = await testEnvironment.ConnectClient();
+            await client.SubscribeAsync("#");
+            await client.UnsubscribeAsync("#");
+        });
+    }
 
-        [TestMethod]
-        public async Task Intercept_Unsubscribe_With_User_Properties()
+    [TestMethod]
+    public async Task Intercept_Unsubscribe_With_User_Properties()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
+
+        InterceptingUnsubscriptionEventArgs eventArgs = null;
+        server.InterceptingUnsubscriptionAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = e;
+            return CompletedTask.Instance;
+        };
 
-                InterceptingUnsubscriptionEventArgs eventArgs = null;
-                server.InterceptingUnsubscriptionAsync += e =>
-                {
-                    eventArgs = e;
-                    return CompletedTask.Instance;
-                };
+        var client = await testEnvironment.ConnectClient();
 
-                var client = await testEnvironment.ConnectClient();
+        var unsubscribeOptions = testEnvironment.ClientFactory.CreateUnsubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
+        await client.UnsubscribeAsync(unsubscribeOptions);
 
-                var unsubscribeOptions = testEnvironment.ClientFactory.CreateUnsubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
-                await client.UnsubscribeAsync(unsubscribeOptions);
-
-                CollectionAssert.AreEqual(unsubscribeOptions.UserProperties.ToList(), eventArgs.UserProperties);
-            }
-        }
+        CollectionAssert.AreEqual(unsubscribeOptions.UserProperties.ToList(), eventArgs.UserProperties);
     }
 }

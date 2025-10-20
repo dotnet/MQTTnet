@@ -12,189 +12,178 @@ using MQTTnet.Tests.Mockups;
 
 namespace MQTTnet.Tests.Server;
 
+// ReSharper disable InconsistentNaming
 [TestClass]
 public sealed class Status_Tests : BaseTestClass
 {
     [TestMethod]
     public async Task Disconnect_Client()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
-        {
-            var server = await testEnvironment.StartServer();
+        using var testEnvironment = new TestEnvironment(TestContext);
+        var server = await testEnvironment.StartServer();
 
-            var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
+        var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
 
-            await Task.Delay(1000);
+        await Task.Delay(1000);
 
-            var clientStatus = await server.GetClientsAsync();
+        var clientStatus = await server.GetClientsAsync();
 
-            Assert.AreEqual(1, clientStatus.Count);
-            Assert.IsTrue(clientStatus.Any(s => s.Id == c1.Options.ClientId));
+        Assert.HasCount(1, clientStatus);
+        Assert.IsTrue(clientStatus.Any(s => s.Id == c1.Options.ClientId));
 
-            await clientStatus.First().DisconnectAsync();
+        await clientStatus[0].DisconnectAsync();
 
-            await Task.Delay(500);
+        await Task.Delay(500);
 
-            Assert.IsFalse(c1.IsConnected);
+        Assert.IsFalse(c1.IsConnected);
 
-            clientStatus = await server.GetClientsAsync();
+        clientStatus = await server.GetClientsAsync();
 
-            Assert.AreEqual(0, clientStatus.Count);
-        }
+        Assert.IsEmpty(clientStatus);
     }
 
     [TestMethod]
     public async Task Keep_Persistent_Session_Version311()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
-        {
-            var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
+        using var testEnvironment = new TestEnvironment(TestContext);
+        var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
-            var c1 = await testEnvironment.ConnectClient(
-                new MqttClientOptionsBuilder().WithClientId("client1").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V311));
-            var c2 = await testEnvironment.ConnectClient(
-                new MqttClientOptionsBuilder().WithClientId("client2").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V311));
+        var c1 = await testEnvironment.ConnectClient(
+            new MqttClientOptionsBuilder().WithClientId("client1").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V311));
+        var c2 = await testEnvironment.ConnectClient(
+            new MqttClientOptionsBuilder().WithClientId("client2").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V311));
 
-            await c1.DisconnectAsync();
+        await c1.DisconnectAsync();
 
-            await LongTestDelay();
+        await LongTestDelay();
 
-            var clientStatus = await server.GetClientsAsync();
-            var sessionStatus = await server.GetSessionsAsync();
+        var clientStatus = await server.GetClientsAsync();
+        var sessionStatus = await server.GetSessionsAsync();
 
-            Assert.AreEqual(1, clientStatus.Count);
-            Assert.AreEqual(2, sessionStatus.Count);
+        Assert.HasCount(1, clientStatus);
+        Assert.HasCount(2, sessionStatus);
 
-            await c2.DisconnectAsync();
+        await c2.DisconnectAsync();
 
-            await LongTestDelay();
+        await LongTestDelay();
 
-            clientStatus = await server.GetClientsAsync();
-            sessionStatus = await server.GetSessionsAsync();
+        clientStatus = await server.GetClientsAsync();
+        sessionStatus = await server.GetSessionsAsync();
 
-            Assert.AreEqual(0, clientStatus.Count);
-            Assert.AreEqual(2, sessionStatus.Count);
-        }
+        Assert.IsEmpty(clientStatus);
+        Assert.HasCount(2, sessionStatus);
     }
 
     [TestMethod]
     public async Task Keep_Persistent_Session_Version500()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
-        {
-            var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
+        using var testEnvironment = new TestEnvironment(TestContext);
+        var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
-            var c1 = await testEnvironment.ConnectClient(
-                new MqttClientOptionsBuilder().WithClientId("client1").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V500));
-            var c2 = await testEnvironment.ConnectClient(
-                new MqttClientOptionsBuilder().WithClientId("client2").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V500));
+        var c1 = await testEnvironment.ConnectClient(
+            new MqttClientOptionsBuilder().WithClientId("client1").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V500));
+        var c2 = await testEnvironment.ConnectClient(
+            new MqttClientOptionsBuilder().WithClientId("client2").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V500));
 
-            // The session expiry interval is mandatory for MQTT5.0.0 in order keep session!
-            await c1.DisconnectAsync(sessionExpiryInterval: 60);
+        // The session expiry interval is mandatory for MQTT5.0.0 in order keep session!
+        await c1.DisconnectAsync(sessionExpiryInterval: 60);
 
-            await LongTestDelay();
+        await LongTestDelay();
 
-            var clientStatus = await server.GetClientsAsync();
-            var sessionStatus = await server.GetSessionsAsync();
+        var clientStatus = await server.GetClientsAsync();
+        var sessionStatus = await server.GetSessionsAsync();
 
-            Assert.AreEqual(1, clientStatus.Count);
-            Assert.AreEqual(2, sessionStatus.Count);
+        Assert.HasCount(1, clientStatus);
+        Assert.HasCount(2, sessionStatus);
 
-            // The session expiry interval is mandatory for MQTT5.0.0 in order keep session!
-            await c2.DisconnectAsync(sessionExpiryInterval: 60);
+        // The session expiry interval is mandatory for MQTT5.0.0 in order keep session!
+        await c2.DisconnectAsync(sessionExpiryInterval: 60);
 
-            await LongTestDelay();
+        await LongTestDelay();
 
-            clientStatus = await server.GetClientsAsync();
-            sessionStatus = await server.GetSessionsAsync();
+        clientStatus = await server.GetClientsAsync();
+        sessionStatus = await server.GetSessionsAsync();
 
-            Assert.AreEqual(0, clientStatus.Count);
-            Assert.AreEqual(2, sessionStatus.Count);
-        }
+        Assert.IsEmpty(clientStatus);
+        Assert.HasCount(2, sessionStatus);
     }
 
     [TestMethod]
     public async Task Show_Client_And_Session_Statistics()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
-        {
-            var server = await testEnvironment.StartServer();
+        using var testEnvironment = new TestEnvironment(TestContext);
+        var server = await testEnvironment.StartServer();
 
-            var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
-            var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client2"));
+        var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client1"));
+        var c2 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithClientId("client2"));
 
-            await Task.Delay(500);
+        await Task.Delay(500);
 
-            var clientStatus = await server.GetClientsAsync();
-            var sessionStatus = await server.GetSessionsAsync();
+        var clientStatus = await server.GetClientsAsync();
+        var sessionStatus = await server.GetSessionsAsync();
 
-            Assert.AreEqual(2, clientStatus.Count);
-            Assert.AreEqual(2, sessionStatus.Count);
+        Assert.HasCount(2, clientStatus);
+        Assert.HasCount(2, sessionStatus);
 
-            Assert.IsTrue(clientStatus.Any(s => s.Id == c1.Options.ClientId));
-            Assert.IsTrue(clientStatus.Any(s => s.Id == c2.Options.ClientId));
+        Assert.IsTrue(clientStatus.Any(s => s.Id == c1.Options.ClientId));
+        Assert.IsTrue(clientStatus.Any(s => s.Id == c2.Options.ClientId));
 
-            await c1.DisconnectAsync();
-            await c2.DisconnectAsync();
+        await c1.DisconnectAsync();
+        await c2.DisconnectAsync();
 
-            await Task.Delay(500);
+        await Task.Delay(500);
 
-            clientStatus = await server.GetClientsAsync();
-            sessionStatus = await server.GetSessionsAsync();
+        clientStatus = await server.GetClientsAsync();
+        sessionStatus = await server.GetSessionsAsync();
 
-            Assert.AreEqual(0, clientStatus.Count);
-            Assert.AreEqual(0, sessionStatus.Count);
-        }
+        Assert.IsEmpty(clientStatus);
+        Assert.IsEmpty(sessionStatus);
     }
 
     [TestMethod]
     public async Task Track_Sent_Application_Messages()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironment = new TestEnvironment(TestContext);
+        var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
+
+        var c1 = await testEnvironment.ConnectClient();
+
+        for (var i = 1; i < 25; i++)
         {
-            var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
+            await c1.PublishStringAsync("a");
+            await Task.Delay(50);
 
-            var c1 = await testEnvironment.ConnectClient();
-
-            for (var i = 1; i < 25; i++)
-            {
-                await c1.PublishStringAsync("a");
-                await Task.Delay(50);
-
-                var clientStatus = await server.GetClientsAsync();
-                Assert.AreEqual(i, clientStatus.First().SentApplicationMessagesCount);
-                Assert.AreEqual(0, clientStatus.First().ReceivedApplicationMessagesCount);
-            }
+            var clientStatus = await server.GetClientsAsync();
+            Assert.AreEqual(i, clientStatus[0].SentApplicationMessagesCount);
+            Assert.AreEqual(0, clientStatus[0].ReceivedApplicationMessagesCount);
         }
     }
 
     [TestMethod]
     public async Task Track_Sent_Packets()
     {
-        using (var testEnvironment = new TestEnvironment(TestContext))
+        using var testEnvironment = new TestEnvironment(TestContext);
+        var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
+
+        var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithNoKeepAlive());
+
+        for (var i = 1; i < 25; i++)
         {
-            var server = await testEnvironment.StartServer(new MqttServerOptionsBuilder().WithPersistentSessions());
+            // At most once will send one packet to the client and the server will reply
+            // with an additional ACK packet.
+            await c1.PublishStringAsync("a", string.Empty, MqttQualityOfServiceLevel.AtLeastOnce);
 
-            var c1 = await testEnvironment.ConnectClient(new MqttClientOptionsBuilder().WithNoKeepAlive());
+            await Task.Delay(500);
 
-            for (var i = 1; i < 25; i++)
-            {
-                // At most once will send one packet to the client and the server will reply
-                // with an additional ACK packet.
-                await c1.PublishStringAsync("a", string.Empty, MqttQualityOfServiceLevel.AtLeastOnce);
+            var clientStatus = await server.GetClientsAsync();
 
-                await Task.Delay(500);
+            Assert.AreEqual(i, clientStatus[0].SentApplicationMessagesCount, "SAMC invalid!");
 
-                var clientStatus = await server.GetClientsAsync();
+            // + 1 because CONNECT is also counted.
+            Assert.AreEqual(i + 1, clientStatus[0].SentPacketsCount, "SPC invalid!");
 
-                Assert.AreEqual(i, clientStatus.First().SentApplicationMessagesCount, "SAMC invalid!");
-
-                // + 1 because CONNECT is also counted.
-                Assert.AreEqual(i + 1, clientStatus.First().SentPacketsCount, "SPC invalid!");
-
-                // +2 because ConnACK + PubAck package is already counted.
-                Assert.AreEqual(i + 2, clientStatus.First().ReceivedPacketsCount, "RPC invalid!");
-            }
+            // +2 because ConnACK + PubAck package is already counted.
+            Assert.AreEqual(i + 2, clientStatus[0].ReceivedPacketsCount, "RPC invalid!");
         }
     }
 }

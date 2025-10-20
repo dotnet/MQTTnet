@@ -26,23 +26,21 @@ public static class RpcClient_Samples
         // The RPC client is an addon for the existing client. So we need a regular client
         // which is wrapped later.
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        var mqttClientOptions = new MqttClientOptionsBuilder()
+            .WithTcpServer("broker.hivemq.com")
+            .Build();
+
+        await mqttClient.ConnectAsync(mqttClientOptions);
+
+        using (var mqttRpcClient = mqttFactory.CreateMqttRpcClient(mqttClient))
         {
-            var mqttClientOptions = new MqttClientOptionsBuilder()
-                .WithTcpServer("broker.hivemq.com")
-                .Build();
-
-            await mqttClient.ConnectAsync(mqttClientOptions);
-
-            using (var mqttRpcClient = mqttFactory.CreateMqttRpcClient(mqttClient))
-            {
-                // Access to a fully featured application message is not supported for RPC calls!
-                // The method will throw an exception when the response was not received in time.
-                await mqttRpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
-            }
-
-            Console.WriteLine("The RPC call was successful.");
+            // Access to a fully featured application message is not supported for RPC calls!
+            // The method will throw an exception when the response was not received in time.
+            await mqttRpcClient.ExecuteAsync(TimeSpan.FromSeconds(2), "ping", "", MqttQualityOfServiceLevel.AtMostOnce);
         }
+
+        Console.WriteLine("The RPC call was successful.");
     }
 
     /*

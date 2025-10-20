@@ -9,72 +9,68 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 
-namespace MQTTnet.Tests.Server
+namespace MQTTnet.Tests.Server;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class Topic_Alias_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class Topic_Alias_Tests : BaseTestClass
+    [TestMethod]
+    public async Task Server_Reports_Topic_Alias_Supported()
     {
-        [TestMethod]
-        public async Task Server_Reports_Topic_Alias_Supported()
+        using var testEnvironment = CreateTestEnvironment();
+        await testEnvironment.StartServer();
+
+        var client = testEnvironment.CreateClient();
+
+        var connectResult = await client.ConnectAsync(new MqttClientOptionsBuilder()
+            .WithProtocolVersion(MqttProtocolVersion.V500)
+            .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
+            .Build());
+
+        Assert.AreEqual(ushort.MaxValue, connectResult.TopicAliasMaximum);
+    }
+
+    [TestMethod]
+    public async Task Publish_With_Topic_Alias()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        await testEnvironment.StartServer();
+
+        var receivedTopics = new List<string>();
+
+        var c1 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
+        c1.ApplicationMessageReceivedAsync += e =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
+            lock (receivedTopics)
             {
-                await testEnvironment.StartServer();
-
-                var client = testEnvironment.CreateClient();
-
-                var connectResult = await client.ConnectAsync(new MqttClientOptionsBuilder()
-                    .WithProtocolVersion(MqttProtocolVersion.V500)
-                    .WithTcpServer("127.0.0.1", testEnvironment.ServerPort)
-                    .Build());
-
-                Assert.AreEqual(connectResult.TopicAliasMaximum, ushort.MaxValue);
+                receivedTopics.Add(e.ApplicationMessage.Topic);
             }
-        }
 
-        [TestMethod]
-        public async Task Publish_With_Topic_Alias()
+            return CompletedTask.Instance;
+        };
+
+        await c1.SubscribeAsync("#");
+
+        var c2 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
+
+        var message = new MqttApplicationMessage
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                await testEnvironment.StartServer();
+            Topic = "this_is_the_topic",
+            TopicAlias = 22
+        };
 
-                var receivedTopics = new List<string>();
+        await c2.PublishAsync(message);
 
-                var c1 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
-                c1.ApplicationMessageReceivedAsync += e =>
-                {
-                    lock (receivedTopics)
-                    {
-                        receivedTopics.Add(e.ApplicationMessage.Topic);
-                    }
+        message.Topic = null;
 
-                    return CompletedTask.Instance;
-                };
+        await c2.PublishAsync(message);
+        await c2.PublishAsync(message);
 
-                await c1.SubscribeAsync("#");
+        await Task.Delay(500);
 
-                var c2 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
-
-                var message = new MqttApplicationMessage
-                {
-                    Topic = "this_is_the_topic",
-                    TopicAlias = 22
-                };
-
-                await c2.PublishAsync(message);
-
-                message.Topic = null;
-
-                await c2.PublishAsync(message);
-                await c2.PublishAsync(message);
-
-                await Task.Delay(500);
-
-                Assert.AreEqual(3, receivedTopics.Count);
-                CollectionAssert.AllItemsAreNotNull(receivedTopics);
-                Assert.IsTrue(receivedTopics.All(t => t.Equals("this_is_the_topic")));
-            }
-        }
+        Assert.HasCount(3, receivedTopics);
+        CollectionAssert.AllItemsAreNotNull(receivedTopics);
+        Assert.IsTrue(receivedTopics.All(t => t.Equals("this_is_the_topic")));
     }
 }

@@ -20,7 +20,7 @@ public sealed class DefaultMqttCertificatesProvider : IMqttClientCertificatesPro
     {
         if (certificates != null)
         {
-            _certificates = new X509Certificate2Collection();
+            _certificates = [];
             foreach (var certificate in certificates)
             {
                 _certificates.Add(certificate);

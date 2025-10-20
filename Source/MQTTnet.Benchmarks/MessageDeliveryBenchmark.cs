@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
@@ -23,21 +22,18 @@ public class MessageDeliveryBenchmark : BaseBenchmark
     int _messagesExpectedCount;
     int _messagesReceivedCount;
     Dictionary<string, IMqttClient> _mqttPublisherClientsByPublisherName;
-
     MqttServer _mqttServer;
     List<IMqttClient> _mqttSubscriberClients;
+
+    [Params(1000, 10000)] public int _numPublishers;
+
+    [Params(5, 10, 20, 50)] public int _numSubscribedTopicsPerSubscriber;
+
+    [Params(10)] public int _numSubscribers;
+
+    [Params(1, 5)] public int _numTopicsPerPublisher;
     Dictionary<string, string> _publisherByTopic;
-    List<MqttApplicationMessage> _topicPublishMessages;
-
     Dictionary<string, List<string>> _topicsByPublisher;
-
-    [Params(1000, 10000)] public int NumPublishers;
-
-    [Params(5, 10, 20, 50)] public int NumSubscribedTopicsPerSubscriber;
-
-    [Params(10)] public int NumSubscribers;
-
-    [Params(1, 5)] public int NumTopicsPerPublisher;
 
     [GlobalCleanup]
     public void Cleanup()
@@ -64,14 +60,11 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         _mqttServer = null;
     }
 
-    /// <summary>
-    ///     Publish messages and wait for messages sent to subscribers
-    /// </summary>
     [Benchmark]
     public void DeliverMessages()
     {
         // There should be one message received per publish for each subscribed topic
-        _messagesExpectedCount = NumSubscribedTopicsPerSubscriber * NumSubscribers;
+        _messagesExpectedCount = _numSubscribedTopicsPerSubscriber * _numSubscribers;
 
         // Loop for a while and exchange messages
 
@@ -81,8 +74,6 @@ public class MessageDeliveryBenchmark : BaseBenchmark
 
         // same payload for all messages
         var payload = new byte[] { 1, 2, 3, 4 };
-
-        var tasks = new List<Task>();
 
         // publish a message for each subscribed topic
         foreach (var topic in _allSubscribedTopics)
@@ -101,35 +92,23 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         }
         catch
         {
+            // Ignore all errors.
         }
 
         _cancellationTokenSource.Dispose();
 
         if (_messagesReceivedCount < _messagesExpectedCount)
         {
-            throw new Exception(string.Format("Messages Received Count mismatch, expected {0}, received {1}", _messagesExpectedCount, _messagesReceivedCount));
+            throw new Exception($"Messages Received Count mismatch, expected {_messagesExpectedCount}, received {_messagesReceivedCount}");
         }
     }
-
 
     [GlobalSetup]
     public void Setup()
     {
         _lockMsgCount = new object();
 
-        Dictionary<string, List<string>> singleWildcardTopicsByPublisher;
-        Dictionary<string, List<string>> multiWildcardTopicsByPublisher;
-
-        TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out _topicsByPublisher, out singleWildcardTopicsByPublisher, out multiWildcardTopicsByPublisher);
-
-        var topics = _topicsByPublisher.First().Value;
-        _topicPublishMessages = new List<MqttApplicationMessage>();
-        // Prepare messages, same for each publisher
-        foreach (var topic in topics)
-        {
-            var message = new MqttApplicationMessageBuilder().WithTopic(topic).WithPayload(new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 }).Build();
-            _topicPublishMessages.Add(message);
-        }
+        TopicGenerator.Generate(_numPublishers, _numTopicsPerPublisher, out _topicsByPublisher, out _, out _);
 
         // Create server
         var serverFactory = new MqttServerFactory();
@@ -139,7 +118,7 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         _mqttServer.StartAsync().GetAwaiter().GetResult();
 
         // Create publisher clients
-        _mqttPublisherClientsByPublisherName = new Dictionary<string, IMqttClient>();
+        _mqttPublisherClientsByPublisherName = [];
         foreach (var pt in _topicsByPublisher)
         {
             var publisherName = pt.Key;
@@ -151,13 +130,13 @@ public class MessageDeliveryBenchmark : BaseBenchmark
 
         // Create subscriber clients
         _mqttSubscriberClients = new List<IMqttClient>();
-        for (var i = 0; i < NumSubscribers; i++)
+        for (var i = 0; i < _numSubscribers; i++)
         {
             var mqttSubscriberClient = clientFactory.CreateMqttClient();
             _mqttSubscriberClients.Add(mqttSubscriberClient);
 
             var subscriberOptions = new MqttClientOptionsBuilder().WithTcpServer("localhost").WithClientId("subscriber" + i).Build();
-            mqttSubscriberClient.ApplicationMessageReceivedAsync += r =>
+            mqttSubscriberClient.ApplicationMessageReceivedAsync += _ =>
             {
                 // count messages and signal cancellation when expected message count is reached
                 lock (_lockMsgCount)
@@ -171,12 +150,13 @@ public class MessageDeliveryBenchmark : BaseBenchmark
 
                 return Task.CompletedTask;
             };
+
             mqttSubscriberClient.ConnectAsync(subscriberOptions).GetAwaiter().GetResult();
         }
 
 
         var allTopics = new List<string>();
-        _publisherByTopic = new Dictionary<string, string>();
+        _publisherByTopic = [];
         foreach (var t in _topicsByPublisher)
         {
             foreach (var topic in t.Value)
@@ -189,21 +169,18 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         // Subscribe to NumSubscribedTopics topics spread across all topics
         _allSubscribedTopics = new List<string>();
 
-        var totalNumTopics = NumPublishers * NumTopicsPerPublisher;
-        var topicIndexStep = totalNumTopics / (NumSubscribedTopicsPerSubscriber * NumSubscribers);
-        if (topicIndexStep * NumSubscribedTopicsPerSubscriber * NumSubscribers != totalNumTopics)
+        var totalNumTopics = _numPublishers * _numTopicsPerPublisher;
+        var topicIndexStep = totalNumTopics / (_numSubscribedTopicsPerSubscriber * _numSubscribers);
+        if (topicIndexStep * _numSubscribedTopicsPerSubscriber * _numSubscribers != totalNumTopics)
         {
             throw new Exception(
-                string.Format(
-                    "The total number of topics must be divisible by the number of subscribed topics across all subscribers. Total number of topics: {0}, topic step: {1}",
-                    totalNumTopics,
-                    topicIndexStep));
+                $"The total number of topics must be divisible by the number of subscribed topics across all subscribers. Total number of topics: {totalNumTopics}, topic step: {topicIndexStep}");
         }
 
         var topicIndex = 0;
         foreach (var mqttSubscriber in _mqttSubscriberClients)
         {
-            for (var i = 0; i < NumSubscribedTopicsPerSubscriber; ++i, topicIndex += topicIndexStep)
+            for (var i = 0; i < _numSubscribedTopicsPerSubscriber; ++i, topicIndex += topicIndexStep)
             {
                 var topic = allTopics[topicIndex];
                 _allSubscribedTopics.Add(topic);

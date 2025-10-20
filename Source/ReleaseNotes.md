@@ -1,12 +1,8 @@
-**! Read the migration guide (https://github.com/dotnet/MQTTnet/wiki/Upgrading-guide) before migrating to version 5!**
-
-## Changes
-* Memory usage optimizations (thanks to @mregen)
-* Performance optimizations (thanks to @mregen)
-* Removal of no longer supported .NET Frameworks **(BREAKING CHANGE)**
-* Changed code signing and nuget certificate
-* Namespace changes **(BREAKING CHANGE)**
-* Removal of Managed Client **(BREAKING CHANGE)**
-* Client: MQTT 5.0.0 is now the default version when connecting with a server **(BREAKING CHANGE)**
-* Server: Set default for "MaxPendingMessagesPerClient" to 1000 **(BREAKING CHANGE)**
-* Server: Set SSL version to "None" which will let the OS choose the version **(BREAKING CHANGE)**
+* Core: Used new language features across the entire library
+* Core: Performance improvements
+* Server: Improved performance of retained messages when no event handler is attached (#2093, thanks to @zhaowgit)
+* Server: The event `InterceptingClientEnqueue` is now also called for retained messages (BREAKING CHANGE!)
+* Server: The local end point is now also exposed in the channel adapter (#2179)
+* Marked all projects as AOT compatible
+* Restored the strong name of the nugets
+* Embedded license file in all nugets (#2197, thanks to @JensNordenbro)

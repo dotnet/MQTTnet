@@ -4,24 +4,23 @@
 
 using System.IO.Pipelines;
 
-namespace MQTTnet.Tests.ASP.Mockups
+namespace MQTTnet.Tests.ASP.Mockups;
+
+public sealed class DuplexPipeMockup : IDuplexPipe
 {
-    public sealed class DuplexPipeMockup : IDuplexPipe
+    public DuplexPipeMockup()
     {
-        public DuplexPipeMockup()
-        {
-            var pool = new LimitedMemoryPool();
-            var pipeOptions = new PipeOptions(pool);
-            Receive = new Pipe(pipeOptions);
-            Send = new Pipe(pipeOptions);
-        }
-
-        PipeReader IDuplexPipe.Input => Receive.Reader;
-
-        PipeWriter IDuplexPipe.Output => Send.Writer;
-
-        public Pipe Receive { get; } 
-
-        public Pipe Send { get; }
+        var pool = new LimitedMemoryPool();
+        var pipeOptions = new PipeOptions(pool);
+        Receive = new Pipe(pipeOptions);
+        Send = new Pipe(pipeOptions);
     }
+
+    PipeReader IDuplexPipe.Input => Receive.Reader;
+
+    PipeWriter IDuplexPipe.Output => Send.Writer;
+
+    public Pipe Receive { get; }
+
+    public Pipe Send { get; }
 }

@@ -9,26 +9,17 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Exceptions;
 
-public sealed class MqttClientUnexpectedDisconnectReceivedException : MqttCommunicationException
+public sealed class MqttClientUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket, Exception innerException = null) : MqttCommunicationException(
+    $"Unexpected DISCONNECT (Reason code={disconnectPacket.ReasonCode}) received.",
+    innerException)
 {
-    public MqttClientUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket, Exception innerExcpetion = null) : base(
-        $"Unexpected DISCONNECT (Reason code={disconnectPacket.ReasonCode}) received.",
-        innerExcpetion)
-    {
-        ReasonCode = disconnectPacket.ReasonCode;
-        SessionExpiryInterval = disconnectPacket.SessionExpiryInterval;
-        ReasonString = disconnectPacket.ReasonString;
-        ServerReference = disconnectPacket.ServerReference;
-        UserProperties = disconnectPacket.UserProperties;
-    }
+    public MqttDisconnectReasonCode? ReasonCode { get; } = disconnectPacket.ReasonCode;
 
-    public MqttDisconnectReasonCode? ReasonCode { get; }
+    public string ReasonString { get; } = disconnectPacket.ReasonString;
 
-    public string ReasonString { get; }
+    public string ServerReference { get; } = disconnectPacket.ServerReference;
 
-    public string ServerReference { get; }
+    public uint? SessionExpiryInterval { get; } = disconnectPacket.SessionExpiryInterval;
 
-    public uint? SessionExpiryInterval { get; }
-
-    public List<MqttUserProperty> UserProperties { get; }
+    public List<MqttUserProperty> UserProperties { get; } = disconnectPacket.UserProperties;
 }

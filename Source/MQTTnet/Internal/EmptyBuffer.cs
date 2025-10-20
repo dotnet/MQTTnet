@@ -5,14 +5,13 @@
 using System;
 using System.Buffers;
 
-namespace MQTTnet.Internal
+namespace MQTTnet.Internal;
+
+public static class EmptyBuffer
 {
-    public static class EmptyBuffer
-    {
-        public static readonly byte[] Array = System.Array.Empty<byte>();
+    public static readonly byte[] Array = [];
 
-        public static readonly ArraySegment<byte> ArraySegment = new ArraySegment<byte>(Array, 0, 0);
+    public static readonly ArraySegment<byte> ArraySegment = new(Array, 0, 0);
 
-        public static readonly ReadOnlySequence<byte> ReadOnlySequence = ReadOnlySequence<byte>.Empty;
-    }
+    public static readonly ReadOnlySequence<byte> ReadOnlySequence = ReadOnlySequence<byte>.Empty;
 }

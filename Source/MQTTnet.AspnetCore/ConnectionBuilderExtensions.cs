@@ -4,13 +4,12 @@
 
 using Microsoft.AspNetCore.Connections;
 
-namespace MQTTnet.AspNetCore
+namespace MQTTnet.AspNetCore;
+
+public static class ConnectionBuilderExtensions
 {
-    public static class ConnectionBuilderExtensions
+    public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder)
     {
-        public static IConnectionBuilder UseMqtt(this IConnectionBuilder builder)
-        {
-            return builder.UseConnectionHandler<MqttConnectionHandler>();
-        }
+        return builder.UseConnectionHandler<MqttConnectionHandler>();
     }
 }

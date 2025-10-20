@@ -5,14 +5,13 @@
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server.Internal;
+
+public sealed class UnsubscribeResult
 {
-    public sealed class UnsubscribeResult
-    {
-        public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>(128);
+    public List<MqttUnsubscribeReasonCode> ReasonCodes { get; } = new List<MqttUnsubscribeReasonCode>(128);
 
-        public bool CloseConnection { get; set; }
+    public bool CloseConnection { get; set; }
 
-        public List<MqttUserProperty> UserProperties { get; set; }
-    }
+    public List<MqttUserProperty> UserProperties { get; set; }
 }

@@ -99,11 +99,11 @@ public static class MqttClientExtensions
         return client.ConnectAsync(client.Options, cancellationToken);
     }
 
-    public static Task SendExtendedAuthenticationExchangeDataAsync(this IMqttClient client, MqttExtendedAuthenticationExchangeData data)
+    public static Task SendEnhancedAuthenticationExchangeDataAsync(this IMqttClient client, MqttEnhancedAuthenticationExchangeData data)
     {
         ArgumentNullException.ThrowIfNull(client);
 
-        return client.SendExtendedAuthenticationExchangeDataAsync(data, CancellationToken.None);
+        return client.SendEnhancedAuthenticationExchangeDataAsync(data, CancellationToken.None);
     }
 
     public static Task<MqttClientSubscribeResult> SubscribeAsync(this IMqttClient mqttClient, MqttTopicFilter topicFilter, CancellationToken cancellationToken = default)

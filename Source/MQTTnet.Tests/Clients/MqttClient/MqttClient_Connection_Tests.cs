@@ -3,251 +3,301 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
-using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
+using MQTTnet.Server.EnhancedAuthentication;
 
-namespace MQTTnet.Tests.Clients.MqttClient
+namespace MQTTnet.Tests.Clients.MqttClient;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class MqttClient_Connection_Tests : BaseTestClass
 {
-    [TestClass]
-    public sealed class MqttClient_Connection_Tests : BaseTestClass
+    [TestMethod]
+    public Task Connect_To_Invalid_Server_Port_Not_Opened()
     {
-        [TestMethod]
-        [ExpectedException(typeof(MqttCommunicationException))]
-        public async Task Connect_To_Invalid_Server_Port_Not_Opened()
+        return Assert.ThrowsExactlyAsync<MqttCommunicationException>(async () =>
         {
             var client = new MqttClientFactory().CreateMqttClient();
-            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5)))
-            {
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).Build(), timeout.Token);
-            }
-        }
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", 12345).Build(), timeout.Token);
+        });
+    }
 
-        [TestMethod]
-        [ExpectedException(typeof(OperationCanceledException))]
-        public async Task Connect_To_Invalid_Server_Wrong_IP()
+    [TestMethod]
+    public Task Connect_To_Invalid_Server_Wrong_IP()
+    {
+        return Assert.ThrowsExactlyAsync<OperationCanceledException>(async () =>
         {
             var client = new MqttClientFactory().CreateMqttClient();
-            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2)))
-            {
-                await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build(), timeout.Token);
-            }
-        }
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").Build(), timeout.Token);
+        });
+    }
 
-        [TestMethod]
-        [ExpectedException(typeof(MqttCommunicationException))]
-        public async Task Connect_To_Invalid_Server_Wrong_Protocol()
+    [TestMethod]
+    public Task Connect_To_Invalid_Server_Wrong_Protocol()
+    {
+        return Assert.ThrowsExactlyAsync<MqttCommunicationException>(async () =>
         {
             var client = new MqttClientFactory().CreateMqttClient();
             await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("http://127.0.0.1", 12345).WithTimeout(TimeSpan.FromSeconds(2)).Build());
-        }
+        });
+    }
 
-        [TestMethod]
-        public async Task ConnectTimeout_Throws_Exception()
+    [TestMethod]
+    public async Task ConnectTimeout_Throws_Exception()
+    {
+        var factory = new MqttClientFactory();
+        using var client = factory.CreateMqttClient();
+        var disconnectHandlerCalled = false;
+        try
         {
-            var factory = new MqttClientFactory();
-            using (var client = factory.CreateMqttClient())
+            client.DisconnectedAsync += _ =>
             {
-                var disconnectHandlerCalled = false;
-                try
-                {
-                    client.DisconnectedAsync += args =>
-                    {
-                        disconnectHandlerCalled = true;
-                        return CompletedTask.Instance;
-                    };
+                disconnectHandlerCalled = true;
+                return CompletedTask.Instance;
+            };
 
-                    await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").Build());
+            await client.ConnectAsync(new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1").Build());
 
-                    Assert.Fail("Must fail!");
-                }
-                catch (Exception exception)
-                {
-                    Assert.IsNotNull(exception);
-                    Assert.IsInstanceOfType(exception, typeof(MqttCommunicationException));
-                }
-
-                await LongTestDelay(); // disconnected handler is called async
-                Assert.IsTrue(disconnectHandlerCalled);
-            }
+            Assert.Fail("Must fail!");
         }
-
-        [TestMethod]
-        public async Task Disconnect_Clean()
+        catch (Exception exception)
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                var server = await testEnvironment.StartServer();
-
-                ClientDisconnectedEventArgs eventArgs = null;
-                server.ClientDisconnectedAsync += args =>
-                {
-                    eventArgs = args;
-                    return CompletedTask.Instance;
-                };
-
-                var client = await testEnvironment.ConnectClient();
-
-                var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
-
-                // Perform a clean disconnect.
-                await client.DisconnectAsync(disconnectOptions);
-
-                await LongTestDelay();
-
-                Assert.IsNotNull(eventArgs);
-                Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
-            }
+            Assert.IsNotNull(exception);
+            Assert.IsInstanceOfType(exception, typeof(MqttCommunicationException));
         }
 
-        [TestMethod]
-        public async Task Disconnect_Clean_With_Custom_Reason()
+        await LongTestDelay(); // disconnected handler is called async
+        Assert.IsTrue(disconnectHandlerCalled);
+    }
+
+    [TestMethod]
+    public async Task Disconnect_Clean()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
+
+        ClientDisconnectedEventArgs eventArgs = null;
+        server.ClientDisconnectedAsync += args =>
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = args;
+            return CompletedTask.Instance;
+        };
 
-                ClientDisconnectedEventArgs eventArgs = null;
-                server.ClientDisconnectedAsync += args =>
-                {
-                    eventArgs = args;
-                    return CompletedTask.Instance;
-                };
+        var client = await testEnvironment.ConnectClient();
 
-                var client = await testEnvironment.ConnectClient();
+        var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
 
-                var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
+        // Perform a clean disconnect.
+        await client.DisconnectAsync(disconnectOptions);
 
-                // Perform a clean disconnect.
-                await client.DisconnectAsync(disconnectOptions);
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
+        Assert.AreEqual(MqttClientDisconnectType.Clean, eventArgs.DisconnectType);
+    }
 
-                Assert.IsNotNull(eventArgs);
-                Assert.AreEqual(MqttDisconnectReasonCode.MessageRateTooHigh, eventArgs.ReasonCode);
-            }
-        }
+    [TestMethod]
+    public async Task Disconnect_Clean_With_Custom_Reason()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
 
-        [TestMethod]
-        public async Task Disconnect_Clean_With_User_Properties()
+        ClientDisconnectedEventArgs eventArgs = null;
+        server.ClientDisconnectedAsync += args =>
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
-            {
-                var server = await testEnvironment.StartServer();
+            eventArgs = args;
+            return CompletedTask.Instance;
+        };
 
-                ClientDisconnectedEventArgs eventArgs = null;
-                server.ClientDisconnectedAsync += args =>
-                {
-                    eventArgs = args;
-                    return CompletedTask.Instance;
-                };
+        var client = await testEnvironment.ConnectClient();
 
-                var client = await testEnvironment.ConnectClient();
+        var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithReason(MqttClientDisconnectOptionsReason.MessageRateTooHigh).Build();
 
-                var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithUserProperty("test_name", "test_value").Build();
+        // Perform a clean disconnect.
+        await client.DisconnectAsync(disconnectOptions);
 
-                // Perform a clean disconnect.
-                await client.DisconnectAsync(disconnectOptions);
+        await LongTestDelay();
 
-                await LongTestDelay();
+        Assert.IsNotNull(eventArgs);
+        Assert.AreEqual(MqttDisconnectReasonCode.MessageRateTooHigh, eventArgs.ReasonCode);
+    }
 
-                Assert.IsNotNull(eventArgs);
-                Assert.IsNotNull(eventArgs.UserProperties);
-                Assert.AreEqual(1, eventArgs.UserProperties.Count);
-                Assert.AreEqual("test_name", eventArgs.UserProperties[0].Name);
-                Assert.AreEqual("test_value", eventArgs.UserProperties[0].Value);
-            }
-        }
+    [TestMethod]
+    public async Task Disconnect_Clean_With_User_Properties()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
 
-        [TestMethod]
-        public async Task No_Unobserved_Exception()
+        ClientDisconnectedEventArgs eventArgs = null;
+        server.ClientDisconnectedAsync += args =>
         {
-            using (var testEnvironment = CreateTestEnvironment())
-            {
-                testEnvironment.IgnoreClientLogErrors = true;
+            eventArgs = args;
+            return CompletedTask.Instance;
+        };
 
-                var client = testEnvironment.CreateClient();
-                var options = new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").WithTimeout(TimeSpan.FromSeconds(2)).Build();
+        var client = await testEnvironment.ConnectClient();
 
-                try
-                {
-                    using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(0.5)))
-                    {
-                        await client.ConnectAsync(options, timeout.Token);
-                    }
-                }
-                catch (OperationCanceledException)
-                {
-                }
+        var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithUserProperty("test_name", "test_value").Build();
 
-                client.Dispose();
+        // Perform a clean disconnect.
+        await client.DisconnectAsync(disconnectOptions);
 
-                // These delays and GC calls are required in order to make calling the finalizer reproducible.
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                await LongTestDelay();
-                await LongTestDelay();
-                await LongTestDelay();
-            }
-        }
+        await LongTestDelay();
 
-        [TestMethod]
-        public async Task Return_Non_Success()
+        Assert.IsNotNull(eventArgs);
+        Assert.IsNotNull(eventArgs.UserProperties);
+        Assert.HasCount(1, eventArgs.UserProperties);
+        Assert.AreEqual("test_name", eventArgs.UserProperties[0].Name);
+        Assert.AreEqual("test_value", eventArgs.UserProperties[0].Value);
+    }
+
+    class TestClientKerberosAuthenticationHandler : IMqttEnhancedAuthenticationHandler
+    {
+        public async Task HandleEnhancedAuthenticationAsync(MqttEnhancedAuthenticationEventArgs eventArgs)
         {
-            using (var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500))
+            if (eventArgs.AuthenticationMethod != "GS2-KRB5")
             {
-                var server = await testEnvironment.StartServer();
-
-                server.ValidatingConnectionAsync += args =>
-                {
-                    args.ResponseUserProperties = new List<MqttUserProperty>
-                    {
-                        new MqttUserProperty("Property", "Value")
-                    };
-
-                    args.ReasonCode = MqttConnectReasonCode.QuotaExceeded;
-
-                    return CompletedTask.Instance;
-                };
-
-                var client = testEnvironment.CreateClient();
-
-                var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().Build());
-
-                Assert.IsNotNull(response);
-                Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);
-                Assert.AreEqual(response.UserProperties[0].Name, "Property");
-                Assert.AreEqual(response.UserProperties[0].Value, "Value");
+                throw new InvalidOperationException("Wrong authentication method");
             }
-        }
 
-        [TestMethod]
-        public async Task Throw_Proper_Exception_When_Not_Connected()
+            var sendOptions = new SendMqttEnhancedAuthenticationDataOptions
+            {
+                Data = "initial context token"u8.ToArray()
+            };
+
+            await eventArgs.SendAsync(sendOptions, eventArgs.CancellationToken);
+
+            var response = await eventArgs.ReceiveAsync(eventArgs.CancellationToken);
+
+            Assert.AreEqual("reply context token", Encoding.UTF8.GetString(response.AuthenticationData));
+
+            // No further data is required, but we have to fulfil the exchange.
+            sendOptions = new SendMqttEnhancedAuthenticationDataOptions
+            {
+                Data = []
+            };
+
+            await eventArgs.SendAsync(sendOptions, eventArgs.CancellationToken);
+        }
+    }
+
+    [TestMethod]
+    public async Task Use_Enhanced_Authentication()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
+
+        server.ValidatingConnectionAsync += async args =>
         {
-            try
+            if (args.AuthenticationMethod == "GS2-KRB5")
             {
-                var mqttFactory = new MqttClientFactory();
-                using (var mqttClient = mqttFactory.CreateMqttClient())
-                {
-                    await mqttClient.SubscribeAsync("test", MqttQualityOfServiceLevel.AtLeastOnce);
-                }
-            }
-            catch (MqttClientNotConnectedException exception)
-            {
-                if (exception.Message == "The MQTT client is not connected.")
-                {
-                    return;
-                }
-            }
+                var result = await args.ExchangeEnhancedAuthenticationAsync(new ExchangeEnhancedAuthenticationOptions(), args.CancellationToken);
 
-            Assert.Fail();
+                Assert.AreEqual("initial context token", Encoding.UTF8.GetString(result.AuthenticationData));
+
+                var authOptions = testEnvironment.ServerFactory.CreateExchangeExtendedAuthenticationOptionsBuilder().WithAuthenticationData("reply context token").Build();
+
+                result =  await args.ExchangeEnhancedAuthenticationAsync(authOptions, args.CancellationToken);
+
+                Assert.AreEqual(string.Empty, Encoding.UTF8.GetString(result.AuthenticationData));
+
+                args.ResponseAuthenticationData = "outcome of authentication"u8.ToArray();
+            }
+            else
+            {
+                args.ReasonCode = MqttConnectReasonCode.BadAuthenticationMethod;
+            }
+        };
+
+        // Use Kerberos sample from the MQTT RFC.
+        var kerberosAuthenticationHandler = new TestClientKerberosAuthenticationHandler();
+
+        var clientOptions = testEnvironment.CreateDefaultClientOptionsBuilder().WithEnhancedAuthentication("GS2-KRB5").WithEnhancedAuthenticationHandler(kerberosAuthenticationHandler);
+        var client = await testEnvironment.ConnectClient(clientOptions);
+
+        Assert.IsTrue(client.IsConnected);
+    }
+
+    [TestMethod]
+    public async Task No_Unobserved_Exception()
+    {
+        using var testEnvironment = CreateTestEnvironment();
+        testEnvironment.IgnoreClientLogErrors = true;
+
+        var client = testEnvironment.CreateClient();
+        var options = new MqttClientOptionsBuilder().WithTcpServer("1.2.3.4").WithTimeout(TimeSpan.FromSeconds(2)).Build();
+
+        try
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(0.5));
+            await client.ConnectAsync(options, timeout.Token);
         }
+        catch (OperationCanceledException)
+        {
+        }
+
+        client.Dispose();
+
+        // These delays and GC calls are required in order to make calling the finalizer reproducible.
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        await LongTestDelay();
+        await LongTestDelay();
+        await LongTestDelay();
+    }
+
+    [TestMethod]
+    public async Task Return_Non_Success()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
+
+        server.ValidatingConnectionAsync += args =>
+        {
+            args.ResponseUserProperties = [new("Property", "Value")];
+
+            args.ReasonCode = MqttConnectReasonCode.QuotaExceeded;
+
+            return CompletedTask.Instance;
+        };
+
+        var client = testEnvironment.CreateClient();
+
+        var response = await client.ConnectAsync(testEnvironment.CreateDefaultClientOptionsBuilder().Build());
+
+        Assert.IsNotNull(response);
+        Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);
+        Assert.AreEqual("Property", response.UserProperties[0].Name);
+        Assert.AreEqual("Value", response.UserProperties[0].Value);
+    }
+
+    [TestMethod]
+    public async Task Throw_Proper_Exception_When_Not_Connected()
+    {
+        try
+        {
+            var mqttFactory = new MqttClientFactory();
+            using var mqttClient = mqttFactory.CreateMqttClient();
+            await mqttClient.SubscribeAsync("test", MqttQualityOfServiceLevel.AtLeastOnce);
+        }
+        catch (MqttClientNotConnectedException exception)
+        {
+            if (exception.Message == "The MQTT client is not connected.")
+            {
+                return;
+            }
+        }
+
+        Assert.Fail();
     }
 }

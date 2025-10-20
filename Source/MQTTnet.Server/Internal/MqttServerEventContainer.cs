@@ -4,52 +4,64 @@
 
 using MQTTnet.Internal;
 
-namespace MQTTnet.Server.Internal
+namespace MQTTnet.Server.Internal;
+
+public class MqttServerEventContainer
 {
-    public sealed class MqttServerEventContainer
+    public AsyncEvent<ApplicationMessageNotConsumedEventArgs> ApplicationMessageNotConsumedEvent { get; } = new();
+
+    public AsyncEvent<ClientAcknowledgedPublishPacketEventArgs> ClientAcknowledgedPublishPacketEvent { get; } = new();
+
+    public AsyncEvent<ClientConnectedEventArgs> ClientConnectedEvent { get; } = new();
+
+    public AsyncEvent<ClientDisconnectedEventArgs> ClientDisconnectedEvent { get; } = new();
+
+    public AsyncEvent<ClientSubscribedTopicEventArgs> ClientSubscribedTopicEvent { get; } = new();
+
+    public AsyncEvent<ClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopicEvent { get; } = new();
+
+    public AsyncEvent<InterceptingClientApplicationMessageEnqueueEventArgs> InterceptingClientEnqueueEvent { get; } = new();
+
+    public AsyncEvent<ApplicationMessageEnqueuedEventArgs> ApplicationMessageEnqueuedOrDroppedEvent { get; } = new();
+
+    public AsyncEvent<QueueMessageOverwrittenEventArgs> QueuedApplicationMessageOverwrittenEvent { get; } = new();
+
+    public AsyncEvent<InterceptingPacketEventArgs> InterceptingInboundPacketEvent { get; } = new();
+
+    public AsyncEvent<InterceptingPacketEventArgs> InterceptingOutboundPacketEvent { get; } = new();
+
+    public AsyncEvent<InterceptingPublishEventArgs> InterceptingPublishEvent { get; } = new();
+
+    public AsyncEvent<InterceptingSubscriptionEventArgs> InterceptingSubscriptionEvent { get; } = new();
+
+    public AsyncEvent<InterceptingUnsubscriptionEventArgs> InterceptingUnsubscriptionEvent { get; } = new();
+
+    public AsyncEvent<LoadingRetainedMessagesEventArgs> LoadingRetainedMessagesEvent { get; } = new();
+
+    public AsyncEvent<EventArgs> PreparingSessionEvent { get; } = new();
+
+    public AsyncEvent<RetainedMessageChangedEventArgs> RetainedMessageChangedEvent { get; } = new();
+
+    public AsyncEvent<EventArgs> RetainedMessagesClearedEvent { get; } = new();
+
+    public AsyncEvent<SessionDeletedEventArgs> SessionDeletedEvent { get; } = new();
+
+    public AsyncEvent<EventArgs> StartedEvent { get; } = new();
+
+    public AsyncEvent<EventArgs> StoppedEvent { get; } = new();
+
+    public AsyncEvent<ValidatingConnectionEventArgs> ValidatingConnectionEvent { get; } = new();
+
+    public async Task<bool> ShouldSkipEnqueue(string senderClientId, string clientId, MqttApplicationMessage applicationMessage)
     {
-        public AsyncEvent<ApplicationMessageNotConsumedEventArgs> ApplicationMessageNotConsumedEvent { get; } = new AsyncEvent<ApplicationMessageNotConsumedEventArgs>();
+        if (!InterceptingClientEnqueueEvent.HasHandlers)
+        {
+            return false;
+        }
 
-        public AsyncEvent<ClientAcknowledgedPublishPacketEventArgs> ClientAcknowledgedPublishPacketEvent { get; } = new AsyncEvent<ClientAcknowledgedPublishPacketEventArgs>();
+        var eventArgs = new InterceptingClientApplicationMessageEnqueueEventArgs(senderClientId, clientId, applicationMessage);
+        await InterceptingClientEnqueueEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
 
-        public AsyncEvent<ClientConnectedEventArgs> ClientConnectedEvent { get; } = new AsyncEvent<ClientConnectedEventArgs>();
-
-        public AsyncEvent<ClientDisconnectedEventArgs> ClientDisconnectedEvent { get; } = new AsyncEvent<ClientDisconnectedEventArgs>();
-
-        public AsyncEvent<ClientSubscribedTopicEventArgs> ClientSubscribedTopicEvent { get; } = new AsyncEvent<ClientSubscribedTopicEventArgs>();
-
-        public AsyncEvent<ClientUnsubscribedTopicEventArgs> ClientUnsubscribedTopicEvent { get; } = new AsyncEvent<ClientUnsubscribedTopicEventArgs>();
-
-        public AsyncEvent<InterceptingClientApplicationMessageEnqueueEventArgs> InterceptingClientEnqueueEvent { get; } = new AsyncEvent<InterceptingClientApplicationMessageEnqueueEventArgs>();
-        
-        public AsyncEvent<ApplicationMessageEnqueuedEventArgs> ApplicationMessageEnqueuedOrDroppedEvent { get; } = new AsyncEvent<ApplicationMessageEnqueuedEventArgs>();
-
-        public AsyncEvent<QueueMessageOverwrittenEventArgs> QueuedApplicationMessageOverwrittenEvent { get; } = new AsyncEvent<QueueMessageOverwrittenEventArgs>();
-
-        public AsyncEvent<InterceptingPacketEventArgs> InterceptingInboundPacketEvent { get; } = new AsyncEvent<InterceptingPacketEventArgs>();
-
-        public AsyncEvent<InterceptingPacketEventArgs> InterceptingOutboundPacketEvent { get; } = new AsyncEvent<InterceptingPacketEventArgs>();
-
-        public AsyncEvent<InterceptingPublishEventArgs> InterceptingPublishEvent { get; } = new AsyncEvent<InterceptingPublishEventArgs>();
-
-        public AsyncEvent<InterceptingSubscriptionEventArgs> InterceptingSubscriptionEvent { get; } = new AsyncEvent<InterceptingSubscriptionEventArgs>();
-
-        public AsyncEvent<InterceptingUnsubscriptionEventArgs> InterceptingUnsubscriptionEvent { get; } = new AsyncEvent<InterceptingUnsubscriptionEventArgs>();
-
-        public AsyncEvent<LoadingRetainedMessagesEventArgs> LoadingRetainedMessagesEvent { get; } = new AsyncEvent<LoadingRetainedMessagesEventArgs>();
-
-        public AsyncEvent<EventArgs> PreparingSessionEvent { get; } = new AsyncEvent<EventArgs>();
-
-        public AsyncEvent<RetainedMessageChangedEventArgs> RetainedMessageChangedEvent { get; } = new AsyncEvent<RetainedMessageChangedEventArgs>();
-
-        public AsyncEvent<EventArgs> RetainedMessagesClearedEvent { get; } = new AsyncEvent<EventArgs>();
-
-        public AsyncEvent<SessionDeletedEventArgs> SessionDeletedEvent { get; } = new AsyncEvent<SessionDeletedEventArgs>();
-
-        public AsyncEvent<EventArgs> StartedEvent { get; } = new AsyncEvent<EventArgs>();
-
-        public AsyncEvent<EventArgs> StoppedEvent { get; } = new AsyncEvent<EventArgs>();
-
-        public AsyncEvent<ValidatingConnectionEventArgs> ValidatingConnectionEvent { get; } = new AsyncEvent<ValidatingConnectionEventArgs>();
+        return !eventArgs.AcceptEnqueue;
     }
 }

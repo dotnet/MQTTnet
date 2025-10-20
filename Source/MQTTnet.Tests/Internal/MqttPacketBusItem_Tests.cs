@@ -7,37 +7,39 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Tests.Internal
+namespace MQTTnet.Tests.Internal;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class MqttPacketBusItem_Tests
 {
-    [TestClass]
-    public sealed class MqttPacketBusItem_Tests
+    [TestMethod]
+    public void Fire_Completed_Event()
     {
-        [TestMethod]
-        public void Fire_Completed_Event()
+        var eventFired = false;
+
+        var item = new MqttPacketBusItem(new MqttPublishPacket());
+        item.Completed += (_, _) =>
         {
-            var eventFired = false;
+            eventFired = true;
+        };
 
-            var item = new MqttPacketBusItem(new MqttPublishPacket());
-            item.Completed += (_, __) =>
-            {
-                eventFired = true;
-            };
+        item.Complete();
 
-            item.Complete();
+        Assert.IsTrue(eventFired);
+    }
 
-            Assert.IsTrue(eventFired);
-        }
-
-        [TestMethod]
-        [ExpectedException(typeof(TaskCanceledException))]
-        public async Task Wait_Packet_Bus_Item_After_Already_Canceled()
+    [TestMethod]
+    public Task Wait_Packet_Bus_Item_After_Already_Canceled()
+    {
+        return Assert.ThrowsExactlyAsync<TaskCanceledException>(async () =>
         {
             var item = new MqttPacketBusItem(new MqttPublishPacket());
 
-            // Finish the item before the actual 
+            // Finish the item before the actual
             item.Cancel();
 
             await item.WaitAsync();
-        }
+        });
     }
 }

@@ -3,149 +3,149 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Tests.Internal
+namespace MQTTnet.Tests.Internal;
+
+[SuppressMessage("ReSharper", "InconsistentNaming")]
+[TestClass]
+public sealed class MqttPacketBus_Tests
 {
-    [TestClass]
-    public sealed class MqttPacketBus_Tests
-    {       
-        [TestMethod]
-        public void Alternate_Priorities()
+    [TestMethod]
+    public void Alternate_Priorities()
+    {
+        var bus = new MqttPacketBus();
+
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
+
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
+
+        Assert.AreEqual(9, bus.TotalItemsCount);
+
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
+        Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+
+        Assert.AreEqual(0, bus.TotalItemsCount);
+    }
+
+    [TestMethod]
+    public void Await_Single_Packet()
+    {
+        var bus = new MqttPacketBus();
+
+        var delivered = false;
+
+        var item1 = new MqttPacketBusItem(new MqttPublishPacket());
+        var item2 = new MqttPacketBusItem(new MqttPublishPacket());
+
+        var item3 = new MqttPacketBusItem(new MqttPublishPacket());
+        item3.Completed += (_, _) =>
         {
-            var bus = new MqttPacketBus();
+            delivered = true;
+        };
 
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+        bus.EnqueueItem(item1, MqttPacketBusPartition.Data);
+        bus.EnqueueItem(item2, MqttPacketBusPartition.Data);
+        bus.EnqueueItem(item3, MqttPacketBusPartition.Data);
 
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttSubAckPacket()), MqttPacketBusPartition.Control);
+        Assert.IsFalse(delivered);
 
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPingRespPacket()), MqttPacketBusPartition.Health);
+        bus.DequeueItemAsync(CancellationToken.None).Result.Complete();
 
-            Assert.AreEqual(9, bus.TotalItemsCount);
+        Assert.IsFalse(delivered);
 
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPublishPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttSubAckPacket));
-            Assert.IsInstanceOfType(bus.DequeueItemAsync(CancellationToken.None).Result.Packet, typeof(MqttPingRespPacket));
+        bus.DequeueItemAsync(CancellationToken.None).Result.Complete();
 
-            Assert.AreEqual(0, bus.TotalItemsCount);
-        }
+        Assert.IsFalse(delivered);
 
-        [TestMethod]
-        public void Await_Single_Packet()
-        {
-            var bus = new MqttPacketBus();
+        bus.DequeueItemAsync(CancellationToken.None).Result.Complete();
 
-            var delivered = false;
+        // The third packet has the event attached.
+        Assert.IsTrue(delivered);
+    }
 
-            var item1 = new MqttPacketBusItem(new MqttPublishPacket());
-            var item2 = new MqttPacketBusItem(new MqttPublishPacket());
+    [TestMethod]
+    public void Export_Packets_Without_Dequeue()
+    {
+        var bus = new MqttPacketBus();
 
-            var item3 = new MqttPacketBusItem(new MqttPublishPacket());
-            item3.Completed += (_, __) =>
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+
+        Assert.AreEqual(3, bus.TotalItemsCount);
+
+        var exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Control);
+        Assert.HasCount(0, exportedPackets);
+
+        exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Health);
+        Assert.HasCount(0, exportedPackets);
+
+        exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Data);
+        Assert.HasCount(3, exportedPackets);
+
+        Assert.AreEqual(3, bus.TotalItemsCount);
+    }
+
+    [TestMethod]
+    public async Task Fill_From_Different_Task()
+    {
+        const int messageCount = 500;
+
+        var delayRandom = new Random();
+
+        var bus = new MqttPacketBus();
+
+        _ = Task.Run(
+            () =>
             {
-                delivered = true;
-            };
-
-            bus.EnqueueItem(item1, MqttPacketBusPartition.Data);
-            bus.EnqueueItem(item2, MqttPacketBusPartition.Data);
-            bus.EnqueueItem(item3, MqttPacketBusPartition.Data);
-
-            Assert.IsFalse(delivered);
-
-            bus.DequeueItemAsync(CancellationToken.None).Result.Complete();
-
-            Assert.IsFalse(delivered);
-
-            bus.DequeueItemAsync(CancellationToken.None).Result.Complete();
-
-            Assert.IsFalse(delivered);
-
-            bus.DequeueItemAsync(CancellationToken.None).Result.Complete();
-
-            // The third packet has the event attached.
-            Assert.IsTrue(delivered);
-        }
-
-        [TestMethod]
-        public void Export_Packets_Without_Dequeue()
-        {
-            var bus = new MqttPacketBus();
-
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-            bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
-
-            Assert.AreEqual(3, bus.TotalItemsCount);
-
-            var exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Control);
-            Assert.AreEqual(0, exportedPackets.Count);
-
-            exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Health);
-            Assert.AreEqual(0, exportedPackets.Count);
-
-            exportedPackets = bus.ExportPackets(MqttPacketBusPartition.Data);
-            Assert.AreEqual(3, exportedPackets.Count);
-
-            Assert.AreEqual(3, bus.TotalItemsCount);
-        }
-
-        [TestMethod]
-        public async Task Fill_From_Different_Task()
-        {
-            const int MessageCount = 500;
-
-            var delayRandom = new Random();
-
-            var bus = new MqttPacketBus();
-
-            _ = Task.Run(
-                () =>
+                for (var i = 0; i < messageCount; i++)
                 {
-                    for (var i = 0; i < MessageCount; i++)
-                    {
-                        bus.EnqueueItem(new MqttPacketBusItem(MqttPingReqPacket.Instance), MqttPacketBusPartition.Health);
+                    bus.EnqueueItem(new MqttPacketBusItem(MqttPingReqPacket.Instance), MqttPacketBusPartition.Health);
 
-                        Thread.Sleep(delayRandom.Next(0, 10));
-                    }
-                });
-
-            for (var i = 0; i < MessageCount; i++)
-            {
-                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
-                {
-                    await bus.DequeueItemAsync(timeout.Token);
+                    Thread.Sleep(delayRandom.Next(0, 10));
                 }
-            }
+            });
 
-            Assert.AreEqual(0, bus.TotalItemsCount);
+        for (var i = 0; i < messageCount; i++)
+        {
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            await bus.DequeueItemAsync(timeout.Token);
         }
 
-        [TestMethod]
-        [ExpectedException(typeof(TaskCanceledException))]
-        public async Task Wait_With_Empty_Bus()
+        Assert.AreEqual(0, bus.TotalItemsCount);
+    }
+
+    [TestMethod]
+    public Task Wait_With_Empty_Bus()
+    {
+        return Assert.ThrowsExactlyAsync<TaskCanceledException>(async () =>
         {
             var bus = new MqttPacketBus();
 
-            using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1)))
-            {
-                await bus.DequeueItemAsync(timeout.Token);
-            }
-        }
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            await bus.DequeueItemAsync(timeout.Token);
+        });
+
     }
 }

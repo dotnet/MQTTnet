@@ -54,6 +54,8 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
     public EndPoint RemoteEndPoint => _channel.RemoteEndPoint;
 
+    public EndPoint LocalEndPoint => _channel.LocalEndPoint;
+
     public bool IsSecureConnection => _channel.IsSecureConnection;
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
@@ -74,7 +76,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
              */
 
             var timeout = new TaskCompletionSource<object>();
-            using (cancellationToken.Register(() => timeout.TrySetResult(null)))
+            await using (cancellationToken.Register(() => timeout.TrySetResult(null)))
             {
                 var connectTask = Task.Run(
                     async () =>

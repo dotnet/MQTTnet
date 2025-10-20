@@ -2,14 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using MQTTnet.Formatter;
-using MQTTnet.Packets;
-using MQTTnet.Protocol;
 using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using MQTTnet.Formatter;
+using MQTTnet.Packets;
+using MQTTnet.Protocol;
 
 namespace MQTTnet;
 
@@ -98,13 +98,6 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithAuthentication(string method, byte[] data)
-    {
-        _options.AuthenticationMethod = method;
-        _options.AuthenticationData = data;
-        return this;
-    }
-
     /// <summary>
     ///     Clean session is used in MQTT versions below 5.0.0. It is the same as setting "CleanStart".
     /// </summary>
@@ -134,31 +127,23 @@ public sealed class MqttClientOptionsBuilder
         ArgumentNullException.ThrowIfNull(uri);
 
         var port = uri.IsDefaultPort ? null : (int?)uri.Port;
-        switch (uri.Scheme.ToLower())
+        switch (uri.Scheme.ToLowerInvariant())
         {
             case "tcp":
             case "mqtt":
-                WithTcpServer(uri.Host, port)
-                    .WithAddressFamily(AddressFamily.Unspecified)
-                    .WithProtocolType(ProtocolType.Tcp)
-                    .WithTlsOptions(o => o.UseTls(false));
+                WithTcpServer(uri.Host, port).WithAddressFamily(AddressFamily.Unspecified).WithProtocolType(ProtocolType.Tcp).WithTlsOptions(o => o.UseTls(false));
                 break;
 
             case "mqtts":
-                WithTcpServer(uri.Host, port)
-                    .WithAddressFamily(AddressFamily.Unspecified)
-                    .WithProtocolType(ProtocolType.Tcp)
-                    .WithTlsOptions(o => o.UseTls(true));
+                WithTcpServer(uri.Host, port).WithAddressFamily(AddressFamily.Unspecified).WithProtocolType(ProtocolType.Tcp).WithTlsOptions(o => o.UseTls());
                 break;
 
             case "ws":
-                WithWebSocketServer(o => o.WithUri(uri.ToString()))
-                    .WithTlsOptions(o => o.UseTls(false));
+                WithWebSocketServer(o => o.WithUri(uri.ToString())).WithTlsOptions(o => o.UseTls(false));
                 break;
 
             case "wss":
-                WithWebSocketServer(o => o.WithUri(uri.ToString()))
-                    .WithTlsOptions(o => o.UseTls(true));
+                WithWebSocketServer(o => o.WithUri(uri.ToString())).WithTlsOptions(o => o.UseTls());
                 break;
 
             // unix:///path/to/socket
@@ -220,9 +205,16 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithExtendedAuthenticationExchangeHandler(IMqttExtendedAuthenticationExchangeHandler handler)
+    public MqttClientOptionsBuilder WithEnhancedAuthentication(string method, byte[] data = null)
     {
-        _options.ExtendedAuthenticationExchangeHandler = handler;
+        _options.AuthenticationMethod = method;
+        _options.AuthenticationData = data;
+        return this;
+    }
+
+    public MqttClientOptionsBuilder WithEnhancedAuthenticationHandler(IMqttEnhancedAuthenticationHandler handler)
+    {
+        _options.EnhancedAuthenticationHandler = handler;
         return this;
     }
 
@@ -315,7 +307,7 @@ public sealed class MqttClientOptionsBuilder
         ArgumentNullException.ThrowIfNull(optionsBuilder);
 
         _tcpOptions = new MqttClientTcpOptions();
-        optionsBuilder.Invoke(_tcpOptions);
+        optionsBuilder(_tcpOptions);
 
         return this;
     }
@@ -361,9 +353,9 @@ public sealed class MqttClientOptionsBuilder
     ///     Not all brokers support this feature so it may be necessary to set it to false if your bridge does not connect
     ///     properly.
     /// </summary>
-    public MqttClientOptionsBuilder WithTryPrivate(bool tryPrivate = true)
+    public MqttClientOptionsBuilder WithTryPrivate(bool value = true)
     {
-        _options.TryPrivate = true;
+        _options.TryPrivate = value;
         return this;
     }
 
@@ -474,11 +466,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithWillUserProperty(string name, string value)
     {
-        if (_options.WillUserProperties == null)
-        {
-            _options.WillUserProperties = new List<MqttUserProperty>();
-        }
-
+        _options.WillUserProperties ??= [];
         _options.WillUserProperties.Add(new MqttUserProperty(name, value));
         return this;
     }

@@ -5,27 +5,26 @@
 using MQTTnet.Adapter;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Formatter.V5
+namespace MQTTnet.Formatter.V5;
+
+public sealed class MqttV5PacketFormatter : IMqttPacketFormatter
 {
-    public sealed class MqttV5PacketFormatter : IMqttPacketFormatter
+    readonly MqttV5PacketDecoder _decoder;
+    readonly MqttV5PacketEncoder _encoder;
+
+    public MqttV5PacketFormatter(MqttBufferWriter bufferWriter)
     {
-        readonly MqttV5PacketDecoder _decoder;
-        readonly MqttV5PacketEncoder _encoder;
+        _decoder = new MqttV5PacketDecoder();
+        _encoder = new MqttV5PacketEncoder(bufferWriter);
+    }
 
-        public MqttV5PacketFormatter(MqttBufferWriter bufferWriter)
-        {
-            _decoder = new MqttV5PacketDecoder();
-            _encoder = new MqttV5PacketEncoder(bufferWriter);
-        }
+    public MqttPacket Decode(ReceivedMqttPacket receivedPacket)
+    {
+        return _decoder.Decode(receivedPacket);
+    }
 
-        public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
-        {
-            return _decoder.Decode(receivedMqttPacket);
-        }
-
-        public MqttPacketBuffer Encode(MqttPacket mqttPacket)
-        {
-            return _encoder.Encode(mqttPacket);
-        }
+    public MqttPacketBuffer Encode(MqttPacket packet)
+    {
+        return _encoder.Encode(packet);
     }
 }

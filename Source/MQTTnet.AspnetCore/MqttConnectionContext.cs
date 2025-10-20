@@ -61,27 +61,6 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         }
     }
 
-    public EndPoint RemoteEndPoint
-    {
-        get
-        {
-            // mqtt over tcp
-            if (_connection.RemoteEndPoint != null)
-            {
-                return _connection.RemoteEndPoint;
-            }
-
-            // mqtt over websocket
-            var httpFeature = _connection.Features.Get<IHttpConnectionFeature>();
-            if (httpFeature?.RemoteIpAddress != null)
-            {
-                return new IPEndPoint(httpFeature.RemoteIpAddress, httpFeature.RemotePort);
-            }
-
-            return null;
-        }
-    }
-
     public bool IsSecureConnection
     {
         get
@@ -104,7 +83,49 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         }
     }
 
+    public EndPoint LocalEndPoint
+    {
+        get
+        {
+            // mqtt over tcp
+            if (_connection.LocalEndPoint != null)
+            {
+                return _connection.LocalEndPoint;
+            }
+
+            // mqtt over websocket
+            var httpFeature = _connection.Features.Get<IHttpConnectionFeature>();
+            if (httpFeature?.LocalIpAddress != null)
+            {
+                return new IPEndPoint(httpFeature.LocalIpAddress, httpFeature.LocalPort);
+            }
+
+            return null;
+        }
+    }
+
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
+
+    public EndPoint RemoteEndPoint
+    {
+        get
+        {
+            // mqtt over tcp
+            if (_connection.RemoteEndPoint != null)
+            {
+                return _connection.RemoteEndPoint;
+            }
+
+            // mqtt over websocket
+            var httpFeature = _connection.Features.Get<IHttpConnectionFeature>();
+            if (httpFeature?.RemoteIpAddress != null)
+            {
+                return new IPEndPoint(httpFeature.RemoteIpAddress, httpFeature.RemotePort);
+            }
+
+            return null;
+        }
+    }
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
@@ -232,8 +253,8 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
         var span = output.GetSpan(buffer.Length);
 
         buffer.Packet.AsSpan().CopyTo(span);
-        int offset = buffer.Packet.Count;
-        buffer.Payload.CopyTo(destination: span.Slice(offset));
+        var offset = buffer.Packet.Count;
+        buffer.Payload.CopyTo(span.Slice(offset));
         output.Advance(buffer.Length);
     }
 }

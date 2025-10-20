@@ -72,6 +72,8 @@ public sealed class MqttConnectedClient : IDisposable
 
     public MqttClientStatistics Statistics { get; } = new();
 
+    public string UserName => ConnectPacket.Username;
+
     public void Dispose()
     {
         _cancellationToken?.Dispose();
@@ -117,7 +119,7 @@ public sealed class MqttConnectedClient : IDisposable
             var willPublishPacket = MqttPublishPacketFactory.Create(Session.LatestConnectPacket);
             var willApplicationMessage = MqttApplicationMessageFactory.Create(willPublishPacket);
 
-            _ = _sessionsManager.DispatchApplicationMessage(Id, Session.Items, willApplicationMessage, CancellationToken.None);
+            _ = _sessionsManager.DispatchApplicationMessage(Id, UserName, Session.Items, willApplicationMessage, CancellationToken.None);
             Session.WillMessageSent = true;
 
             _logger.Info("Client '{0}': Published will message", Id);
@@ -174,7 +176,7 @@ public sealed class MqttConnectedClient : IDisposable
     {
         if (_eventContainer.ClientAcknowledgedPublishPacketEvent.HasHandlers)
         {
-            var eventArgs = new ClientAcknowledgedPublishPacketEventArgs(Id, Session.Items, publishPacket, acknowledgePacket);
+            var eventArgs = new ClientAcknowledgedPublishPacketEventArgs(Id, UserName, Session.Items, publishPacket, acknowledgePacket);
             return _eventContainer.ClientAcknowledgedPublishPacketEvent.TryInvokeAsync(eventArgs, _logger);
         }
 
@@ -217,7 +219,8 @@ public sealed class MqttConnectedClient : IDisposable
 
         var applicationMessage = MqttApplicationMessageFactory.Create(publishPacket);
 
-        var dispatchApplicationMessageResult = await _sessionsManager.DispatchApplicationMessage(Id, Session.Items, applicationMessage, cancellationToken).ConfigureAwait(false);
+        var dispatchApplicationMessageResult =
+            await _sessionsManager.DispatchApplicationMessage(Id, UserName, Session.Items, applicationMessage, cancellationToken).ConfigureAwait(false);
 
         if (dispatchApplicationMessageResult.CloseConnection)
         {
@@ -281,13 +284,20 @@ public sealed class MqttConnectedClient : IDisposable
             return;
         }
 
-        if (subscribeResult.RetainedMessages != null)
+        if (subscribeResult.RetainedMessages == null)
         {
-            foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+            return;
+        }
+
+        foreach (var retainedMessageMatch in subscribeResult.RetainedMessages)
+        {
+            if (await _eventContainer.ShouldSkipEnqueue(string.Empty, Id, retainedMessageMatch.ApplicationMessage))
             {
-                var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
-                Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+                continue;
             }
+
+            var publishPacket = MqttPublishPacketFactory.Create(retainedMessageMatch);
+            Session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
         }
     }
 
@@ -339,7 +349,7 @@ public sealed class MqttConnectedClient : IDisposable
             return packet;
         }
 
-        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, RemoteEndPoint, packet, Session.Items);
+        var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, UserName, RemoteEndPoint, packet, Session.Items);
         await _eventContainer.InterceptingOutboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
 
         if (!interceptingPacketEventArgs.ProcessPacket || packet == null)
@@ -385,7 +395,7 @@ public sealed class MqttConnectedClient : IDisposable
 
                 if (_eventContainer.InterceptingInboundPacketEvent.HasHandlers)
                 {
-                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, RemoteEndPoint, currentPacket, Session.Items);
+                    var interceptingPacketEventArgs = new InterceptingPacketEventArgs(cancellationToken, Id, UserName, RemoteEndPoint, currentPacket, Session.Items);
                     await _eventContainer.InterceptingInboundPacketEvent.InvokeAsync(interceptingPacketEventArgs).ConfigureAwait(false);
                     currentPacket = interceptingPacketEventArgs.Packet;
                     processPacket = interceptingPacketEventArgs.ProcessPacket;

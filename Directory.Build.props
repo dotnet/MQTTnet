@@ -31,6 +31,12 @@
         <AnalysisModeStyle>default</AnalysisModeStyle>
     </PropertyGroup>
 
+  <PropertyGroup>
+    <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
+    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+  </PropertyGroup>
+
     <!--https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#continuousintegrationbuild-->
     <PropertyGroup Condition="'$(TF_BUILD)' == 'true' OR '$(GITHUB_ACTIONS)' == 'true'">
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>

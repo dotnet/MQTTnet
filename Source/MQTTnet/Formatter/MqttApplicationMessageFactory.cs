@@ -5,30 +5,29 @@
 using System;
 using MQTTnet.Packets;
 
-namespace MQTTnet.Formatter
-{
-    public static class MqttApplicationMessageFactory
-    {
-        public static MqttApplicationMessage Create(MqttPublishPacket publishPacket)
-        {
-            ArgumentNullException.ThrowIfNull(publishPacket);
+namespace MQTTnet.Formatter;
 
-            return new MqttApplicationMessage
-            {
-                Topic = publishPacket.Topic,
-                Payload = publishPacket.Payload,
-                QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
-                Retain = publishPacket.Retain,
-                Dup = publishPacket.Dup,
-                ResponseTopic = publishPacket.ResponseTopic,
-                ContentType = publishPacket.ContentType,
-                CorrelationData = publishPacket.CorrelationData,
-                MessageExpiryInterval = publishPacket.MessageExpiryInterval,
-                SubscriptionIdentifiers = publishPacket.SubscriptionIdentifiers,
-                TopicAlias = publishPacket.TopicAlias,
-                PayloadFormatIndicator = publishPacket.PayloadFormatIndicator,
-                UserProperties = publishPacket.UserProperties
-            };
-        }
+public static class MqttApplicationMessageFactory
+{
+    public static MqttApplicationMessage Create(MqttPublishPacket publishPacket)
+    {
+        ArgumentNullException.ThrowIfNull(publishPacket);
+
+        return new MqttApplicationMessage
+        {
+            Topic = publishPacket.Topic,
+            Payload = publishPacket.Payload,
+            QualityOfServiceLevel = publishPacket.QualityOfServiceLevel,
+            Retain = publishPacket.Retain,
+            Dup = publishPacket.Dup,
+            ResponseTopic = publishPacket.ResponseTopic,
+            ContentType = publishPacket.ContentType,
+            CorrelationData = publishPacket.CorrelationData,
+            MessageExpiryInterval = publishPacket.MessageExpiryInterval,
+            SubscriptionIdentifiers = publishPacket.SubscriptionIdentifiers,
+            TopicAlias = publishPacket.TopicAlias,
+            PayloadFormatIndicator = publishPacket.PayloadFormatIndicator,
+            UserProperties = publishPacket.UserProperties
+        };
     }
 }

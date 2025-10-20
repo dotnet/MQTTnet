@@ -21,7 +21,7 @@ public static class MqttClientSubscribeOptionsValidator
             return;
         }
 
-        if (options.UserProperties?.Any() == true)
+        if (options.UserProperties?.Count > 0)
         {
             Throw(nameof(options.UserProperties));
         }

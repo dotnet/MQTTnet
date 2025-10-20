@@ -230,7 +230,7 @@ public sealed class MqttTopicTemplate : IEquatable<MqttTopicTemplate>
             throw new ArgumentException("the topic has to match this template", nameof(topic));
         }
 
-        return parseParameterValuesInternal(topic);
+        return ParseParameterValuesInternal(topic);
     }
 
     /// <summary>
@@ -330,7 +330,7 @@ public sealed class MqttTopicTemplate : IEquatable<MqttTopicTemplate>
         return parameters.Aggregate(this, (t, p) => t.TrySetParameter(p.parameter, p.value));
     }
 
-    IEnumerable<(string parameter, int index, string value)> parseParameterValuesInternal(string topic)
+    IEnumerable<(string parameter, int index, string value)> ParseParameterValuesInternal(string topic)
     {
         // because we have a match, we know the segment array is at least the template's length
         var segments = topic.Split(MqttTopicFilterComparer.LevelSeparator);

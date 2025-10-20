@@ -6,36 +6,33 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
 using MQTTnet.Protocol;
 
-namespace MQTTnet.Tests
+namespace MQTTnet.Tests;
+
+// ReSharper disable InconsistentNaming
+[TestClass]
+public sealed class MqttTopicValidator_Tests
 {
-    [TestClass]
-    public sealed class MqttTopicValidator_Tests
+    [TestMethod]
+    public void Invalid_Topic_Empty()
     {
-        [TestMethod]
-        [ExpectedException(typeof(MqttProtocolViolationException))]
-        public void Invalid_Topic_Empty()
-        {
-            MqttTopicValidator.ThrowIfInvalid(string.Empty);
-        }
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() => MqttTopicValidator.ThrowIfInvalid(string.Empty));
+    }
 
-        [TestMethod]
-        [ExpectedException(typeof(MqttProtocolViolationException))]
-        public void Invalid_Topic_Hash()
-        {
-            MqttTopicValidator.ThrowIfInvalid("/a/#/c");
-        }
+    [TestMethod]
+    public void Invalid_Topic_Hash()
+    {
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() => MqttTopicValidator.ThrowIfInvalid("/a/#/c"));
+    }
 
-        [TestMethod]
-        [ExpectedException(typeof(MqttProtocolViolationException))]
-        public void Invalid_Topic_Plus()
-        {
-            MqttTopicValidator.ThrowIfInvalid("/a/+/c");
-        }
+    [TestMethod]
+    public void Invalid_Topic_Plus()
+    {
+        Assert.ThrowsExactly<MqttProtocolViolationException>(() => MqttTopicValidator.ThrowIfInvalid("/a/+/c"));
+    }
 
-        [TestMethod]
-        public void Valid_Topic()
-        {
-            MqttTopicValidator.ThrowIfInvalid("/a/b/c");
-        }
+    [TestMethod]
+    public void Valid_Topic()
+    {
+        MqttTopicValidator.ThrowIfInvalid("/a/b/c");
     }
 }

@@ -20,23 +20,21 @@ public static class PackageInspection_Samples
 
         var mqttFactory = new MqttClientFactory();
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
-        {
-            var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder()
-                .WithTcpServer("broker.hivemq.com")
-                .Build();
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        var mqttClientOptions = mqttFactory.CreateClientOptionsBuilder()
+            .WithTcpServer("broker.hivemq.com")
+            .Build();
 
-            mqttClient.InspectPacketAsync += OnInspectPacket;
+        mqttClient.InspectPacketAsync += OnInspectPacket;
 
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            Console.WriteLine("MQTT client is connected.");
+        Console.WriteLine("MQTT client is connected.");
 
-            var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
-                .Build();
+        var mqttClientDisconnectOptions = mqttFactory.CreateClientDisconnectOptionsBuilder()
+            .Build();
 
-            await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
-        }
+        await mqttClient.DisconnectAsync(mqttClientDisconnectOptions, CancellationToken.None);
     }
 
     static Task OnInspectPacket(InspectMqttPacketEventArgs eventArgs)

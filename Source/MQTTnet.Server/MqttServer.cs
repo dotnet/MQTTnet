@@ -237,6 +237,13 @@ public class MqttServer : Disposable
         return _clientSessionsManager.GetSessionsStatus();
     }
 
+    public Task<MqttSessionStatus> GetSessionAsync(string id)
+    {
+        ThrowIfNotStarted();
+
+        return _clientSessionsManager.GetSessionStatus(id);
+    }
+
     public Task InjectApplicationMessage(InjectedMqttApplicationMessage injectedApplicationMessage, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(injectedApplicationMessage);
@@ -255,6 +262,7 @@ public class MqttServer : Disposable
 
         return _clientSessionsManager.DispatchApplicationMessage(
             injectedApplicationMessage.SenderClientId,
+            injectedApplicationMessage.SenderUserName,
             sessionItems,
             injectedApplicationMessage.ApplicationMessage,
             cancellationToken);

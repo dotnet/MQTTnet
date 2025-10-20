@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using MQTTnet.Diagnostics.Logger;
+using MQTTnet.Server.EnhancedAuthentication;
 using MQTTnet.Server.Internal.Adapter;
 
 namespace MQTTnet.Server;
@@ -20,16 +21,18 @@ public sealed class MqttServerFactory
 
     public IMqttNetLogger DefaultLogger { get; }
 
-    public IList<Func<MqttServerFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = new List<Func<MqttServerFactory, IMqttServerAdapter>>
-    {
-        factory => new MqttTcpServerAdapter()
-    };
+    public IList<Func<MqttServerFactory, IMqttServerAdapter>> DefaultServerAdapters { get; } = [_ => new MqttTcpServerAdapter()];
 
     public IDictionary<object, object> Properties { get; } = new Dictionary<object, object>();
 
     public MqttApplicationMessageBuilder CreateApplicationMessageBuilder()
     {
         return new MqttApplicationMessageBuilder();
+    }
+
+    public ExchangeEnhancedAuthenticationOptionsFactory CreateExchangeExtendedAuthenticationOptionsBuilder()
+    {
+        return new ExchangeEnhancedAuthenticationOptionsFactory();
     }
 
     public MqttServer CreateMqttServer(MqttServerOptions options)

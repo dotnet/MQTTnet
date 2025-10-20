@@ -11,9 +11,9 @@ namespace MQTTnet;
 
 public sealed class MqttClientUnsubscribeResultFactory
 {
-    static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = new List<MqttUserProperty>();
+    static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = [];
 
-    public MqttClientUnsubscribeResult Create(MqttUnsubscribePacket unsubscribePacket, MqttUnsubAckPacket unsubAckPacket)
+    public static MqttClientUnsubscribeResult Create(MqttUnsubscribePacket unsubscribePacket, MqttUnsubAckPacket unsubAckPacket)
     {
         ArgumentNullException.ThrowIfNull(unsubscribePacket);
         ArgumentNullException.ThrowIfNull(unsubAckPacket);

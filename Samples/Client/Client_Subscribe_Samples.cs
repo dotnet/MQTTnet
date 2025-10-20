@@ -26,32 +26,30 @@ public static class Client_Subscribe_Samples
 
         var mqttFactory = new MqttClientFactory();
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+
+        // Setup message handling before connecting so that queued messages
+        // are also handled properly. When there is no event handler attached all
+        // received messages get lost.
+        mqttClient.ApplicationMessageReceivedAsync += e =>
         {
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+            Console.WriteLine("Received application message.");
+            e.DumpToConsole();
 
-            // Setup message handling before connecting so that queued messages
-            // are also handled properly. When there is no event handler attached all
-            // received messages get lost.
-            mqttClient.ApplicationMessageReceivedAsync += e =>
-            {
-                Console.WriteLine("Received application message.");
-                e.DumpToConsole();
+            return Task.CompletedTask;
+        };
 
-                return Task.CompletedTask;
-            };
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "2")).Build();
 
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "2")).Build();
+        await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
-            await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+        Console.WriteLine("MQTT client subscribed to topic.");
 
-            Console.WriteLine("MQTT client subscribed to topic.");
-
-            Console.WriteLine("Press enter to exit.");
-            Console.ReadLine();
-        }
+        Console.WriteLine("Press enter to exit.");
+        Console.ReadLine();
     }
 
     public static async Task Send_Responses()
@@ -62,36 +60,34 @@ public static class Client_Subscribe_Samples
 
         var mqttFactory = new MqttClientFactory();
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        mqttClient.ApplicationMessageReceivedAsync += delegate(MqttApplicationMessageReceivedEventArgs args)
         {
-            mqttClient.ApplicationMessageReceivedAsync += delegate(MqttApplicationMessageReceivedEventArgs args)
-            {
-                // Do some work with the message...
+            // Do some work with the message...
 
-                // Now respond to the broker with a reason code other than success.
-                args.ReasonCode = MqttApplicationMessageReceivedReasonCode.ImplementationSpecificError;
-                args.ResponseReasonString = "That did not work!";
+            // Now respond to the broker with a reason code other than success.
+            args.ReasonCode = MqttApplicationMessageReceivedReasonCode.ImplementationSpecificError;
+            args.ResponseReasonString = "That did not work!";
 
-                // User properties require MQTT v5!
-                args.ResponseUserProperties.Add(new MqttUserProperty("My", "Data"));
+            // User properties require MQTT v5!
+            args.ResponseUserProperties.Add(new MqttUserProperty("My", "Data"));
 
-                // Now the broker will resend the message again.
-                return Task.CompletedTask;
-            };
+            // Now the broker will resend the message again.
+            return Task.CompletedTask;
+        };
 
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+        var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
 
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
 
-            var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+        var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
-            Console.WriteLine("MQTT client subscribed to topic.");
+        Console.WriteLine("MQTT client subscribed to topic.");
 
-            // The response contains additional data sent by the server after subscribing.
-            response.DumpToConsole();
-        }
+        // The response contains additional data sent by the server after subscribing.
+        response.DumpToConsole();
     }
 
     public static async Task Subscribe_Multiple_Topics()
@@ -102,27 +98,25 @@ public static class Client_Subscribe_Samples
 
         var mqttFactory = new MqttClientFactory();
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
-        {
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
 
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            // Create the subscribe options including several topics with different options.
-            // It is also possible to all of these topics using a dedicated call of _SubscribeAsync_ per topic.
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-                .WithTopicTemplate(sampleTemplate.WithParameter("id", "1"))
-                .WithTopicTemplate(sampleTemplate.WithParameter("id", "2"), noLocal: true)
-                .WithTopicTemplate(sampleTemplate.WithParameter("id", "3"), retainHandling: MqttRetainHandling.SendAtSubscribe)
-                .Build();
+        // Create the subscribe options including several topics with different options.
+        // It is also possible to all of these topics using a dedicated call of _SubscribeAsync_ per topic.
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
+            .WithTopicTemplate(sampleTemplate.WithParameter("id", "1"))
+            .WithTopicTemplate(sampleTemplate.WithParameter("id", "2"), noLocal: true)
+            .WithTopicTemplate(sampleTemplate.WithParameter("id", "3"), retainHandling: MqttRetainHandling.SendAtSubscribe)
+            .Build();
 
-            var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+        var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
-            Console.WriteLine("MQTT client subscribed to topics.");
+        Console.WriteLine("MQTT client subscribed to topics.");
 
-            // The response contains additional data sent by the server after subscribing.
-            response.DumpToConsole();
-        }
+        // The response contains additional data sent by the server after subscribing.
+        response.DumpToConsole();
     }
 
     public static async Task Subscribe_Topic()
@@ -133,21 +127,19 @@ public static class Client_Subscribe_Samples
 
         var mqttFactory = new MqttClientFactory();
 
-        using (var mqttClient = mqttFactory.CreateMqttClient())
-        {
-            var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
+        using var mqttClient = mqttFactory.CreateMqttClient();
+        var mqttClientOptions = new MqttClientOptionsBuilder().WithTcpServer("broker.hivemq.com").Build();
 
-            await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
+        await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-            var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
 
-            var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
+        var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
-            Console.WriteLine("MQTT client subscribed to topic.");
+        Console.WriteLine("MQTT client subscribed to topic.");
 
-            // The response contains additional data sent by the server after subscribing.
-            response.DumpToConsole();
-        }
+        // The response contains additional data sent by the server after subscribing.
+        response.DumpToConsole();
     }
 
     static void ConcurrentProcessingDisableAutoAcknowledge(CancellationToken shutdownToken, IMqttClient mqttClient)

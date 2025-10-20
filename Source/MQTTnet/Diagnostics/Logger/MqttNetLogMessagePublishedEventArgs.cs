@@ -4,15 +4,9 @@
 
 using System;
 
-namespace MQTTnet.Diagnostics.Logger
-{
-    public sealed class MqttNetLogMessagePublishedEventArgs : EventArgs
-    {
-        public MqttNetLogMessagePublishedEventArgs(MqttNetLogMessage logMessage)
-        {
-            LogMessage = logMessage ?? throw new ArgumentNullException(nameof(logMessage));
-        }
+namespace MQTTnet.Diagnostics.Logger;
 
-        public MqttNetLogMessage LogMessage { get; }
-    }
+public sealed class MqttNetLogMessagePublishedEventArgs(MqttNetLogMessage logMessage) : EventArgs
+{
+    public MqttNetLogMessage LogMessage { get; } = logMessage ?? throw new ArgumentNullException(nameof(logMessage));
 }

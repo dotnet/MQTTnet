@@ -6,6 +6,7 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -122,8 +123,8 @@ public sealed class MqttClient_Tests : BaseTestClass
         await Task.Delay(500);
 
         Assert.IsNotNull(ex);
-        Assert.IsInstanceOfType(ex, typeof(MqttCommunicationException));
-        Assert.IsInstanceOfType(ex.InnerException, typeof(SocketException));
+        Assert.IsInstanceOfType<MqttCommunicationException>(ex);
+        Assert.IsInstanceOfType<SocketException>(ex.InnerException);
     }
 
     [TestMethod]
@@ -245,8 +246,8 @@ public sealed class MqttClient_Tests : BaseTestClass
         catch (Exception exception)
         {
             Assert.IsNotNull(exception);
-            Assert.IsInstanceOfType(exception, typeof(MqttCommunicationException));
-            Assert.IsInstanceOfType(exception.InnerException, typeof(SocketException));
+            Assert.IsInstanceOfType<MqttCommunicationException>(exception);
+            Assert.IsInstanceOfType<SocketException>(exception.InnerException);
         }
     }
 
@@ -355,7 +356,7 @@ public sealed class MqttClient_Tests : BaseTestClass
 
         async Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString());
+            var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString(), CultureInfo.InvariantCulture);
             await Task.Delay(value);
 
             lock (receivedValues)
@@ -369,7 +370,7 @@ public sealed class MqttClient_Tests : BaseTestClass
         var client2 = await testEnvironment.ConnectClient();
         for (var i = MessagesCount; i > 0; i--)
         {
-            await client2.PublishStringAsync("x", i.ToString());
+            await client2.PublishStringAsync("x", i.ToString(CultureInfo.InvariantCulture));
         }
 
         await Task.Delay(5000);
@@ -401,7 +402,7 @@ public sealed class MqttClient_Tests : BaseTestClass
         var client2 = await testEnvironment.ConnectClient();
         for (var i = MessagesCount; i > 0; i--)
         {
-            await client2.PublishStringAsync("x", i.ToString(), MqttQualityOfServiceLevel.ExactlyOnce);
+            await client2.PublishStringAsync("x", i.ToString(CultureInfo.InvariantCulture), MqttQualityOfServiceLevel.ExactlyOnce);
         }
 
         await Task.Delay(5000);
@@ -415,7 +416,7 @@ public sealed class MqttClient_Tests : BaseTestClass
 
         Task Handler1(MqttApplicationMessageReceivedEventArgs eventArgs)
         {
-            var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString());
+            var value = int.Parse(eventArgs.ApplicationMessage.ConvertPayloadToString(), CultureInfo.InvariantCulture);
             eventArgs.AutoAcknowledge = false;
             Task.Delay(value).ContinueWith(_ => eventArgs.AcknowledgeAsync(CancellationToken.None));
 

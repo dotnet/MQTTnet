@@ -157,7 +157,7 @@ public static class PublicBrokerTest
 
                 if (receivedMessage?.Topic != topic || receivedMessage?.ConvertPayloadToString() != "Hello_World")
                 {
-                    throw new Exception("Message invalid.");
+                    throw new InvalidOperationException("Message invalid.");
                 }
 
                 await client.UnsubscribeAsync(topic).ConfigureAwait(false);

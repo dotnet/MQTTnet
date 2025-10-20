@@ -2,10 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using MQTTnet.Packets;
 using MQTTnet.Server;
@@ -13,7 +9,7 @@ using MQTTnet.Server;
 namespace MQTTnet.Benchmarks;
 
 [MemoryDiagnoser]
-public class MessageDeliveryBenchmark : BaseBenchmark
+public sealed class MessageDeliveryBenchmark : BaseBenchmark, IDisposable
 {
     List<string> _allSubscribedTopics; // Keep track of the subset of topics that are subscribed
     CancellationTokenSource _cancellationTokenSource;
@@ -99,8 +95,14 @@ public class MessageDeliveryBenchmark : BaseBenchmark
 
         if (_messagesReceivedCount < _messagesExpectedCount)
         {
-            throw new Exception($"Messages Received Count mismatch, expected {_messagesExpectedCount}, received {_messagesReceivedCount}");
+            throw new InvalidOperationException($"Messages Received Count mismatch, expected {_messagesExpectedCount}, received {_messagesReceivedCount}");
         }
+    }
+
+    public void Dispose()
+    {
+        _cancellationTokenSource?.Dispose();
+        _mqttServer?.Dispose();
     }
 
     [GlobalSetup]
@@ -173,7 +175,7 @@ public class MessageDeliveryBenchmark : BaseBenchmark
         var topicIndexStep = totalNumTopics / (_numSubscribedTopicsPerSubscriber * _numSubscribers);
         if (topicIndexStep * _numSubscribedTopicsPerSubscriber * _numSubscribers != totalNumTopics)
         {
-            throw new Exception(
+            throw new InvalidOperationException(
                 $"The total number of topics must be divisible by the number of subscribed topics across all subscribers. Total number of topics: {totalNumTopics}, topic step: {topicIndexStep}");
         }
 

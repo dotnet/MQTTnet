@@ -6,6 +6,7 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
 
+using System.Globalization;
 using System.Text;
 using MQTTnet.Diagnostics.Logger;
 
@@ -51,7 +52,7 @@ public static class Logger_Samples
         mqttEventLogger.LogMessagePublished += (_, args) =>
         {
             var output = new StringBuilder();
-            output.AppendLine($">> [{args.LogMessage.Timestamp:O}] [{args.LogMessage.ThreadId}] [{args.LogMessage.Source}] [{args.LogMessage.Level}]: {args.LogMessage.Message}");
+            output.AppendLine(CultureInfo.InvariantCulture, $">> [{args.LogMessage.Timestamp:O}] [{args.LogMessage.ThreadId}] [{args.LogMessage.Source}] [{args.LogMessage.Level}]: {args.LogMessage.Message}");
             if (args.LogMessage.Exception != null)
             {
                 output.AppendLine(args.LogMessage.Exception.ToString());

@@ -144,7 +144,7 @@ public class Security_Tests : BaseTestClass
         var clientOptions = new MqttClientOptionsBuilder().WithTcpServer("127.0.0.1", testEnvironment.ServerPort).WithCredentials(username, password).Build();
 
         var ex = await Assert.ThrowsExactlyAsync<MqttConnectingFailedException>(async () => await client.ConnectAsync(clientOptions));
-        Assert.IsInstanceOfType(ex.InnerException, typeof(MqttProtocolViolationException));
+        Assert.IsInstanceOfType<MqttProtocolViolationException>(ex.InnerException);
         Assert.AreEqual("Error while authenticating. If the User Name Flag is set to 0, the Password Flag MUST be set to 0 [MQTT-3.1.2-22].", ex.Message, false);
     }
 

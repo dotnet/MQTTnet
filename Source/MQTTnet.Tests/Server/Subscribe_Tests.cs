@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -222,7 +223,7 @@ public sealed class Subscribe_Tests : BaseTestClass
 
         for (var i = 0; i < 500; i++)
         {
-            var so = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(i.ToString()).Build();
+            var so = new MqttClientSubscribeOptionsBuilder().WithTopicFilter(i.ToString(CultureInfo.InvariantCulture)).Build();
 
             await c1.SubscribeAsync(so);
 
@@ -234,7 +235,7 @@ public sealed class Subscribe_Tests : BaseTestClass
         var messageBuilder = new MqttApplicationMessageBuilder();
         for (var i = 0; i < 500; i++)
         {
-            messageBuilder.WithTopic(i.ToString());
+            messageBuilder.WithTopic(i.ToString(CultureInfo.InvariantCulture));
 
             await c2.PublishAsync(messageBuilder.Build());
 
@@ -264,7 +265,7 @@ public sealed class Subscribe_Tests : BaseTestClass
         var optionsBuilder = new MqttClientSubscribeOptionsBuilder();
         for (var i = 0; i < 500; i++)
         {
-            optionsBuilder.WithTopicFilter(i.ToString());
+            optionsBuilder.WithTopicFilter(i.ToString(CultureInfo.InvariantCulture));
         }
 
         await c1.SubscribeAsync(optionsBuilder.Build());
@@ -274,7 +275,7 @@ public sealed class Subscribe_Tests : BaseTestClass
         var messageBuilder = new MqttApplicationMessageBuilder();
         for (var i = 0; i < 500; i++)
         {
-            messageBuilder.WithTopic(i.ToString());
+            messageBuilder.WithTopic(i.ToString(CultureInfo.InvariantCulture));
 
             await c2.PublishAsync(messageBuilder.Build());
         }

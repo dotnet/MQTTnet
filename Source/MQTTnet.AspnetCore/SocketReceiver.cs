@@ -8,7 +8,7 @@ using System.Net.Sockets;
 
 namespace MQTTnet.AspNetCore;
 
-public sealed class SocketReceiver
+public sealed class SocketReceiver : IDisposable
 {
     readonly SocketAwaitable _awaitable;
     readonly SocketAsyncEventArgs _eventArgs = new();
@@ -32,5 +32,10 @@ public sealed class SocketReceiver
         }
 
         return _awaitable;
+    }
+
+    public void Dispose()
+    {
+        _eventArgs.Dispose();
     }
 }

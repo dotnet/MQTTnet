@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Globalization;
 using MQTTnet.Diagnostics.Logger;
 
 namespace MQTTnet.Tests.Mockups;
@@ -13,12 +14,12 @@ public sealed class TestLogger : IMqttNetLogger
 
     public bool IsEnabled { get; } = true;
 
-    public void Publish(MqttNetLogLevel logLevel, string source, string message, object[] parameters, Exception exception)
+    public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
     {
         LogMessagePublished?.Invoke(this, new MqttNetLogMessagePublishedEventArgs(new MqttNetLogMessage
         {
-            Level = logLevel,
-            Message = string.Format(message, parameters),
+            Level = level,
+            Message = string.Format(CultureInfo.InvariantCulture, message, parameters),
             Exception = exception
         }));
     }

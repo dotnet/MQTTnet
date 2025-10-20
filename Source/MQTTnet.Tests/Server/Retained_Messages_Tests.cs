@@ -24,7 +24,7 @@ public class Retained_Messages_Tests : BaseTestClass
         var c1 = await testEnvironment.ConnectClient();
 
         await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[3]).WithRetainFlag().Build());
-        await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload(new byte[0]).WithRetainFlag().Build());
+        await c1.PublishAsync(new MqttApplicationMessageBuilder().WithTopic("retained").WithPayload([]).WithRetainFlag().Build());
 
         await c1.DisconnectAsync();
 

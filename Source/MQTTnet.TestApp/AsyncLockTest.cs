@@ -11,7 +11,7 @@ namespace MQTTnet.TestApp;
 
 public sealed class AsyncLockTest
 {
-    public async Task Run()
+    public static async Task Run()
     {
         try
         {

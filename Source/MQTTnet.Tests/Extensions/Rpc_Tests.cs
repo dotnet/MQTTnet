@@ -220,7 +220,7 @@ public sealed class Rpc_Tests : BaseTestClass
         Assert.AreEqual("pong", Encoding.UTF8.GetString(response));
     }
 
-    class TestTopicStrategy : IMqttRpcClientTopicGenerationStrategy
+    sealed class TestTopicStrategy : IMqttRpcClientTopicGenerationStrategy
     {
         public MqttRpcTopicPair CreateRpcTopics(TopicGenerationContext context)
         {
@@ -232,7 +232,7 @@ public sealed class Rpc_Tests : BaseTestClass
         }
     }
 
-    class TestParametersTopicGenerationStrategy : IMqttRpcClientTopicGenerationStrategy
+    sealed class TestParametersTopicGenerationStrategy : IMqttRpcClientTopicGenerationStrategy
     {
         internal const string ExpectedParamName = "test_param_name";
 

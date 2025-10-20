@@ -4,8 +4,6 @@
 
 using System.Buffers;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Channel;
@@ -18,9 +16,9 @@ namespace MQTTnet.Benchmarks;
 
 [SimpleJob(RuntimeMoniker.Net60)]
 [MemoryDiagnoser]
-public class MqttTcpChannelBenchmark : BaseBenchmark
+public sealed class MqttTcpChannelBenchmark : BaseBenchmark, IDisposable
 {
-    IMqttChannel _clientChannel;
+    MqttTcpChannel _clientChannel;
     MqttServer _mqttServer;
     IMqttChannel _serverChannel;
 
@@ -83,5 +81,12 @@ public class MqttTcpChannelBenchmark : BaseBenchmark
         {
             await _serverChannel.WriteAsync(buffer, true, CancellationToken.None).ConfigureAwait(false);
         }
+    }
+
+    public void Dispose()
+    {
+        _clientChannel?.Dispose();
+        _mqttServer?.Dispose();
+        _serverChannel?.Dispose();
     }
 }

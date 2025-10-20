@@ -85,7 +85,7 @@ public static class Program
         }
         else if (pressedKey.KeyChar == 'f')
         {
-            Task.Run(new AsyncLockTest().Run);
+            Task.Run(AsyncLockTest.Run);
         }
 
         Thread.Sleep(Timeout.Infinite);

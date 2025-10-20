@@ -350,7 +350,7 @@ public class General_Tests : BaseTestClass
         var isIntercepted = false;
         c2.ApplicationMessageReceivedAsync += e =>
         {
-            isIntercepted = string.Compare("extended", Encoding.UTF8.GetString(e.ApplicationMessage.Payload), StringComparison.Ordinal) == 0;
+            isIntercepted = string.Equals("extended", Encoding.UTF8.GetString(e.ApplicationMessage.Payload), StringComparison.Ordinal);
             return CompletedTask.Instance;
         };
 

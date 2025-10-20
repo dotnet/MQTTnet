@@ -119,9 +119,11 @@ public class MqttConnectionContextTest
         await Assert.ThrowsExactlyAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(CancellationToken.None)).ConfigureAwait(false);
     }
 
-    class Startup
+    sealed class Startup
     {
+#pragma warning disable CA1822
         public void Configure(IApplicationBuilder app)
+#pragma warning restore CA1822
         {
         }
     }

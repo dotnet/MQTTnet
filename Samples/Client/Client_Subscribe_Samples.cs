@@ -142,7 +142,7 @@ public static class Client_Subscribe_Samples
         response.DumpToConsole();
     }
 
-    static void ConcurrentProcessingDisableAutoAcknowledge(CancellationToken shutdownToken, IMqttClient mqttClient)
+    static void ConcurrentProcessingDisableAutoAcknowledge(IMqttClient mqttClient, CancellationToken shutdownToken)
     {
         /*
          * This sample shows how to achieve concurrent processing and not have message AutoAcknowledged
@@ -170,7 +170,7 @@ public static class Client_Subscribe_Samples
         };
     }
 
-    static void ConcurrentProcessingWithLimit(CancellationToken shutdownToken, IMqttClient mqttClient)
+    static void ConcurrentProcessingWithLimit(IMqttClient mqttClient, CancellationToken shutdownToken)
     {
         /*
          * This sample shows how to achieve concurrent processing, with:

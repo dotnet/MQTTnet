@@ -14,7 +14,7 @@ namespace MQTTnet.TestApp;
 /// the number of messages per second that can be exchanged between publishers and subscriber.
 /// Measurements are performed for subscriptions containing no wildcard, a single wildcard or multiple wildcards.
 /// </summary>
-public class MessageThroughputTest
+public sealed class MessageThroughputTest : IDisposable
 {
     // Change these constants to suit
     const int NumPublishers = 5000;
@@ -55,9 +55,9 @@ public class MessageThroughputTest
 
             await Setup();
 
-            await Subscribe_to_No_Wildcard_Topics();
-            await Subscribe_to_Single_Wildcard_Topics();
-            await Subscribe_to_Multi_Wildcard_Topics();
+            await SubscribeToNoWildcardTopics();
+            await SubscribeToSingleWildcardTopics();
+            await SubscribeToMultiWildcardTopics();
 
             Console.WriteLine();
             Console.WriteLine("End message throughput test");
@@ -74,7 +74,7 @@ public class MessageThroughputTest
 
     public async Task Setup()
     {
-        new TopicGenerator().Generate(NumPublishers, NumTopicsPerPublisher, out _topicsByPublisher, out _singleWildcardTopicsByPublisher, out _multiWildcardTopicsByPublisher);
+        TopicGenerator.Generate(NumPublishers, NumTopicsPerPublisher, out _topicsByPublisher, out _singleWildcardTopicsByPublisher, out _multiWildcardTopicsByPublisher);
 
         var serverOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
         var mqttClientFactory = new MqttClientFactory();
@@ -152,7 +152,7 @@ public class MessageThroughputTest
     /// <summary>
     /// Measure no-wildcard topic subscription message exchange performance
     /// </summary>
-    public Task Subscribe_to_No_Wildcard_Topics()
+    public Task SubscribeToNoWildcardTopics()
     {
         return ProcessMessages(_topicsByPublisher, "no wildcards");
     }
@@ -160,7 +160,7 @@ public class MessageThroughputTest
     /// <summary>
     /// Measure single-wildcard topic subscription message exchange performance
     /// </summary>
-    public Task Subscribe_to_Single_Wildcard_Topics()
+    public Task SubscribeToSingleWildcardTopics()
     {
         return ProcessMessages(_singleWildcardTopicsByPublisher, "single wildcard");
     }
@@ -168,7 +168,7 @@ public class MessageThroughputTest
     /// <summary>
     /// Measure multi-wildcard topic subscription message exchange performance
     /// </summary>
-    public Task Subscribe_to_Multi_Wildcard_Topics()
+    public Task SubscribeToMultiWildcardTopics()
     {
         return ProcessMessages(_multiWildcardTopicsByPublisher, "multi wildcard");
     }
@@ -342,4 +342,8 @@ public class MessageThroughputTest
         Console.ResetColor();
     }
 
+    public void Dispose()
+    {
+        _cancellationTokenSource.Dispose();
+    }
 }

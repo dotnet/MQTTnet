@@ -8,17 +8,19 @@ namespace MQTTnet.Samples.Helpers;
 
 internal static class ObjectExtensions
 {
+    static readonly JsonSerializerOptions SerializerOptions = new()
+    {
+        WriteIndented = true
+    };
+
     public static TObject DumpToConsole<TObject>(this TObject @object)
     {
         var output = "NULL";
         if (@object != null)
         {
-            output = JsonSerializer.Serialize(@object, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            output = JsonSerializer.Serialize(@object, SerializerOptions);
         }
-        
+
         Console.WriteLine($"[{@object?.GetType().Name}]:\r\n{output}");
         return @object;
     }

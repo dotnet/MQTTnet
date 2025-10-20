@@ -1,19 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>false</IsPackable>
-        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <EnableNETAnalyzers>false</EnableNETAnalyzers>
-        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NuGetAuditMode>all</NuGetAuditMode>
-        <NuGetAudit>true</NuGetAudit>
-        <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <NoWarn>$(NoWarn);CA1707</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

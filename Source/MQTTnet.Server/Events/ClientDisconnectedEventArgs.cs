@@ -35,24 +35,24 @@ public sealed class ClientDisconnectedEventArgs : EventArgs
     ///     Gets the client identifier.
     ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
     /// </summary>
-    public string ClientId => _connectPacket.ClientId;
+    public string ClientId => _connectPacket.ClientId!;
 
     /// <summary>
     ///     Gets the user name of the client.
     /// </summary>
-    public string UserName => _connectPacket.Username;
+    public string? UserName => _connectPacket.Username;
 
     /// <summary>
     ///     Gets the password of the client.
     /// </summary>
-    public string Password => Encoding.UTF8.GetString(_connectPacket.Password.AsSpan());
+    public string? Password => Encoding.UTF8.GetString(_connectPacket.Password.AsSpan());
 
     public MqttClientDisconnectType DisconnectType { get; }
 
     public EndPoint RemoteEndPoint { get; }
 
     [Obsolete("Use RemoteEndPoint instead.")]
-    public string Endpoint => RemoteEndPoint?.ToString();
+    public string? Endpoint => RemoteEndPoint?.ToString();
 
     /// <summary>
     ///     Gets the reason code sent by the client.
@@ -66,7 +66,7 @@ public sealed class ClientDisconnectedEventArgs : EventArgs
     ///     Only available for clean disconnects.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public string ReasonString => _disconnectPacket?.ReasonString;
+    public string? ReasonString => _disconnectPacket?.ReasonString;
 
     /// <summary>
     ///     Gets the session expiry interval sent by the client.
@@ -85,5 +85,5 @@ public sealed class ClientDisconnectedEventArgs : EventArgs
     ///     Only available for clean disconnects.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public List<MqttUserProperty> UserProperties => _disconnectPacket?.UserProperties;
+    public List<MqttUserProperty>? UserProperties => _disconnectPacket?.UserProperties;
 }

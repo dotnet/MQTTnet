@@ -19,13 +19,13 @@ public sealed class MqttClientUnsubscribeResultFactory
         ArgumentNullException.ThrowIfNull(unsubAckPacket);
 
         // MQTTv3.1.1 has no reason code at all!
-        if (unsubAckPacket.ReasonCodes != null && unsubAckPacket.ReasonCodes.Count != unsubscribePacket.TopicFilters.Count)
+        if (unsubAckPacket.ReasonCodes != null && unsubAckPacket.ReasonCodes.Count != unsubscribePacket.TopicFilters!.Count)
         {
             throw new MqttProtocolViolationException("The return codes are not matching the topic filters [MQTT-3.9.3-1].");
         }
 
         var items = new List<MqttClientUnsubscribeResultItem>();
-        for (var i = 0; i < unsubscribePacket.TopicFilters.Count; i++)
+        for (var i = 0; i < unsubscribePacket.TopicFilters!.Count; i++)
         {
             items.Add(CreateUnsubscribeResultItem(i, unsubscribePacket, unsubAckPacket));
         }
@@ -43,6 +43,6 @@ public sealed class MqttClientUnsubscribeResultFactory
             resultCode = (MqttClientUnsubscribeResultCode)unsubAckPacket.ReasonCodes[index];
         }
 
-        return new MqttClientUnsubscribeResultItem(unsubscribePacket.TopicFilters[index], resultCode);
+        return new MqttClientUnsubscribeResultItem(unsubscribePacket.TopicFilters![index], resultCode);
     }
 }

@@ -11,7 +11,7 @@ public class BlobCertificateProvider(byte[] blob) : ICertificateProvider
 {
     public byte[] Blob { get; } = blob ?? throw new ArgumentNullException(nameof(blob));
 
-    public string Password { get; set; }
+    public string? Password { get; set; }
 
     public X509Certificate2 GetCertificate()
     {

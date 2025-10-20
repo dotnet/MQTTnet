@@ -19,7 +19,7 @@ public sealed class MqttClientDisconnectOptions
     ///     Gets or sets the reason string.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; set; }
 
     /// <summary>
     ///     Gets or sets the session expiry interval.
@@ -31,5 +31,5 @@ public sealed class MqttClientDisconnectOptions
     ///     Gets or sets the user properties.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 }

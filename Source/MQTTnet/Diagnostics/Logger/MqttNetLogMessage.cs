@@ -8,19 +8,19 @@ namespace MQTTnet.Diagnostics.Logger;
 
 public sealed class MqttNetLogMessage
 {
-    public string LogId { get; set; }
+    public string? LogId { get; set; }
 
     public DateTime Timestamp { get; set; }
 
     public int ThreadId { get; set; }
 
-    public string Source { get; set; }
+    public string? Source { get; set; }
 
     public MqttNetLogLevel Level { get; set; }
 
-    public string Message { get; set; }
+    public string? Message { get; set; }
 
-    public Exception Exception { get; set; }
+    public Exception? Exception { get; set; }
 
     public override string ToString()
     {

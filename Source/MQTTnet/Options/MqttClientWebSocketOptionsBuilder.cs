@@ -11,10 +11,19 @@ namespace MQTTnet;
 
 public sealed class MqttClientWebSocketOptionsBuilder
 {
-    readonly MqttClientWebSocketOptions _webSocketOptions = new();
+    readonly MqttClientWebSocketOptions _webSocketOptions = new()
+    {
+        Uri = string.Empty
+    };
 
     public MqttClientWebSocketOptions Build()
     {
+
+        if (string.IsNullOrEmpty(_webSocketOptions.Uri))
+        {
+            throw new InvalidOperationException("The URI is not set.");
+        }
+
         return _webSocketOptions;
     }
 

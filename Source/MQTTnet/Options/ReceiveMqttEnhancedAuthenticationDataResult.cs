@@ -10,13 +10,13 @@ namespace MQTTnet;
 
 public sealed class ReceiveMqttEnhancedAuthenticationDataResult
 {
-    public byte[] AuthenticationData { get; init; }
+    public byte[]? AuthenticationData { get; init; }
 
-    public string AuthenticationMethod { get; init; }
+    public string? AuthenticationMethod { get; init; }
 
     public MqttAuthenticateReasonCode ReasonCode { get; init; }
 
-    public string ReasonString { get; init; }
+    public string? ReasonString { get; init; }
 
-    public List<MqttUserProperty> UserProperties { get; init; }
+    public List<MqttUserProperty>? UserProperties { get; init; }
 }

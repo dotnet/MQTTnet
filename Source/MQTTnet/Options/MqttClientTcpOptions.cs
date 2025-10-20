@@ -26,7 +26,7 @@ public sealed class MqttClientTcpOptions : IMqttClientChannelOptions
     ///     Gets the local endpoint (network card) which is used by the client.
     ///     Set it to _null_ to let the OS select the network card.
     /// </summary>
-    public EndPoint LocalEndpoint { get; set; }
+    public EndPoint? LocalEndpoint { get; set; }
 
     /// <summary>
     ///     Enables or disables the Nagle algorithm for the socket.
@@ -42,7 +42,7 @@ public sealed class MqttClientTcpOptions : IMqttClientChannelOptions
     /// </summary>
     public ProtocolType ProtocolType { get; set; } = ProtocolType.Tcp;
 
-    public EndPoint RemoteEndpoint { get; set; }
+    public EndPoint? RemoteEndpoint { get; set; }
 
     public MqttClientTlsOptions TlsOptions { get; set; } = new();
 

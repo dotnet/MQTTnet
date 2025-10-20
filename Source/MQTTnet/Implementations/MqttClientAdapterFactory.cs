@@ -12,7 +12,7 @@ namespace MQTTnet.Implementations;
 
 public sealed class MqttClientAdapterFactory : IMqttClientAdapterFactory
 {
-    public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
+    public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector? packetInspector, IMqttNetLogger logger)
     {
         ArgumentNullException.ThrowIfNull(options);
 

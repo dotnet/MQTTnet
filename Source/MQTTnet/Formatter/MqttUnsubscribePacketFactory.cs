@@ -18,10 +18,7 @@ public static class MqttUnsubscribePacketFactory
             UserProperties = clientUnsubscribeOptions.UserProperties
         };
 
-        if (clientUnsubscribeOptions.TopicFilters != null)
-        {
-            packet.TopicFilters.AddRange(clientUnsubscribeOptions.TopicFilters);
-        }
+        packet.TopicFilters!.AddRange(clientUnsubscribeOptions.TopicFilters);
 
         return packet;
     }

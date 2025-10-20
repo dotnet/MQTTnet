@@ -20,7 +20,7 @@ public sealed class MqttRpcClient : IMqttRpcClient
     readonly IMqttClient _mqttClient;
     readonly MqttRpcClientOptions _options;
 
-    readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>>();
+    readonly ConcurrentDictionary<string, AsyncTaskCompletionSource<byte[]>> _waitingCalls = new();
 
     public MqttRpcClient(IMqttClient mqttClient, MqttRpcClientOptions options)
     {
@@ -42,7 +42,12 @@ public sealed class MqttRpcClient : IMqttRpcClient
         _waitingCalls.Clear();
     }
 
-    public async Task<byte[]> ExecuteAsync(TimeSpan timeout, string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null)
+    public async Task<byte[]> ExecuteAsync(
+        TimeSpan timeout,
+        string methodName,
+        byte[] payload,
+        MqttQualityOfServiceLevel qualityOfServiceLevel,
+        IDictionary<string, object>? parameters = null)
     {
         using var timeoutToken = new CancellationTokenSource(timeout);
         try
@@ -60,7 +65,12 @@ public sealed class MqttRpcClient : IMqttRpcClient
         }
     }
 
-    public async Task<byte[]> ExecuteAsync(string methodName, byte[] payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string, object> parameters = null, CancellationToken cancellationToken = default)
+    public async Task<byte[]> ExecuteAsync(
+        string methodName,
+        byte[] payload,
+        MqttQualityOfServiceLevel qualityOfServiceLevel,
+        IDictionary<string, object>? parameters = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(methodName);
 
@@ -82,7 +92,7 @@ public sealed class MqttRpcClient : IMqttRpcClient
 
         var requestMessageBuilder = new MqttApplicationMessageBuilder().WithTopic(requestTopic).WithPayload(payload).WithQualityOfServiceLevel(qualityOfServiceLevel);
 
-        if (_mqttClient.Options.ProtocolVersion == MqttProtocolVersion.V500)
+        if (_mqttClient.Options!.ProtocolVersion == MqttProtocolVersion.V500)
         {
             requestMessageBuilder.WithResponseTopic(responseTopic);
         }
@@ -103,11 +113,10 @@ public sealed class MqttRpcClient : IMqttRpcClient
             await _mqttClient.SubscribeAsync(subscribeOptions, cancellationToken).ConfigureAwait(false);
             await _mqttClient.PublishAsync(requestMessage, cancellationToken).ConfigureAwait(false);
 
-            using (cancellationToken.Register(
-                       () =>
-                       {
-                           awaitable.TrySetCanceled();
-                       }))
+            using (cancellationToken.Register(() =>
+                   {
+                       awaitable.TrySetCanceled();
+                   }))
             {
                 return await awaitable.Task.ConfigureAwait(false);
             }

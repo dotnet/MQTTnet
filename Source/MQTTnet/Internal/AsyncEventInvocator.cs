@@ -9,10 +9,10 @@ namespace MQTTnet.Internal;
 
 public readonly struct AsyncEventInvocator<TEventArgs>
 {
-    readonly Action<TEventArgs> _handler;
-    readonly Func<TEventArgs, Task> _asyncHandler;
+    readonly Action<TEventArgs>? _handler;
+    readonly Func<TEventArgs, Task>? _asyncHandler;
 
-    public AsyncEventInvocator(Action<TEventArgs> handler, Func<TEventArgs, Task> asyncHandler)
+    public AsyncEventInvocator(Action<TEventArgs>? handler, Func<TEventArgs, Task>? asyncHandler)
     {
         _handler = handler;
         _asyncHandler = asyncHandler;

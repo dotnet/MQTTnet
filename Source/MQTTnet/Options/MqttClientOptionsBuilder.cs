@@ -18,10 +18,10 @@ public sealed class MqttClientOptionsBuilder
     readonly MqttClientOptions _options = new();
 
     int? _port;
-    EndPoint _remoteEndPoint;
-    MqttClientTcpOptions _tcpOptions;
-    MqttClientTlsOptions _tlsOptions;
-    MqttClientWebSocketOptions _webSocketOptions;
+    EndPoint? _remoteEndPoint;
+    MqttClientTcpOptions? _tcpOptions;
+    MqttClientTlsOptions? _tlsOptions;
+    MqttClientWebSocketOptions? _webSocketOptions;
 
     public MqttClientOptions Build()
     {
@@ -38,7 +38,7 @@ public sealed class MqttClientOptionsBuilder
 
         if (_tcpOptions != null)
         {
-            _tcpOptions.TlsOptions = tlsOptions;
+            _tcpOptions.TlsOptions = tlsOptions!;
 
             if (_remoteEndPoint == null)
             {
@@ -49,7 +49,7 @@ public sealed class MqttClientOptionsBuilder
             {
                 if (dns.Port == 0)
                 {
-                    if (_port.HasValue)
+                    if (_port != null)
                     {
                         _remoteEndPoint = new DnsEndPoint(dns.Host, _port.Value, dns.AddressFamily);
                     }
@@ -64,7 +64,7 @@ public sealed class MqttClientOptionsBuilder
             {
                 if (ip.Port == 0)
                 {
-                    if (_port.HasValue)
+                    if (_port != null)
                     {
                         _remoteEndPoint = new IPEndPoint(ip.Address, _port.Value);
                     }
@@ -82,10 +82,10 @@ public sealed class MqttClientOptionsBuilder
         }
         else if (_webSocketOptions != null)
         {
-            _webSocketOptions.TlsOptions = tlsOptions;
+            _webSocketOptions.TlsOptions = tlsOptions!;
         }
 
-        _options.ChannelOptions = (IMqttClientChannelOptions)_tcpOptions ?? _webSocketOptions;
+        _options.ChannelOptions = (IMqttClientChannelOptions?)_tcpOptions ?? _webSocketOptions;
 
         MqttClientOptionsValidator.ThrowIfNotSupported(_options);
 
@@ -94,7 +94,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithAddressFamily(AddressFamily addressFamily)
     {
-        _tcpOptions.AddressFamily = addressFamily;
+        _tcpOptions!.AddressFamily = addressFamily;
         return this;
     }
 
@@ -174,9 +174,9 @@ public sealed class MqttClientOptionsBuilder
         return WithConnectionUri(new Uri(uri, UriKind.Absolute));
     }
 
-    public MqttClientOptionsBuilder WithCredentials(string username, string password)
+    public MqttClientOptionsBuilder WithCredentials(string username, string? password)
     {
-        byte[] passwordBuffer = null;
+        byte[]? passwordBuffer = null;
 
         if (password != null)
         {
@@ -186,7 +186,7 @@ public sealed class MqttClientOptionsBuilder
         return WithCredentials(username, passwordBuffer);
     }
 
-    public MqttClientOptionsBuilder WithCredentials(string username, byte[] password = null)
+    public MqttClientOptionsBuilder WithCredentials(string username, byte[]? password = null)
     {
         return WithCredentials(new MqttClientCredentials(username, password));
     }
@@ -205,7 +205,7 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithEnhancedAuthentication(string method, byte[] data = null)
+    public MqttClientOptionsBuilder WithEnhancedAuthentication(string method, byte[]? data = null)
     {
         _options.AuthenticationMethod = method;
         _options.AuthenticationData = data;
@@ -249,7 +249,7 @@ public sealed class MqttClientOptionsBuilder
 
     public MqttClientOptionsBuilder WithProtocolType(ProtocolType protocolType)
     {
-        _tcpOptions.ProtocolType = protocolType;
+        _tcpOptions!.ProtocolType = protocolType;
         return this;
     }
 
@@ -405,7 +405,7 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithWillPayload(byte[] willPayload)
+    public MqttClientOptionsBuilder WithWillPayload(byte[]? willPayload)
     {
         _options.WillPayload = willPayload;
         return this;
@@ -423,11 +423,11 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    public MqttClientOptionsBuilder WithWillPayload(string willPayload)
+    public MqttClientOptionsBuilder WithWillPayload(string? willPayload)
     {
         if (string.IsNullOrEmpty(willPayload))
         {
-            return WithWillPayload((byte[])null);
+            return WithWillPayload((byte[]?)null);
         }
 
         _options.WillPayload = Encoding.UTF8.GetBytes(willPayload);

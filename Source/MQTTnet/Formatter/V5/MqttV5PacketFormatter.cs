@@ -18,7 +18,7 @@ public sealed class MqttV5PacketFormatter : IMqttPacketFormatter
         _encoder = new MqttV5PacketEncoder(bufferWriter);
     }
 
-    public MqttPacket Decode(ReceivedMqttPacket receivedPacket)
+    public MqttPacket? Decode(ReceivedMqttPacket receivedPacket)
     {
         return _decoder.Decode(receivedPacket);
     }

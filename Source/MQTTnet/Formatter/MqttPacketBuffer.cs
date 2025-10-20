@@ -40,7 +40,7 @@ public readonly struct MqttPacketBuffer
         }
 
         var buffer = GC.AllocateUninitializedArray<byte>(Length);
-        MqttMemoryHelper.Copy(Packet.Array, Packet.Offset, buffer, 0, Packet.Count);
+        MqttMemoryHelper.Copy(Packet.Array!, Packet.Offset, buffer, 0, Packet.Count);
         MqttMemoryHelper.Copy(Payload, 0, buffer, Packet.Count, (int)Payload.Length);
 
         return buffer;

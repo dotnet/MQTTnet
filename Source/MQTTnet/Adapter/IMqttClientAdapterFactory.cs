@@ -8,5 +8,5 @@ namespace MQTTnet.Adapter;
 
 public interface IMqttClientAdapterFactory
 {
-    IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger);
+    IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector? packetInspector, IMqttNetLogger logger);
 }

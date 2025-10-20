@@ -20,10 +20,10 @@ namespace MQTTnet.Implementations;
 
 public sealed class MqttTcpChannel : IMqttChannel
 {
-    readonly MqttClientOptions _clientOptions;
-    readonly MqttClientTcpOptions _tcpOptions;
+    readonly MqttClientOptions? _clientOptions;
+    readonly MqttClientTcpOptions? _tcpOptions;
 
-    Stream _stream;
+    Stream? _stream;
 
     public MqttTcpChannel()
     {
@@ -32,7 +32,7 @@ public sealed class MqttTcpChannel : IMqttChannel
     public MqttTcpChannel(MqttClientOptions clientOptions) : this()
     {
         _clientOptions = clientOptions ?? throw new ArgumentNullException(nameof(clientOptions));
-        _tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions;
+        _tcpOptions = (MqttClientTcpOptions)clientOptions.ChannelOptions!;
 
         IsSecureConnection = clientOptions.ChannelOptions?.TlsOptions?.UseTls == true;
     }
@@ -47,18 +47,18 @@ public sealed class MqttTcpChannel : IMqttChannel
         ClientCertificate = clientCertificate;
     }
 
-    public X509Certificate2 ClientCertificate { get; }
+    public X509Certificate2? ClientCertificate { get; }
 
-    public EndPoint RemoteEndPoint { get; private set; }
+    public EndPoint? RemoteEndPoint { get; private set; }
 
     public bool IsSecureConnection { get; }
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        CrossPlatformSocket socket = null;
+        CrossPlatformSocket? socket = null;
         try
         {
-            if (_tcpOptions.AddressFamily == AddressFamily.Unspecified)
+            if (_tcpOptions!.AddressFamily == AddressFamily.Unspecified)
             {
                 socket = new CrossPlatformSocket(_tcpOptions.ProtocolType);
             }
@@ -74,7 +74,7 @@ public sealed class MqttTcpChannel : IMqttChannel
 
             socket.ReceiveBufferSize = _tcpOptions.BufferSize;
             socket.SendBufferSize = _tcpOptions.BufferSize;
-            socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
+            socket.SendTimeout = (int)_clientOptions!.Timeout.TotalMilliseconds;
 
             if (_tcpOptions.ProtocolType == ProtocolType.Tcp)
             {
@@ -87,7 +87,7 @@ public sealed class MqttTcpChannel : IMqttChannel
                 socket.LingerState = _tcpOptions.LingerState;
             }
 
-            if (_tcpOptions.DualMode.HasValue)
+            if (_tcpOptions.DualMode != null)
             {
                 // It is important to avoid setting the flag if no specific value is set by the user
                 // because on IPv4 only networks the setter will always throw an exception. Regardless
@@ -95,7 +95,7 @@ public sealed class MqttTcpChannel : IMqttChannel
                 socket.DualMode = _tcpOptions.DualMode.Value;
             }
 
-            await socket.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
+            await socket.ConnectAsync(_tcpOptions.RemoteEndpoint!, cancellationToken).ConfigureAwait(false);
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -285,13 +285,13 @@ public sealed class MqttTcpChannel : IMqttChannel
         object sender,
         string targetHost,
         X509CertificateCollection localCertificates,
-        X509Certificate remoteCertificate,
+        X509Certificate? remoteCertificate,
         string[] acceptableIssuers)
     {
         var certificateSelectionHandler = _tcpOptions?.TlsOptions?.CertificateSelectionHandler;
         if (certificateSelectionHandler != null)
         {
-            var eventArgs = new MqttClientCertificateSelectionEventArgs(targetHost, localCertificates, remoteCertificate, acceptableIssuers, _tcpOptions);
+            var eventArgs = new MqttClientCertificateSelectionEventArgs(targetHost, localCertificates, remoteCertificate, acceptableIssuers, _tcpOptions!);
             return certificateSelectionHandler(eventArgs);
         }
 
@@ -300,15 +300,15 @@ public sealed class MqttTcpChannel : IMqttChannel
             return localCertificates[0];
         }
 
-        return null;
+        return null!;
     }
 
-    bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    bool InternalUserCertificateValidationCallback(object? sender, X509Certificate? x509Certificate, X509Chain? chain, SslPolicyErrors sslPolicyErrors)
     {
         var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
         if (certificateValidationHandler != null)
         {
-            var eventArgs = new MqttClientCertificateValidationEventArgs(x509Certificate, chain, sslPolicyErrors, _tcpOptions);
+            var eventArgs = new MqttClientCertificateValidationEventArgs(x509Certificate, chain, sslPolicyErrors, _tcpOptions!);
             return certificateValidationHandler(eventArgs);
         }
 
@@ -320,8 +320,8 @@ public sealed class MqttTcpChannel : IMqttChannel
         return sslPolicyErrors == SslPolicyErrors.None;
     }
 
-    X509CertificateCollection LoadCertificates()
+    X509CertificateCollection? LoadCertificates()
     {
-        return _tcpOptions.TlsOptions.ClientCertificatesProvider?.GetCertificates();
+        return _tcpOptions!.TlsOptions.ClientCertificatesProvider?.GetCertificates();
     }
 }

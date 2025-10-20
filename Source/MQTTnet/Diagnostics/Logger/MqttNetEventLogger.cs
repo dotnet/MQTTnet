@@ -9,17 +9,17 @@ namespace MQTTnet.Diagnostics.Logger;
 /// <summary>
 ///     This logger fires an event when a new message was published.
 /// </summary>
-public sealed class MqttNetEventLogger(string logId = null) : IMqttNetLogger
+public sealed class MqttNetEventLogger(string? logId = null) : IMqttNetLogger
 {
-    public event EventHandler<MqttNetLogMessagePublishedEventArgs> LogMessagePublished;
+    public event EventHandler<MqttNetLogMessagePublishedEventArgs>? LogMessagePublished;
 
     public bool IsEnabled => LogMessagePublished != null;
 
-    public string LogId { get; } = logId;
+    public string? LogId { get; } = logId;
 
-    public IFormatProvider FormatProvider { get; set; }
+    public IFormatProvider? FormatProvider { get; set; }
 
-    public void Publish(MqttNetLogLevel level, string source, string message, object[] parameters, Exception exception)
+    public void Publish(MqttNetLogLevel level, string source, string message, object?[]? parameters, Exception? exception)
     {
         var eventHandler = LogMessagePublished;
         if (eventHandler == null)
@@ -30,7 +30,7 @@ public sealed class MqttNetEventLogger(string logId = null) : IMqttNetLogger
             return;
         }
 
-        if (parameters?.Length > 0 && message?.Length > 0)
+        if (parameters?.Length > 0 && message.Length > 0)
         {
             try
             {

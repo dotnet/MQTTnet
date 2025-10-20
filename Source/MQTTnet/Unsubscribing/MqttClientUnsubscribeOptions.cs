@@ -24,5 +24,5 @@ public sealed class MqttClientUnsubscribeOptions
     ///     The feature is very similar to the HTTP header concept.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 }

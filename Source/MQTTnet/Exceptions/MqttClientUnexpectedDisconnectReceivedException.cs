@@ -9,17 +9,17 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Exceptions;
 
-public sealed class MqttClientUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket, Exception innerException = null) : MqttCommunicationException(
+public sealed class MqttClientUnexpectedDisconnectReceivedException(MqttDisconnectPacket disconnectPacket, Exception? innerException = null) : MqttCommunicationException(
     $"Unexpected DISCONNECT (Reason code={disconnectPacket.ReasonCode}) received.",
     innerException)
 {
     public MqttDisconnectReasonCode? ReasonCode { get; } = disconnectPacket.ReasonCode;
 
-    public string ReasonString { get; } = disconnectPacket.ReasonString;
+    public string? ReasonString { get; } = disconnectPacket.ReasonString;
 
-    public string ServerReference { get; } = disconnectPacket.ServerReference;
+    public string? ServerReference { get; } = disconnectPacket.ServerReference;
 
     public uint? SessionExpiryInterval { get; } = disconnectPacket.SessionExpiryInterval;
 
-    public List<MqttUserProperty> UserProperties { get; } = disconnectPacket.UserProperties;
+    public List<MqttUserProperty>? UserProperties { get; } = disconnectPacket.UserProperties;
 }

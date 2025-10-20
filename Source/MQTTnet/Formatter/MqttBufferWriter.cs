@@ -110,7 +110,7 @@ public sealed class MqttBufferWriter
         WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
     }
 
-    public void WriteBinary(byte[] value)
+    public void WriteBinary(byte[]? value)
     {
         if (value == null || value.Length == 0)
         {
@@ -158,7 +158,7 @@ public sealed class MqttBufferWriter
         IncreasePosition(1);
     }
 
-    public void WriteString(string value)
+    public void WriteString(string? value)
     {
         if (string.IsNullOrEmpty(value))
         {

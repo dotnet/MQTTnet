@@ -15,7 +15,7 @@ public sealed class BlockingQueue<TItem> : IDisposable
     readonly LinkedList<TItem> _items = [];
     readonly object _syncRoot = new();
 
-    ManualResetEventSlim _gate = new(false);
+    ManualResetEventSlim? _gate = new(false);
 
     public int Count
     {

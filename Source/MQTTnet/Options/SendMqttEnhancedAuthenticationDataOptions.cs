@@ -9,9 +9,9 @@ namespace MQTTnet;
 
 public sealed class SendMqttEnhancedAuthenticationDataOptions
 {
-    public byte[] Data { get; init; }
+    public byte[]? Data { get; init; }
 
-    public string ReasonString { get; init; }
+    public string? ReasonString { get; init; }
 
-    public List<MqttUserProperty> UserProperties { get; init; }
+    public List<MqttUserProperty>? UserProperties { get; init; }
 }

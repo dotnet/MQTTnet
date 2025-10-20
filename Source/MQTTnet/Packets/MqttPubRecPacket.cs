@@ -17,12 +17,12 @@ public sealed class MqttPubRecPacket : MqttPacketWithIdentifier
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; set; }
 
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 
     public override string ToString()
     {

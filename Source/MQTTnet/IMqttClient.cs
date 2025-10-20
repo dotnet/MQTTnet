@@ -19,7 +19,7 @@ public interface IMqttClient : IDisposable
 
     bool IsConnected { get; }
 
-    MqttClientOptions Options { get; }
+    MqttClientOptions? Options { get; }
 
     Task<MqttClientConnectResult> ConnectAsync(MqttClientOptions options, CancellationToken cancellationToken = default);
 

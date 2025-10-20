@@ -17,12 +17,12 @@ public sealed class MqttDisconnectPacket : MqttPacket
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; set; }
 
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public string ServerReference { get; set; }
+    public string? ServerReference { get; set; }
 
     /// <summary>
     ///     Added in MQTTv5.
@@ -32,7 +32,7 @@ public sealed class MqttDisconnectPacket : MqttPacket
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 
     public override string ToString()
     {

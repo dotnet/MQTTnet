@@ -9,7 +9,7 @@ namespace MQTTnet;
 
 public sealed class MqttClientPublishResult
 {
-    public MqttClientPublishResult(ushort? packetIdentifier, MqttClientPublishReasonCode reasonCode, string reasonString, IReadOnlyCollection<MqttUserProperty> userProperties)
+    public MqttClientPublishResult(ushort? packetIdentifier, MqttClientPublishReasonCode reasonCode, string? reasonString, IReadOnlyCollection<MqttUserProperty> userProperties)
     {
         PacketIdentifier = packetIdentifier;
         ReasonCode = reasonCode;
@@ -40,7 +40,7 @@ public sealed class MqttClientPublishResult
     ///     Gets or sets the reason string.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public string ReasonString { get; }
+    public string? ReasonString { get; }
 
     /// <summary>
     ///     Gets or sets the user properties.

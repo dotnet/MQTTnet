@@ -18,7 +18,7 @@ public class MqttEnhancedAuthenticationExchangeData
     ///     method.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public byte[] AuthenticationData { get; set; }
+    public byte[]? AuthenticationData { get; set; }
 
     /// <summary>
     ///     Gets or sets the reason code.
@@ -30,7 +30,7 @@ public class MqttEnhancedAuthenticationExchangeData
     ///     Gets or sets the reason string.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; set; }
 
     /// <summary>
     ///     Gets or sets the user properties.
@@ -41,5 +41,5 @@ public class MqttEnhancedAuthenticationExchangeData
     ///     The feature is very similar to the HTTP header concept.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 }

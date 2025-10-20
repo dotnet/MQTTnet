@@ -19,7 +19,7 @@ public sealed class MqttSubscribePacket : MqttPacketWithIdentifier
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 
     public override string ToString()
     {

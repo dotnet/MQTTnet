@@ -6,6 +6,6 @@ namespace MQTTnet;
 
 public interface IMqttClientCredentialsProvider
 {
-    byte[] GetPassword(MqttClientOptions clientOptions);
+    byte[]? GetPassword(MqttClientOptions clientOptions);
     string GetUserName(MqttClientOptions clientOptions);
 }

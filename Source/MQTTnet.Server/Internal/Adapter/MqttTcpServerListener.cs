@@ -165,8 +165,8 @@ public sealed class MqttTcpServerListener : IDisposable
 
     async Task TryHandleClientConnectionAsync(CrossPlatformSocket clientSocket)
     {
-        Stream stream = null;
-        EndPoint remoteEndPoint = null;
+        Stream? stream = null;
+        EndPoint? remoteEndPoint = null;
 
         try
         {

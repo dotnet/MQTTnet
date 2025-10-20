@@ -9,14 +9,9 @@ using MQTTnet.Protocol;
 
 namespace MQTTnet.Formatter.V5;
 
-public sealed class MqttV5PropertiesWriter
+public sealed class MqttV5PropertiesWriter(MqttBufferWriter bufferWriter)
 {
-    readonly MqttBufferWriter _bufferWriter;
-
-    public MqttV5PropertiesWriter(MqttBufferWriter bufferWriter)
-    {
-        _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
-    }
+    readonly MqttBufferWriter _bufferWriter = bufferWriter ?? throw new ArgumentNullException(nameof(bufferWriter));
 
     public int Length => _bufferWriter.Length;
 
@@ -26,27 +21,27 @@ public sealed class MqttV5PropertiesWriter
         _bufferWriter.Cleanup();
     }
 
-    public void WriteAssignedClientIdentifier(string value)
+    public void WriteAssignedClientIdentifier(string? value)
     {
         Write(MqttPropertyId.AssignedClientIdentifier, value);
     }
 
-    public void WriteAuthenticationData(byte[] value)
+    public void WriteAuthenticationData(byte[]? value)
     {
         Write(MqttPropertyId.AuthenticationData, value);
     }
 
-    public void WriteAuthenticationMethod(string value)
+    public void WriteAuthenticationMethod(string? value)
     {
         Write(MqttPropertyId.AuthenticationMethod, value);
     }
 
-    public void WriteContentType(string value)
+    public void WriteContentType(string? value)
     {
         Write(MqttPropertyId.ContentType, value);
     }
 
-    public void WriteCorrelationData(byte[] value)
+    public void WriteCorrelationData(byte[]? value)
     {
         Write(MqttPropertyId.CorrelationData, value);
     }
@@ -96,7 +91,7 @@ public sealed class MqttV5PropertiesWriter
         Write(MqttPropertyId.PayloadFormatIndicator, (byte)value);
     }
 
-    public void WriteReasonString(string value)
+    public void WriteReasonString(string? value)
     {
         Write(MqttPropertyId.ReasonString, value);
     }
@@ -134,12 +129,12 @@ public sealed class MqttV5PropertiesWriter
         Write(MqttPropertyId.RequestResponseInformation, true);
     }
 
-    public void WriteResponseInformation(string value)
+    public void WriteResponseInformation(string? value)
     {
         Write(MqttPropertyId.ResponseInformation, value);
     }
 
-    public void WriteResponseTopic(string value)
+    public void WriteResponseTopic(string? value)
     {
         Write(MqttPropertyId.ResponseTopic, value);
     }
@@ -165,7 +160,7 @@ public sealed class MqttV5PropertiesWriter
         Write(MqttPropertyId.ServerKeepAlive, value);
     }
 
-    public void WriteServerReference(string value)
+    public void WriteServerReference(string? value)
     {
         Write(MqttPropertyId.ServerReference, value);
     }
@@ -197,7 +192,7 @@ public sealed class MqttV5PropertiesWriter
         WriteAsVariableByteInteger(MqttPropertyId.SubscriptionIdentifier, value);
     }
 
-    public void WriteSubscriptionIdentifiers(ICollection<uint> value)
+    public void WriteSubscriptionIdentifiers(ICollection<uint>? value)
     {
         if (value == null)
         {
@@ -251,7 +246,7 @@ public sealed class MqttV5PropertiesWriter
         Write(MqttPropertyId.TopicAliasMaximum, value);
     }
 
-    public void WriteUserProperties(List<MqttUserProperty> userProperties)
+    public void WriteUserProperties(List<MqttUserProperty>? userProperties)
     {
         if (userProperties == null || userProperties.Count == 0)
         {
@@ -306,7 +301,7 @@ public sealed class MqttV5PropertiesWriter
         _bufferWriter.WriteTwoByteInteger(value);
     }
 
-    void Write(MqttPropertyId id, string value)
+    void Write(MqttPropertyId id, string? value)
     {
         if (string.IsNullOrEmpty(value))
         {
@@ -317,7 +312,7 @@ public sealed class MqttV5PropertiesWriter
         _bufferWriter.WriteString(value);
     }
 
-    void Write(MqttPropertyId id, byte[] value)
+    void Write(MqttPropertyId id, byte[]? value)
     {
         if (value == null)
         {

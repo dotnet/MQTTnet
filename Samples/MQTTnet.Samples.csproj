@@ -15,6 +15,7 @@
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

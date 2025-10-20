@@ -12,7 +12,7 @@ namespace MQTTnet.Server.Internal.Adapter;
 
 public sealed class MqttTcpServerAdapter : IMqttServerAdapter
 {
-    readonly List<MqttTcpServerListener> _listeners = new List<MqttTcpServerListener>();
+    readonly List<MqttTcpServerListener> _listeners = new();
 
     CancellationTokenSource _cancellationTokenSource;
 

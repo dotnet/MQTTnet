@@ -17,7 +17,7 @@ public sealed class MqttPacketFormatterAdapter
     readonly MqttBufferReader _bufferReader = new();
     readonly MqttBufferWriter _bufferWriter;
 
-    IMqttPacketFormatter _formatter;
+    IMqttPacketFormatter? _formatter;
 
     public MqttPacketFormatterAdapter(MqttBufferWriter mqttBufferWriter)
     {
@@ -37,10 +37,10 @@ public sealed class MqttPacketFormatterAdapter
         _bufferWriter.Cleanup();
     }
 
-    public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
+    public MqttPacket? Decode(ReceivedMqttPacket receivedMqttPacket)
     {
         ThrowIfFormatterNotSet();
-        return _formatter.Decode(receivedMqttPacket);
+        return _formatter!.Decode(receivedMqttPacket);
     }
 
     public void DetectProtocolVersion(ReceivedMqttPacket receivedMqttPacket)
@@ -52,7 +52,7 @@ public sealed class MqttPacketFormatterAdapter
     public MqttPacketBuffer Encode(MqttPacket packet)
     {
         ThrowIfFormatterNotSet();
-        return _formatter.Encode(packet);
+        return _formatter!.Encode(packet);
     }
 
     public static IMqttPacketFormatter GetMqttPacketFormatter(MqttProtocolVersion protocolVersion, MqttBufferWriter bufferWriter)
@@ -80,7 +80,7 @@ public sealed class MqttPacketFormatterAdapter
             throw new MqttProtocolViolationException("CONNECT packet must have at least 7 bytes.");
         }
 
-        _bufferReader.SetBuffer(receivedMqttPacket.Body.Array, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
+        _bufferReader.SetBuffer(receivedMqttPacket.Body.Array!, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
 
         var protocolName = _bufferReader.ReadString();
         var protocolLevel = _bufferReader.ReadByte();

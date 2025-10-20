@@ -12,11 +12,11 @@ public sealed class MqttClientDisconnectedEventArgs : EventArgs
 {
     public MqttClientDisconnectedEventArgs(
         bool clientWasConnected,
-        MqttClientConnectResult connectResult,
+        MqttClientConnectResult? connectResult,
         MqttClientDisconnectReason reason,
-        string reasonString,
-        List<MqttUserProperty> userProperties,
-        Exception exception)
+        string? reasonString,
+        List<MqttUserProperty>? userProperties,
+        Exception? exception)
     {
         ClientWasConnected = clientWasConnected;
         ConnectResult = connectResult;
@@ -32,9 +32,9 @@ public sealed class MqttClientDisconnectedEventArgs : EventArgs
     ///     Gets the authentication result.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public MqttClientConnectResult ConnectResult { get; }
+    public MqttClientConnectResult? ConnectResult { get; }
 
-    public Exception Exception { get; }
+    public Exception? Exception { get; }
 
     /// <summary>
     ///     Gets or sets the reason.
@@ -42,7 +42,7 @@ public sealed class MqttClientDisconnectedEventArgs : EventArgs
     /// </summary>
     public MqttClientDisconnectReason Reason { get; }
 
-    public string ReasonString { get; }
+    public string? ReasonString { get; }
 
-    public List<MqttUserProperty> UserProperties { get; }
+    public List<MqttUserProperty>? UserProperties { get; }
 }

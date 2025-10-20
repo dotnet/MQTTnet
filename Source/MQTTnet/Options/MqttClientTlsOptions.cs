@@ -12,9 +12,9 @@ namespace MQTTnet;
 
 public sealed class MqttClientTlsOptions
 {
-    public Func<MqttClientCertificateValidationEventArgs, bool> CertificateValidationHandler { get; set; }
+    public Func<MqttClientCertificateValidationEventArgs, bool>? CertificateValidationHandler { get; set; }
 
-    public Func<MqttClientCertificateSelectionEventArgs, X509Certificate> CertificateSelectionHandler { get; set; }
+    public Func<MqttClientCertificateSelectionEventArgs, X509Certificate>? CertificateSelectionHandler { get; set; }
 
     public bool UseTls { get; set; }
 
@@ -32,11 +32,11 @@ public sealed class MqttClientTlsOptions
     ///     with the server and requires certificates for authentication.
     ///     The implementation may return different certificates each time.
     /// </summary>
-    public IMqttClientCertificatesProvider ClientCertificatesProvider { get; set; }
+    public IMqttClientCertificatesProvider? ClientCertificatesProvider { get; set; }
 
-    public List<SslApplicationProtocol> ApplicationProtocols { get; set; }
+    public List<SslApplicationProtocol>? ApplicationProtocols { get; set; }
 
-    public CipherSuitesPolicy CipherSuitesPolicy { get; set; }
+    public CipherSuitesPolicy? CipherSuitesPolicy { get; set; }
 
     public EncryptionPolicy EncryptionPolicy { get; set; } = EncryptionPolicy.RequireEncryption;
 
@@ -46,9 +46,9 @@ public sealed class MqttClientTlsOptions
     ///     Gets or sets the target host.
     ///     If the value is null or empty the same host as the TCP socket host will be used.
     /// </summary>
-    public string TargetHost { get; set; }
+    public string? TargetHost { get; set; }
 
     public SslProtocols SslProtocol { get; set; } = SslProtocols.Tls12 | SslProtocols.Tls13;
 
-    public X509Certificate2Collection TrustChain { get; set; }
+    public X509Certificate2Collection? TrustChain { get; set; }
 }

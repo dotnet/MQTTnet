@@ -30,7 +30,9 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
         var fixedHeader = EncodePacket(packet);
         var remainingLength = (uint)_bufferWriter.Length - reservedHeaderSize;
 
-        if (packet is MqttPublishPacket publishPacket)
+        var publishPacket = packet as MqttPublishPacket;
+
+        if (publishPacket != null)
         {
             var payload = publishPacket.Payload;
             remainingLength += (uint)payload.Length;
@@ -405,7 +407,7 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
         _propertiesWriter.WriteTo(_bufferWriter);
         _propertiesWriter.Reset();
 
-        foreach (var reasonCode in packet.ReasonCodes)
+        foreach (var reasonCode in packet.ReasonCodes!)
         {
             _bufferWriter.WriteByte((byte)reasonCode);
         }
@@ -476,7 +478,7 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
         _propertiesWriter.WriteTo(_bufferWriter);
         _propertiesWriter.Reset();
 
-        foreach (var reasonCode in packet.ReasonCodes)
+        foreach (var reasonCode in packet.ReasonCodes!)
         {
             _bufferWriter.WriteByte((byte)reasonCode);
         }
@@ -500,7 +502,7 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
         _propertiesWriter.WriteTo(_bufferWriter);
         _propertiesWriter.Reset();
 
-        foreach (var topicFilter in packet.TopicFilters)
+        foreach (var topicFilter in packet.TopicFilters!)
         {
             _bufferWriter.WriteString(topicFilter);
         }

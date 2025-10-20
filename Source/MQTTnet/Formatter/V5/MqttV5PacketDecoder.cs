@@ -15,7 +15,7 @@ public sealed class MqttV5PacketDecoder
 {
     readonly MqttBufferReader _bufferReader = new();
 
-    public MqttPacket Decode(ReceivedMqttPacket receivedMqttPacket)
+    public MqttPacket? Decode(ReceivedMqttPacket receivedMqttPacket)
     {
         if (receivedMqttPacket.TotalLength == 0)
         {
@@ -51,7 +51,7 @@ public sealed class MqttV5PacketDecoder
 
     MqttAuthPacket DecodeAuthPacket(ArraySegment<byte> body)
     {
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttAuthPacket();
 
@@ -95,7 +95,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var acknowledgeFlags = _bufferReader.ReadByte();
 
@@ -198,7 +198,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttConnectPacket
         {
@@ -346,7 +346,7 @@ public sealed class MqttV5PacketDecoder
             };
         }
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttDisconnectPacket
         {
@@ -383,7 +383,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttPubAckPacket
         {
@@ -420,7 +420,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttPubCompPacket
         {
@@ -458,7 +458,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var retain = (header & 1) > 0;
         var qos = (MqttQualityOfServiceLevel)((header >> 1) & 3);
@@ -533,7 +533,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttPubRecPacket
         {
@@ -570,7 +570,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttPubRelPacket
         {
@@ -607,7 +607,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttSubAckPacket
         {
@@ -643,7 +643,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttSubscribePacket
         {
@@ -693,7 +693,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttUnsubAckPacket
         {
@@ -730,7 +730,7 @@ public sealed class MqttV5PacketDecoder
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttUnsubscribePacket
         {
@@ -747,7 +747,7 @@ public sealed class MqttV5PacketDecoder
 
         while (!_bufferReader.EndOfStream)
         {
-            packet.TopicFilters.Add(_bufferReader.ReadString());
+            packet.TopicFilters!.Add(_bufferReader.ReadString());
         }
 
         return packet;

@@ -13,24 +13,24 @@ public sealed class MqttUnsubAckPacket : MqttPacketWithIdentifier
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public List<MqttUnsubscribeReasonCode> ReasonCodes { get; set; }
+    public List<MqttUnsubscribeReasonCode>? ReasonCodes { get; set; }
 
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; set; }
 
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 
     public override string ToString()
     {
         var reasonCodesText = string.Empty;
         if (ReasonCodes != null)
         {
-            reasonCodesText = string.Join(",", ReasonCodes?.Select(f => f.ToString()));
+            reasonCodesText = string.Join(",", ReasonCodes?.Select(f => f.ToString()) ?? []);
         }
 
         return $"UnsubAck: [PacketIdentifier={PacketIdentifier}] [ReasonCodes={reasonCodesText}] [ReasonString={ReasonString}]";

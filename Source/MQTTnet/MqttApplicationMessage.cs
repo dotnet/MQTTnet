@@ -18,7 +18,7 @@ public sealed class MqttApplicationMessage
     ///     The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded
     ///     payload.
     /// </summary>
-    public string ContentType { get; set; }
+    public string? ContentType { get; set; }
 
     /// <summary>
     ///     Gets or sets the correlation data.
@@ -26,7 +26,7 @@ public sealed class MqttApplicationMessage
     ///     published message.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public byte[] CorrelationData { get; set; }
+    public byte[]? CorrelationData { get; set; }
 
     /// <summary>
     ///     If the DUP flag is set to 0, it indicates that this is the first occasion that the Client or Server has attempted
@@ -94,7 +94,7 @@ public sealed class MqttApplicationMessage
     ///     the request/response pattern between clients that is common in web applications.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public string ResponseTopic { get; set; }
+    public string? ResponseTopic { get; set; }
 
     /// <summary>
     ///     Gets or sets a value indicating whether the message should be retained or not.
@@ -112,7 +112,7 @@ public sealed class MqttApplicationMessage
     ///     the client when need to forward PUBLISH packets matching this subscription to this client.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public List<uint> SubscriptionIdentifiers { get; set; }
+    public List<uint>? SubscriptionIdentifiers { get; set; }
 
     /// <summary>
     ///     Gets or sets the MQTT topic.
@@ -121,7 +121,7 @@ public sealed class MqttApplicationMessage
     ///     The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level
     ///     separator).
     /// </summary>
-    public string Topic { get; set; }
+    public required string Topic { get; set; }
 
     /// <summary>
     ///     Gets or sets the topic alias.
@@ -141,5 +141,5 @@ public sealed class MqttApplicationMessage
     ///     The feature is very similar to the HTTP header concept.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 }

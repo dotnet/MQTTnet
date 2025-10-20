@@ -17,7 +17,7 @@ public sealed class MqttPacketInspector
     readonly AsyncEvent<InspectMqttPacketEventArgs> _asyncEvent;
     readonly MqttNetSourceLogger _logger;
 
-    MemoryStream _receivedPacketBuffer;
+    MemoryStream? _receivedPacketBuffer;
 
     public MqttPacketInspector(AsyncEvent<InspectMqttPacketEventArgs> asyncEvent, IMqttNetLogger logger)
     {
@@ -61,7 +61,7 @@ public sealed class MqttPacketInspector
             return CompletedTask.Instance;
         }
 
-        var buffer = _receivedPacketBuffer.ToArray();
+        var buffer = _receivedPacketBuffer!.ToArray();
         _receivedPacketBuffer.SetLength(0);
 
         return InspectPacket(buffer, MqttPacketFlowDirection.Inbound);

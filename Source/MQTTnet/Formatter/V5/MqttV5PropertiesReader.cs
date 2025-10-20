@@ -35,7 +35,7 @@ public struct MqttV5PropertiesReader
         CurrentPropertyId = MqttPropertyId.None;
     }
 
-    public List<MqttUserProperty> CollectedUserProperties { get; private set; }
+    public List<MqttUserProperty>? CollectedUserProperties { get; private set; }
 
     public MqttPropertyId CurrentPropertyId { get; private set; }
 

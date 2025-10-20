@@ -30,13 +30,13 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
     ///     Gets the authentication data.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public byte[] AuthenticationData => _initialAuthPacket.AuthenticationData;
+    public byte[]? AuthenticationData => _initialAuthPacket.AuthenticationData;
 
     /// <summary>
     ///     Gets the authentication method.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public string AuthenticationMethod => _initialAuthPacket.AuthenticationMethod;
+    public string AuthenticationMethod => _initialAuthPacket.AuthenticationMethod!;
 
     public CancellationToken CancellationToken { get; }
 
@@ -50,7 +50,7 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
     ///     Gets the reason string.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public string ReasonString => _initialAuthPacket.ReasonString;
+    public string? ReasonString => _initialAuthPacket.ReasonString;
 
     /// <summary>
     ///     Gets the user properties.
@@ -61,7 +61,7 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
     ///     The feature is very similar to the HTTP header concept.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties => _initialAuthPacket.UserProperties;
+    public List<MqttUserProperty>? UserProperties => _initialAuthPacket.UserProperties;
 
     public async Task<ReceiveMqttEnhancedAuthenticationDataResult> ReceiveAsync(CancellationToken cancellationToken = default)
     {

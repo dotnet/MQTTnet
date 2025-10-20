@@ -131,7 +131,7 @@ public sealed class MqttBufferReader
 
     public void SetBuffer(ArraySegment<byte> buffer)
     {
-        SetBuffer(buffer.Array, buffer.Offset, buffer.Count);
+        SetBuffer(buffer.Array!, buffer.Offset, buffer.Count);
     }
 
     public void SetBuffer(byte[] buffer, int offset, int length)

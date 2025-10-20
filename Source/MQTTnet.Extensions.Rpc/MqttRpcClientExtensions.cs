@@ -12,7 +12,7 @@ namespace MQTTnet.Extensions.Rpc;
 
 public static class MqttRpcClientExtensions
 {
-    public static Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string,object> parameters = null)
+    public static Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string,object>? parameters = null)
     {
         if (client == null) throw new ArgumentNullException(nameof(client));
 

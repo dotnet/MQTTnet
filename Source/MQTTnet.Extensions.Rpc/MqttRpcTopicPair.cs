@@ -6,7 +6,7 @@ namespace MQTTnet.Extensions.Rpc;
 
 public sealed class MqttRpcTopicPair
 {
-    public string RequestTopic { get; set; }
+    public required string RequestTopic { get; init; }
 
-    public string ResponseTopic { get; set; }
+    public required string ResponseTopic { get; init; }
 }

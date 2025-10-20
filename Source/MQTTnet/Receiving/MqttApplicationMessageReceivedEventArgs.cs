@@ -66,14 +66,14 @@ public sealed class MqttApplicationMessageReceivedEventArgs : EventArgs
     /// <summary>
     ///     Gets or sets the reason string which will be sent to the server in the ACK packet.
     /// </summary>
-    public string ResponseReasonString { get; set; }
+    public string? ResponseReasonString { get; set; }
 
     /// <summary>
     ///     Gets or sets the user properties which will be sent to the server in the ACK packet etc.
     /// </summary>
     public List<MqttUserProperty> ResponseUserProperties { get; } = [];
 
-    public object Tag { get; set; }
+    public object? Tag { get; set; }
 
     internal MqttPublishPacket PublishPacket { get; set; }
 

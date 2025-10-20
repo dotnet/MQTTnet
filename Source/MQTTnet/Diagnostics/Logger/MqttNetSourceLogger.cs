@@ -12,7 +12,7 @@ public sealed class MqttNetSourceLogger(IMqttNetLogger logger, string source)
 
     public bool IsEnabled => _logger.IsEnabled;
 
-    public void Publish(MqttNetLogLevel logLevel, string message, object[] parameters, Exception exception)
+    public void Publish(MqttNetLogLevel logLevel, string message, object?[]? parameters, Exception? exception)
     {
         _logger.Publish(logLevel, source, message, parameters, exception);
     }

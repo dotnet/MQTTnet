@@ -14,19 +14,19 @@ public sealed class MqttClientConnectResult
     ///     Gets the client identifier which was chosen by the server.
     ///     MQTTv5 only.
     /// </summary>
-    public string AssignedClientIdentifier { get; init; }
+    public string? AssignedClientIdentifier { get; init; }
 
     /// <summary>
     ///     Gets the authentication data.
     ///     MQTTv5 only.
     /// </summary>
-    public byte[] AuthenticationData { get; init; }
+    public byte[]? AuthenticationData { get; init; }
 
     /// <summary>
     ///     Gets the authentication method.
     ///     MQTTv5 only.
     /// </summary>
-    public string AuthenticationMethod { get; init; }
+    public string? AuthenticationMethod { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether a session was already available or not.
@@ -45,7 +45,7 @@ public sealed class MqttClientConnectResult
     ///     Gets the reason string.
     ///     MQTTv5 only.
     /// </summary>
-    public string ReasonString { get; init; }
+    public string? ReasonString { get; init; }
 
     public ushort? ReceiveMaximum { get; init; }
 
@@ -53,7 +53,7 @@ public sealed class MqttClientConnectResult
     ///     Gets the response information.
     ///     MQTTv5 only.
     /// </summary>
-    public string ResponseInformation { get; init; }
+    public string? ResponseInformation { get; init; }
 
     /// <summary>
     ///     Gets the result code.
@@ -78,7 +78,7 @@ public sealed class MqttClientConnectResult
     ///     Gets an alternate server which should be used instead of the current one.
     ///     MQTTv5 only.
     /// </summary>
-    public string ServerReference { get; init; }
+    public string? ServerReference { get; init; }
 
     public uint? SessionExpiryInterval { get; init; }
 
@@ -109,7 +109,7 @@ public sealed class MqttClientConnectResult
     ///     The feature is very similar to the HTTP header concept.
     ///     MQTTv5 only.
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; init; }
+    public List<MqttUserProperty>? UserProperties { get; init; }
 
     /// <summary>
     ///     Gets a value indicating whether wildcards can be used in subscriptions at the current server.

@@ -8,18 +8,13 @@ using MQTTnet.Packets;
 
 namespace MQTTnet.Internal;
 
-public sealed class MqttPacketBusItem
+public sealed class MqttPacketBusItem(MqttPacket packet)
 {
     readonly AsyncTaskCompletionSource<MqttPacket> _promise = new();
 
-    public MqttPacketBusItem(MqttPacket packet)
-    {
-        Packet = packet ?? throw new ArgumentNullException(nameof(packet));
-    }
+    public event EventHandler? Completed;
 
-    public event EventHandler Completed;
-
-    public MqttPacket Packet { get; }
+    public MqttPacket Packet { get; } = packet ?? throw new ArgumentNullException(nameof(packet));
 
     public void Cancel()
     {

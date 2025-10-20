@@ -16,17 +16,17 @@ namespace MQTTnet.Implementations;
 
 public sealed class MqttWebSocketChannel : IMqttChannel
 {
-    readonly MqttClientWebSocketOptions _options;
+    readonly MqttClientWebSocketOptions? _options;
 
-    AsyncLock _sendLock = new();
-    WebSocket _webSocket;
+    AsyncLock? _sendLock = new();
+    WebSocket? _webSocket;
 
     public MqttWebSocketChannel(MqttClientWebSocketOptions options)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
-    public MqttWebSocketChannel(WebSocket webSocket, EndPoint remoteEndPoint, bool isSecureConnection, X509Certificate2 clientCertificate)
+    public MqttWebSocketChannel(WebSocket webSocket, EndPoint? remoteEndPoint, bool isSecureConnection, X509Certificate2 clientCertificate)
     {
         _webSocket = webSocket ?? throw new ArgumentNullException(nameof(webSocket));
 
@@ -35,15 +35,15 @@ public sealed class MqttWebSocketChannel : IMqttChannel
         ClientCertificate = clientCertificate;
     }
 
-    public X509Certificate2 ClientCertificate { get; }
+    public X509Certificate2? ClientCertificate { get; }
 
-    public EndPoint RemoteEndPoint { get; }
+    public EndPoint? RemoteEndPoint { get; }
 
     public bool IsSecureConnection { get; private set; }
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
-        var uri = _options.Uri;
+        var uri = _options!.Uri;
         if (!uri.StartsWith("ws://", StringComparison.OrdinalIgnoreCase) && !uri.StartsWith("wss://", StringComparison.OrdinalIgnoreCase))
         {
             if (_options.TlsOptions?.UseTls == true)
@@ -96,7 +96,7 @@ public sealed class MqttWebSocketChannel : IMqttChannel
 
     public async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
     {
-        var response = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
+        var response = await _webSocket!.ReceiveAsync(new ArraySegment<byte>(buffer, offset, count), cancellationToken).ConfigureAwait(false);
         return response.Count;
     }
 
@@ -111,7 +111,7 @@ public sealed class MqttWebSocketChannel : IMqttChannel
         {
             length -= segment.Length;
             bool endOfPacket = isEndOfPacket && length == 0;
-            await _webSocket.SendAsync(segment, WebSocketMessageType.Binary, endOfPacket, cancellationToken).ConfigureAwait(false);
+            await _webSocket!.SendAsync(segment, WebSocketMessageType.Binary, endOfPacket, cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -133,9 +133,9 @@ public sealed class MqttWebSocketChannel : IMqttChannel
         }
     }
 
-    WebProxy CreateProxy()
+    WebProxy? CreateProxy()
     {
-        if (string.IsNullOrEmpty(_options.ProxyOptions?.Address))
+        if (string.IsNullOrEmpty(_options!.ProxyOptions?.Address))
         {
             return null;
         }
@@ -165,7 +165,7 @@ public sealed class MqttWebSocketChannel : IMqttChannel
 
     void SetupClientWebSocket(ClientWebSocket clientWebSocket)
     {
-        if (_options.ProxyOptions != null)
+        if (_options!.ProxyOptions != null)
         {
             clientWebSocket.Options.Proxy = CreateProxy();
         }

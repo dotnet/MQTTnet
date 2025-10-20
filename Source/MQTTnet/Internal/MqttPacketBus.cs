@@ -104,7 +104,7 @@ public sealed class MqttPacketBus : IDisposable
         _signal.Dispose();
     }
 
-    public MqttPacketBusItem DropFirstItem(MqttPacketBusPartition partition)
+    public MqttPacketBusItem? DropFirstItem(MqttPacketBusPartition partition)
     {
         lock (_syncRoot)
         {

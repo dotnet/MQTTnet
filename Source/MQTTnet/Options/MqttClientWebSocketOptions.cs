@@ -11,11 +11,11 @@ namespace MQTTnet;
 
 public sealed class MqttClientWebSocketOptions : IMqttClientChannelOptions
 {
-    public CookieContainer CookieContainer { get; set; }
+    public CookieContainer? CookieContainer { get; set; }
 
-    public WebSocketDeflateOptions DangerousDeflateOptions { get; set; }
+    public WebSocketDeflateOptions? DangerousDeflateOptions { get; set; }
 
-    public ICredentials Credentials { get; set; }
+    public ICredentials? Credentials { get; set; }
 
     /// <summary>
     ///     Gets or sets the keep alive interval for the Web Socket connection.
@@ -23,15 +23,15 @@ public sealed class MqttClientWebSocketOptions : IMqttClientChannelOptions
     /// </summary>
     public TimeSpan KeepAliveInterval { get; set; } = WebSocket.DefaultKeepAliveInterval;
 
-    public MqttClientWebSocketProxyOptions ProxyOptions { get; set; }
+    public MqttClientWebSocketProxyOptions? ProxyOptions { get; set; }
 
-    public IDictionary<string, string> RequestHeaders { get; set; }
+    public IDictionary<string, string>? RequestHeaders { get; set; }
 
-    public ICollection<string> SubProtocols { get; set; } = ["mqtt"];
+    public ICollection<string>? SubProtocols { get; set; } = ["mqtt"];
 
     public MqttClientTlsOptions TlsOptions { get; set; } = new();
 
-    public string Uri { get; set; }
+    public required string Uri { get; set; }
 
     /// <summary>
     ///     Gets or sets whether the default (system) credentials should be used when connecting via Web Socket connection.
@@ -41,6 +41,6 @@ public sealed class MqttClientWebSocketOptions : IMqttClientChannelOptions
 
     public override string ToString()
     {
-        return Uri;
+        return Uri ?? string.Empty;
     }
 }

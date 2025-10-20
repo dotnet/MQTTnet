@@ -13,7 +13,7 @@ public sealed class MqttClientPublishResultFactory
     static readonly IReadOnlyCollection<MqttUserProperty> EmptyUserProperties = [];
     static readonly MqttClientPublishResult AtMostOnceSuccessResult = new(null, MqttClientPublishReasonCode.Success, null, EmptyUserProperties);
 
-    public static MqttClientPublishResult Create(MqttPubAckPacket pubAckPacket)
+    public static MqttClientPublishResult Create(MqttPubAckPacket? pubAckPacket)
     {
         // QoS 0 has no response. So we treat it as a success always.
         if (pubAckPacket == null)
@@ -31,7 +31,7 @@ public sealed class MqttClientPublishResultFactory
         return result;
     }
 
-    public static MqttClientPublishResult Create(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
+    public static MqttClientPublishResult Create(MqttPubRecPacket? pubRecPacket, MqttPubCompPacket? pubCompPacket)
     {
         if (pubRecPacket == null || pubCompPacket == null)
         {

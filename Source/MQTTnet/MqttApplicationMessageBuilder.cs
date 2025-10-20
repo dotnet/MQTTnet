@@ -18,19 +18,19 @@ namespace MQTTnet;
 
 public sealed class MqttApplicationMessageBuilder
 {
-    string _contentType;
-    byte[] _correlationData;
+    string? _contentType;
+    byte[]? _correlationData;
     uint _messageExpiryInterval;
 
     MqttPayloadFormatIndicator _payloadFormatIndicator;
     ReadOnlySequence<byte> _payload;
     MqttQualityOfServiceLevel _qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
-    string _responseTopic;
+    string? _responseTopic;
     bool _retain;
-    List<uint> _subscriptionIdentifiers;
-    string _topic;
+    List<uint>? _subscriptionIdentifiers;
+    string? _topic;
     ushort _topicAlias;
-    List<MqttUserProperty> _userProperties;
+    List<MqttUserProperty>? _userProperties;
 
     public MqttApplicationMessage Build()
     {
@@ -41,7 +41,7 @@ public sealed class MqttApplicationMessageBuilder
 
         var applicationMessage = new MqttApplicationMessage
         {
-            Topic = _topic,
+            Topic = _topic!,
             Payload = _payload,
             QualityOfServiceLevel = _qualityOfServiceLevel,
             Retain = _retain,
@@ -88,7 +88,7 @@ public sealed class MqttApplicationMessageBuilder
         return this;
     }
 
-    public MqttApplicationMessageBuilder WithPayload(byte[] payload)
+    public MqttApplicationMessageBuilder WithPayload(byte[]? payload)
     {
         _payload = payload == null || payload.Length == 0 ? EmptyBuffer.ReadOnlySequence : new ReadOnlySequence<byte>(payload);
         return this;
@@ -100,7 +100,7 @@ public sealed class MqttApplicationMessageBuilder
         return this;
     }
 
-    public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte> payload)
+    public MqttApplicationMessageBuilder WithPayload(IEnumerable<byte>? payload)
     {
         if (payload == null)
         {
@@ -120,12 +120,12 @@ public sealed class MqttApplicationMessageBuilder
         return WithPayload(payload.ToArray());
     }
 
-    public MqttApplicationMessageBuilder WithPayload(Stream payload)
+    public MqttApplicationMessageBuilder WithPayload(Stream? payload)
     {
         return payload == null ? WithPayload(default(byte[])) : WithPayload(payload, payload.Length - payload.Position);
     }
 
-    public MqttApplicationMessageBuilder WithPayload(Stream payload, long length)
+    public MqttApplicationMessageBuilder WithPayload(Stream? payload, long length)
     {
         if (payload == null || length == 0)
         {
@@ -148,7 +148,7 @@ public sealed class MqttApplicationMessageBuilder
         return WithPayload(payloadBuffer);
     }
 
-    public MqttApplicationMessageBuilder WithPayload(string payload)
+    public MqttApplicationMessageBuilder WithPayload(string? payload)
     {
         if (string.IsNullOrEmpty(payload))
         {

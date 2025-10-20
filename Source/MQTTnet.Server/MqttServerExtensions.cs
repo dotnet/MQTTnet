@@ -21,7 +21,7 @@ public static class MqttServerExtensions
     public static Task InjectApplicationMessage(
         this MqttServer server,
         string topic,
-        string payload = null,
+        string? payload = null,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false)
     {

@@ -13,7 +13,7 @@ public sealed class MqttClientSubscribeResult
     public MqttClientSubscribeResult(
         ushort packetIdentifier,
         IReadOnlyCollection<MqttClientSubscribeResultItem> items,
-        string reasonString,
+        string? reasonString,
         IReadOnlyCollection<MqttUserProperty> userProperties)
     {
         PacketIdentifier = packetIdentifier;
@@ -36,7 +36,7 @@ public sealed class MqttClientSubscribeResult
     ///     Gets the reason string.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public string ReasonString { get; }
+    public string? ReasonString { get; }
 
     /// <summary>
     ///     Gets the user properties which were part of the SUBACK packet.

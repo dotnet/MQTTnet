@@ -24,15 +24,15 @@ public sealed class MqttClientOptions
     ///     Gets or sets the authentication data.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public byte[] AuthenticationData { get; set; }
+    public byte[]? AuthenticationData { get; set; }
 
     /// <summary>
     ///     Gets or sets the authentication method.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public string AuthenticationMethod { get; set; }
+    public string? AuthenticationMethod { get; set; }
 
-    public IMqttClientChannelOptions ChannelOptions { get; set; }
+    public IMqttClientChannelOptions? ChannelOptions { get; set; }
 
     /// <summary>
     ///     Gets or sets a value indicating whether clean sessions are used or not.
@@ -52,14 +52,14 @@ public sealed class MqttClientOptions
     /// </summary>
     public string ClientId { get; set; } = Guid.NewGuid().ToString("N");
 
-    public IMqttClientCredentialsProvider Credentials { get; set; }
+    public IMqttClientCredentialsProvider? Credentials { get; set; }
 
     /// <summary>
     ///     Gets or sets the handler for AUTH packets.
     ///     This can happen when connecting or at any time while being already connected.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public IMqttEnhancedAuthenticationHandler EnhancedAuthenticationHandler { get; set; }
+    public IMqttEnhancedAuthenticationHandler? EnhancedAuthenticationHandler { get; set; }
 
     /// <summary>
     ///     Gets or sets the keep alive period.
@@ -143,7 +143,7 @@ public sealed class MqttClientOptions
     ///     The feature is very similar to the HTTP header concept.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 
     /// <summary>
     ///     When this feature is enabled the client will check if used properties are supported in the selected protocol
@@ -158,13 +158,13 @@ public sealed class MqttClientOptions
     ///     Gets or sets the content type of the will message.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public string WillContentType { get; set; }
+    public string? WillContentType { get; set; }
 
     /// <summary>
     ///     Gets or sets the correlation data of the will message.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public byte[] WillCorrelationData { get; set; }
+    public byte[]? WillCorrelationData { get; set; }
 
     /// <summary>
     ///     Gets or sets the will delay interval.
@@ -182,7 +182,7 @@ public sealed class MqttClientOptions
     /// <summary>
     ///     Gets or sets the payload of the will message.
     /// </summary>
-    public byte[] WillPayload { get; set; }
+    public byte[]? WillPayload { get; set; }
 
     /// <summary>
     ///     Gets or sets the payload format indicator of the will message.
@@ -199,7 +199,7 @@ public sealed class MqttClientOptions
     ///     Gets or sets the response topic of the will message.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public string WillResponseTopic { get; set; }
+    public string? WillResponseTopic { get; set; }
 
     /// <summary>
     ///     Gets or sets the retain flag of the will message.
@@ -209,13 +209,13 @@ public sealed class MqttClientOptions
     /// <summary>
     ///     Gets or sets the topic of the will message.
     /// </summary>
-    public string WillTopic { get; set; }
+    public string? WillTopic { get; set; }
 
     /// <summary>
     ///     Gets or sets the user properties of the will message.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public List<MqttUserProperty> WillUserProperties { get; set; }
+    public List<MqttUserProperty>? WillUserProperties { get; set; }
 
     /// <summary>
     ///     Gets or sets the default and initial size of the packet write buffer.

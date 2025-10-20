@@ -20,7 +20,7 @@ public class MqttServerOptionsBuilder
         return _options;
     }
 
-    public MqttServerOptionsBuilder WithClientCertificate(RemoteCertificateValidationCallback validationCallback = null, bool checkCertificateRevocation = false)
+    public MqttServerOptionsBuilder WithClientCertificate(RemoteCertificateValidationCallback? validationCallback = null, bool checkCertificateRevocation = false)
     {
         _options.TlsEndpointOptions.ClientCertificateRequired = true;
         _options.TlsEndpointOptions.CheckCertificateRevocation = checkCertificateRevocation;
@@ -183,7 +183,7 @@ public class MqttServerOptionsBuilder
         return this;
     }
 
-    public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCertificateCredentials credentials = null)
+    public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCertificateCredentials? credentials = null)
     {
         ArgumentNullException.ThrowIfNull(value);
 

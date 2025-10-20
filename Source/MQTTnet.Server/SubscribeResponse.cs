@@ -16,7 +16,7 @@ public sealed class SubscribeResponse
     /// </summary>
     public MqttSubscribeReasonCode ReasonCode { get; set; }
 
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; set; }
 
-    public List<MqttUserProperty> UserProperties { get; } = [];
+    public List<MqttUserProperty>? UserProperties { get; set; } = [];
 }

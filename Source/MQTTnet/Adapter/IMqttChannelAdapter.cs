@@ -18,9 +18,9 @@ public interface IMqttChannelAdapter : IDisposable
 
     long BytesSent { get; }
 
-    X509Certificate2 ClientCertificate { get; }
+    X509Certificate2? ClientCertificate { get; }
 
-    EndPoint RemoteEndPoint { get; }
+    EndPoint? RemoteEndPoint { get; }
 
     bool IsSecureConnection { get; }
 
@@ -30,7 +30,7 @@ public interface IMqttChannelAdapter : IDisposable
 
     Task DisconnectAsync(CancellationToken cancellationToken);
 
-    Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken);
+    Task<MqttPacket?> ReceivePacketAsync(CancellationToken cancellationToken);
 
     void ResetStatistics();
 

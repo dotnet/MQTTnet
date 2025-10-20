@@ -21,7 +21,7 @@ public sealed class LowLevelMqttClient : ILowLevelMqttClient
     readonly MqttNetSourceLogger _logger;
     readonly IMqttNetLogger _rootLogger;
 
-    IMqttChannelAdapter _adapter;
+    IMqttChannelAdapter? _adapter;
 
     public LowLevelMqttClient(IMqttClientAdapterFactory clientAdapterFactory, IMqttNetLogger logger)
     {
@@ -48,7 +48,7 @@ public sealed class LowLevelMqttClient : ILowLevelMqttClient
             throw new InvalidOperationException("Low level MQTT client is already connected. Disconnect first before connecting again.");
         }
 
-        MqttPacketInspector packetInspector = null;
+        MqttPacketInspector? packetInspector = null;
         if (_inspectPacketEvent.HasHandlers)
         {
             packetInspector = new MqttPacketInspector(_inspectPacketEvent, _rootLogger);

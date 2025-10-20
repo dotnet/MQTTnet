@@ -9,7 +9,7 @@ namespace MQTTnet;
 
 public static class MqttApplicationMessageExtensions
 {
-    public static string ConvertPayloadToString(this MqttApplicationMessage applicationMessage)
+    public static string? ConvertPayloadToString(this MqttApplicationMessage applicationMessage)
     {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 

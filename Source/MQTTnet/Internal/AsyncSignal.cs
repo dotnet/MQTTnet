@@ -14,7 +14,7 @@ public sealed class AsyncSignal : IDisposable
 
     bool _isDisposed;
     bool _isSignaled;
-    AsyncSignalWaiter _waiter;
+    AsyncSignalWaiter? _waiter;
 
     public void Dispose()
     {

@@ -22,15 +22,15 @@ public sealed class ClientConnectedEventArgs : EventArgs
         SessionItems = sessionItems ?? throw new ArgumentNullException(nameof(sessionItems));
     }
 
-    public byte[] AuthenticationData => _connectPacket.AuthenticationData;
+    public byte[]? AuthenticationData => _connectPacket.AuthenticationData;
 
-    public string AuthenticationMethod => _connectPacket.AuthenticationMethod;
+    public string? AuthenticationMethod => _connectPacket.AuthenticationMethod;
 
     /// <summary>
     ///     Gets the client identifier of the connected client.
     ///     Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
     /// </summary>
-    public string ClientId => _connectPacket.ClientId;
+    public string ClientId => _connectPacket.ClientId!;
 
     /// <summary>
     ///     Gets the endpoint of the connected client.
@@ -38,7 +38,7 @@ public sealed class ClientConnectedEventArgs : EventArgs
     public EndPoint RemoteEndPoint { get; }
 
     [Obsolete("Use RemoteEndPoint instead.")]
-    public string Endpoint => RemoteEndPoint?.ToString();
+    public string? Endpoint => RemoteEndPoint?.ToString();
 
     /// <summary>
     ///     Gets the protocol version which is used by the connected client.
@@ -53,16 +53,16 @@ public sealed class ClientConnectedEventArgs : EventArgs
     /// <summary>
     ///     Gets the user name of the connected client.
     /// </summary>
-    public string UserName => _connectPacket.Username;
+    public string? UserName => _connectPacket.Username;
 
     /// <summary>
     ///     Gets the password of the connected client.
     /// </summary>
-    public string Password => Encoding.UTF8.GetString(_connectPacket.Password.AsSpan());
+    public string? Password => Encoding.UTF8.GetString(_connectPacket.Password.AsSpan());
 
     /// <summary>
     ///     Gets the user properties sent by the client.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public List<MqttUserProperty> UserProperties => _connectPacket?.UserProperties;
+    public List<MqttUserProperty>? UserProperties => _connectPacket?.UserProperties;
 }

@@ -4,9 +4,9 @@ namespace MQTTnet.Server.EnhancedAuthentication;
 
 public sealed class ExchangeEnhancedAuthenticationResult
 {
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; init; }
 
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; init; }
 
-    public byte[] AuthenticationData { get; set; }
+    public byte[]? AuthenticationData { get; init; }
 }

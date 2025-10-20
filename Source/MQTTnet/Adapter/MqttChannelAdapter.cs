@@ -50,15 +50,15 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
 
     public long BytesSent => Volatile.Read(ref _statistics._bytesSent);
 
-    public X509Certificate2 ClientCertificate => _channel.ClientCertificate;
+    public X509Certificate2? ClientCertificate => _channel.ClientCertificate;
 
-    public EndPoint RemoteEndPoint => _channel.RemoteEndPoint;
+    public EndPoint? RemoteEndPoint => _channel.RemoteEndPoint;
 
     public bool IsSecureConnection => _channel.IsSecureConnection;
 
     public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
 
-    public MqttPacketInspector PacketInspector { get; set; }
+    public MqttPacketInspector? PacketInspector { get; set; }
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
@@ -73,7 +73,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
              * block forever. Even a cancellation token is not supported properly.
              */
 
-            var timeout = new TaskCompletionSource<object>();
+            var timeout = new TaskCompletionSource<object?>();
             await using (cancellationToken.Register(() => timeout.TrySetResult(null)))
             {
                 var connectTask = Task.Run(
@@ -133,7 +133,7 @@ public sealed class MqttChannelAdapter : Disposable, IMqttChannelAdapter
         }
     }
 
-    public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
+    public async Task<MqttPacket?> ReceivePacketAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         ThrowIfDisposed();

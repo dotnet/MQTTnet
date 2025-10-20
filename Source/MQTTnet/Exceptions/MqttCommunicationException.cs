@@ -8,12 +8,12 @@ namespace MQTTnet.Exceptions;
 
 public class MqttCommunicationException : Exception
 {
-    public MqttCommunicationException(Exception innerException)
+    public MqttCommunicationException(Exception? innerException)
         : base(innerException?.Message ?? "MQTT communication failed.", innerException)
     {
     }
 
-    public MqttCommunicationException(string message, Exception innerException = null)
+    public MqttCommunicationException(string message, Exception? innerException = null)
         : base(message, innerException)
     {
     }

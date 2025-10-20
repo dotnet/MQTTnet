@@ -16,7 +16,7 @@ public sealed class CrossPlatformSocket : IDisposable
 {
     readonly Socket _socket;
 
-    NetworkStream _networkStream;
+    NetworkStream? _networkStream;
 
     public CrossPlatformSocket(AddressFamily addressFamily, ProtocolType protocolType)
     {
@@ -50,13 +50,13 @@ public sealed class CrossPlatformSocket : IDisposable
         set => _socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, value ? 1 : 0);
     }
 
-    public LingerOption LingerState
+    public LingerOption? LingerState
     {
         get => _socket.LingerState;
-        set => _socket.LingerState = value;
+        set => _socket.LingerState = value!;
     }
 
-    public EndPoint LocalEndPoint => _socket.LocalEndPoint;
+    public EndPoint? LocalEndPoint => _socket.LocalEndPoint;
 
     public bool NoDelay
     {
@@ -70,7 +70,7 @@ public sealed class CrossPlatformSocket : IDisposable
         set => _socket.ReceiveBufferSize = value;
     }
 
-    public EndPoint RemoteEndPoint => _socket.RemoteEndPoint;
+    public EndPoint? RemoteEndPoint => _socket.RemoteEndPoint;
 
     public bool ReuseAddress
     {
@@ -108,7 +108,7 @@ public sealed class CrossPlatformSocket : IDisposable
         set => _socket.SetSocketOption(SocketOptionLevel.Tcp, SocketOptionName.TcpKeepAliveTime, value);
     }
 
-    public async Task<CrossPlatformSocket> AcceptAsync(CancellationToken cancellationToken)
+    public async Task<CrossPlatformSocket?> AcceptAsync(CancellationToken cancellationToken)
     {
         try
         {

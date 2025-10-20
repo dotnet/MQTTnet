@@ -18,9 +18,9 @@ public static class MqttClientExtensions
     public static Task DisconnectAsync(
         this IMqttClient client,
         MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
-        string reasonString = null,
+        string? reasonString = null,
         uint sessionExpiryInterval = 0,
-        List<MqttUserProperty> userProperties = null,
+        List<MqttUserProperty>? userProperties = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(client);
@@ -39,7 +39,7 @@ public static class MqttClientExtensions
     public static Task<MqttClientPublishResult> PublishBinaryAsync(
         this IMqttClient mqttClient,
         string topic,
-        IEnumerable<byte> payload = null,
+        IEnumerable<byte>? payload = null,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)
@@ -79,7 +79,7 @@ public static class MqttClientExtensions
     public static Task<MqttClientPublishResult> PublishStringAsync(
         this IMqttClient mqttClient,
         string topic,
-        string payload = null,
+        string? payload = null,
         MqttQualityOfServiceLevel qualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce,
         bool retain = false,
         CancellationToken cancellationToken = default)
@@ -133,7 +133,7 @@ public static class MqttClientExtensions
     public static async Task<bool> TryDisconnectAsync(
         this IMqttClient client,
         MqttClientDisconnectOptionsReason reason = MqttClientDisconnectOptionsReason.NormalDisconnection,
-        string reasonString = null)
+        string? reasonString = null)
     {
         ArgumentNullException.ThrowIfNull(client);
 

@@ -12,11 +12,11 @@ public sealed class MqttConnAckPacket : MqttPacket
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public string AssignedClientIdentifier { get; set; }
+    public string? AssignedClientIdentifier { get; set; }
 
-    public byte[] AuthenticationData { get; set; }
+    public byte[]? AuthenticationData { get; set; }
 
-    public string AuthenticationMethod { get; set; }
+    public string? AuthenticationMethod { get; set; }
 
     /// <summary>
     ///     Added in MQTTv3.1.1.
@@ -32,11 +32,11 @@ public sealed class MqttConnAckPacket : MqttPacket
     /// </summary>
     public MqttConnectReasonCode ReasonCode { get; set; }
 
-    public string ReasonString { get; set; }
+    public string? ReasonString { get; set; }
 
     public ushort ReceiveMaximum { get; set; }
 
-    public string ResponseInformation { get; set; }
+    public string? ResponseInformation { get; set; }
 
     public bool RetainAvailable { get; set; }
 
@@ -44,7 +44,7 @@ public sealed class MqttConnAckPacket : MqttPacket
 
     public ushort ServerKeepAlive { get; set; }
 
-    public string ServerReference { get; set; }
+    public string? ServerReference { get; set; }
 
     public uint SessionExpiryInterval { get; set; }
 
@@ -54,7 +54,7 @@ public sealed class MqttConnAckPacket : MqttPacket
 
     public ushort TopicAliasMaximum { get; set; }
 
-    public List<MqttUserProperty> UserProperties { get; set; }
+    public List<MqttUserProperty>? UserProperties { get; set; }
 
     public bool WildcardSubscriptionAvailable { get; set; }
 

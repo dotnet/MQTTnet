@@ -6,5 +6,5 @@ namespace MQTTnet;
 
 public interface IMqttClientChannelOptions
 {
-    MqttClientTlsOptions TlsOptions { get; }
+    MqttClientTlsOptions? TlsOptions { get; }
 }

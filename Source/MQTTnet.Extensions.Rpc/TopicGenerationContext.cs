@@ -10,8 +10,12 @@ namespace MQTTnet.Extensions.Rpc;
 
 public sealed class TopicGenerationContext
 {
-    public TopicGenerationContext(IMqttClient mqttClient, MqttRpcClientOptions options, string methodName,
-        IDictionary<string, object> parameters, MqttQualityOfServiceLevel qualityOfServiceLevel)
+    public TopicGenerationContext(
+        IMqttClient mqttClient,
+        MqttRpcClientOptions options,
+        string methodName,
+        IDictionary<string, object>? parameters,
+        MqttQualityOfServiceLevel qualityOfServiceLevel)
     {
         MethodName = methodName ?? throw new ArgumentNullException(nameof(methodName));
         Parameters = parameters;
@@ -22,11 +26,11 @@ public sealed class TopicGenerationContext
 
     public string MethodName { get; }
 
-    public IDictionary<string, object> Parameters { get; }
-
     public IMqttClient MqttClient { get; }
 
     public MqttRpcClientOptions Options { get; }
+
+    public IDictionary<string, object>? Parameters { get; }
 
     /// <summary>
     ///     Gets or sets the quality of service level.

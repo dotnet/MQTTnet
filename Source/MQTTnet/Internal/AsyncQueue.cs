@@ -70,7 +70,7 @@ public sealed class AsyncQueue<TItem> : IDisposable
         {
             try
             {
-                Task task = null;
+                Task? task = null;
                 lock (_syncRoot)
                 {
                     if (_isDisposed)

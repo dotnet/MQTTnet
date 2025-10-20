@@ -29,7 +29,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
         _mqttProtocolVersion = mqttProtocolVersion;
     }
 
-    public MqttPacket Decode(ReceivedMqttPacket receivedPacket)
+    public MqttPacket? Decode(ReceivedMqttPacket receivedPacket)
     {
         if (receivedPacket.TotalLength == 0)
         {
@@ -126,7 +126,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttConnAckPacket();
 
@@ -140,7 +140,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttConnAckPacket();
 
@@ -156,7 +156,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var protocolName = _bufferReader.ReadString();
         var protocolVersion = _bufferReader.ReadByte();
@@ -224,7 +224,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         return new MqttPubAckPacket
         {
@@ -236,7 +236,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         return new MqttPubCompPacket
         {
@@ -248,7 +248,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(receivedMqttPacket.Body);
 
-        _bufferReader.SetBuffer(receivedMqttPacket.Body.Array, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
+        _bufferReader.SetBuffer(receivedMqttPacket.Body.Array!, receivedMqttPacket.Body.Offset, receivedMqttPacket.Body.Count);
 
         var retain = (receivedMqttPacket.FixedHeader & 0x1) > 0;
         var qualityOfServiceLevel = (MqttQualityOfServiceLevel)((receivedMqttPacket.FixedHeader >> 1) & 0x3);
@@ -283,7 +283,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         return new MqttPubRecPacket
         {
@@ -295,7 +295,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         return new MqttPubRelPacket
         {
@@ -307,7 +307,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttSubAckPacket
         {
@@ -327,7 +327,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttSubscribePacket
         {
@@ -352,7 +352,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         return new MqttUnsubAckPacket
         {
@@ -364,7 +364,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
     {
         ThrowIfBodyIsEmpty(body);
 
-        _bufferReader.SetBuffer(body.Array, body.Offset, body.Count);
+        _bufferReader.SetBuffer(body.Array!, body.Offset, body.Count);
 
         var packet = new MqttUnsubscribePacket
         {
@@ -373,7 +373,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
 
         while (!_bufferReader.EndOfStream)
         {
-            packet.TopicFilters.Add(_bufferReader.ReadString());
+            packet.TopicFilters!.Add(_bufferReader.ReadString());
         }
 
         return packet;
@@ -694,9 +694,9 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
 
         bufferWriter.WriteTwoByteInteger(packet.PacketIdentifier);
 
-        if (packet.ReasonCodes.Count != 0)
+        if (packet.ReasonCodes?.Count > 0)
         {
-            foreach (var packetSubscribeReturnCode in packet.ReasonCodes)
+            foreach (var packetSubscribeReturnCode in packet.ReasonCodes!)
             {
                 if (packetSubscribeReturnCode == MqttSubscribeReasonCode.GrantedQoS0)
                 {
@@ -759,7 +759,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
 
     static byte EncodeUnsubscribePacket(MqttUnsubscribePacket packet, MqttBufferWriter bufferWriter)
     {
-        if (packet.TopicFilters.Count == 0)
+        if (packet.TopicFilters?.Count == 0)
         {
             throw new MqttProtocolViolationException("At least one topic filter must be set [MQTT-3.10.3-2].");
         }

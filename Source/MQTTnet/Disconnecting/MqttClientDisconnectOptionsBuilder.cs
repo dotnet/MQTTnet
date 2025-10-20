@@ -10,9 +10,9 @@ namespace MQTTnet;
 public sealed class MqttClientDisconnectOptionsBuilder
 {
     MqttClientDisconnectOptionsReason _reason = MqttClientDisconnectOptionsReason.NormalDisconnection;
-    string _reasonString;
+    string? _reasonString;
     uint _sessionExpiryInterval;
-    List<MqttUserProperty> _userProperties;
+    List<MqttUserProperty>? _userProperties;
 
     public MqttClientDisconnectOptions Build()
     {

@@ -44,7 +44,7 @@ public sealed class MqttTopicFilter
     ///     The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level
     ///     separator).
     /// </summary>
-    public string Topic { get; set; }
+    public required string Topic { get; set; }
 
     public override string ToString()
     {

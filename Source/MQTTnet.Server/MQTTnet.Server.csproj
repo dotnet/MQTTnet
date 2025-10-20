@@ -35,9 +35,10 @@
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>disable</Nullable>
+        <Nullable>enable</Nullable>
         <AnalysisLevel>latest-Recommended</AnalysisLevel>
         <IsAotCompatible>true</IsAotCompatible>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>

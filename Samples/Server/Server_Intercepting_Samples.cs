@@ -57,7 +57,7 @@ public static class Server_Intercepting_Samples
         using var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
         mqttServer.InterceptingSubscriptionAsync += args =>
         {
-            if (args.TopicFilter.Topic.Equals("#"))
+            if (args.TopicFilter.Topic.Equals("#", StringComparison.Ordinal))
             {
                 args.Response.ReasonCode = MqttSubscribeReasonCode.NotAuthorized;
             }

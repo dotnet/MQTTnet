@@ -3,36 +3,17 @@
     <PropertyGroup>
         <AssemblyName>MQTTnet.Server</AssemblyName>
         <RootNamespace>MQTTnet.Server</RootNamespace>
+        <IsAotCompatible>true</IsAotCompatible>
+
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <Description>This is the server implementation of MQTTnet.</Description>
         <PackageId>MQTTnet.Server</PackageId>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</PackageTags>
-        <PackageIcon>nuget.png</PackageIcon>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>disable</Nullable>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
-        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
-    </ItemGroup>
-
-    <ItemGroup>
-        <None Include="..\..\Images\nuget.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
     </ItemGroup>
 
 </Project>

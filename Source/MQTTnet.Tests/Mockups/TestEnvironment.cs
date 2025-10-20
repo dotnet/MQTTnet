@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -182,7 +181,9 @@ public sealed class TestEnvironment : IDisposable
         return new MqttRpcClient(await ConnectClient(), options);
     }
 
+#pragma warning disable CA1822
     public TestApplicationMessageReceivedHandler CreateApplicationMessageHandler(IMqttClient mqttClient)
+#pragma warning restore CA1822
     {
         return new TestApplicationMessageReceivedHandler(mqttClient);
     }
@@ -199,7 +200,7 @@ public sealed class TestEnvironment : IDisposable
             {
                 var clientOptions = e.ClientOptions;
                 var existingClientId = clientOptions.ClientId;
-                if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName))
+                if (existingClientId != null && !existingClientId.StartsWith(TestContext.TestName, StringComparison.InvariantCulture))
                 {
                     clientOptions.ClientId = TestContext.TestName + "_" + existingClientId;
                 }
@@ -257,7 +258,7 @@ public sealed class TestEnvironment : IDisposable
             if (TestContext != null)
             {
                 // Null is used when the client id is assigned from the server!
-                if (!string.IsNullOrEmpty(e.ClientId) && !e.ClientId.StartsWith(TestContext.TestName))
+                if (!string.IsNullOrEmpty(e.ClientId) && !e.ClientId.StartsWith(TestContext.TestName, StringComparison.InvariantCulture))
                 {
                     TrackException(new InvalidOperationException($"Invalid client ID used ({e.ClientId}). It must start with UnitTest name."));
                     e.ReasonCode = MqttConnectReasonCode.ClientIdentifierNotValid;
@@ -326,10 +327,10 @@ public sealed class TestEnvironment : IDisposable
             GC.WaitForFullGCComplete();
             GC.WaitForPendingFinalizers();
 
-            if (_exceptions.Any())
+            if (_exceptions.Count > 0)
             {
                 // ReSharper disable once ThrowExceptionInUnexpectedLocation
-                throw new Exception($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
+                throw new InvalidOperationException($"{_exceptions.Count} exceptions tracked.\r\n" + string.Join(Environment.NewLine, _exceptions));
             }
         }
         finally
@@ -387,7 +388,7 @@ public sealed class TestEnvironment : IDisposable
                 {
                     var message = $"Server had {_serverErrors.Count} errors (${string.Join(Environment.NewLine, _serverErrors)}).";
                     Console.WriteLine(message);
-                    throw new Exception(message);
+                    throw new InvalidOperationException(message);
                 }
             }
         }
@@ -400,7 +401,7 @@ public sealed class TestEnvironment : IDisposable
                 {
                     var message = $"Client(s) had {_clientErrors.Count} errors (${string.Join(Environment.NewLine, _clientErrors)})";
                     Console.WriteLine(message);
-                    throw new Exception(message);
+                    throw new InvalidOperationException(message);
                 }
             }
         }

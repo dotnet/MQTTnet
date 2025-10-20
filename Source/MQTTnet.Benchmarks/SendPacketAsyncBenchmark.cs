@@ -1,39 +1,19 @@
+using System.Buffers;
+using System.IO.Pipelines;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Formatter;
-using System;
-using System.Buffers;
-using System.IO;
-using System.IO.Pipelines;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks;
 
 [SimpleJob(RuntimeMoniker.Net60)]
-[RPlotExporter, RankColumn]
+[RPlotExporter]
+[RankColumn]
 [MemoryDiagnoser]
-public class SendPacketAsyncBenchmark : BaseBenchmark
+public sealed class SendPacketAsyncBenchmark : BaseBenchmark, IDisposable, IAsyncDisposable
 {
-    MemoryStream _stream;
     MqttPacketBuffer _buffer;
-
-    [GlobalSetup]
-    public void GlobalSetup()
-    {
-        _stream = new MemoryStream(1024);
-        var packet = new ArraySegment<byte>(new byte[10]);
-        _buffer = new MqttPacketBuffer(packet);
-    }
-
-    [Benchmark(Baseline = true)]
-    public async ValueTask Before()
-    {
-        _stream.Position = 0;
-        var output = PipeWriter.Create(_stream);
-
-        WritePacketBuffer(output, _buffer);
-        await output.FlushAsync();
-    }
+    MemoryStream _stream;
 
     [Benchmark]
     public async ValueTask After()
@@ -50,6 +30,37 @@ public class SendPacketAsyncBenchmark : BaseBenchmark
             WritePacketBuffer(output, _buffer);
             await output.FlushAsync().ConfigureAwait(false);
         }
+    }
+
+    [Benchmark(Baseline = true)]
+    public async ValueTask Before()
+    {
+        _stream.Position = 0;
+        var output = PipeWriter.Create(_stream);
+
+        WritePacketBuffer(output, _buffer);
+        await output.FlushAsync();
+    }
+
+    public void Dispose()
+    {
+        _stream?.Dispose();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_stream != null)
+        {
+            await _stream.DisposeAsync();
+        }
+    }
+
+    [GlobalSetup]
+    public void GlobalSetup()
+    {
+        _stream = new MemoryStream(1024);
+        var packet = new ArraySegment<byte>(new byte[10]);
+        _buffer = new MqttPacketBuffer(packet);
     }
 
     static void WritePacketBuffer(PipeWriter output, MqttPacketBuffer buffer)

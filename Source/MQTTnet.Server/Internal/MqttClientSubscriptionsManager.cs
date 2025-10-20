@@ -81,7 +81,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
             return CheckSubscriptionsResult.NotSubscribed;
         }
 
-        var senderIsReceiver = string.Equals(senderId, _session.Id);
+        var senderIsReceiver = string.Equals(senderId, _session.Id, StringComparison.Ordinal);
         var maxQoSLevel = -1; // Not subscribed.
 
         HashSet<uint> subscriptionIdentifiers = null;
@@ -460,7 +460,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
         List<MqttUserProperty> userProperties,
         CancellationToken cancellationToken)
     {
-        var eventArgs = new InterceptingSubscriptionEventArgs(cancellationToken, _session.Id, _session.UserName, new MqttSessionStatus(_session), topicFilter, userProperties);
+        var eventArgs = new InterceptingSubscriptionEventArgs(_session.Id, _session.UserName, new MqttSessionStatus(_session), topicFilter, userProperties, cancellationToken);
 
         if (topicFilter.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce)
         {
@@ -475,7 +475,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
             eventArgs.Response.ReasonCode = MqttSubscribeReasonCode.GrantedQoS2;
         }
 
-        if (topicFilter.Topic.StartsWith("$share/"))
+        if (topicFilter.Topic.StartsWith("$share/", StringComparison.InvariantCulture))
         {
             eventArgs.Response.ReasonCode = MqttSubscribeReasonCode.SharedSubscriptionsNotSupported;
         }
@@ -493,7 +493,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
         List<MqttUserProperty> userProperties,
         CancellationToken cancellationToken)
     {
-        var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(cancellationToken, _session.Id, _session.UserName, _session.Items, topicFilter, userProperties)
+        var clientUnsubscribingTopicEventArgs = new InterceptingUnsubscriptionEventArgs(_session.Id, _session.UserName, _session.Items, topicFilter, userProperties, cancellationToken)
         {
             Response =
             {

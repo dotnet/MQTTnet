@@ -551,7 +551,7 @@ public sealed class MqttPacketSerialization_V3_Binary_Tests
     }
 
 
-    void DeserializeAndCompare(MqttPacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
+    static void DeserializeAndCompare(MqttPacket packet, string expectedBase64Value, MqttProtocolVersion protocolVersion = MqttProtocolVersion.V311)
     {
         var writer = WriterFactory();
 

@@ -34,7 +34,9 @@ public static class MqttNetConsoleLogger
     static void PrintToConsole(object sender, MqttNetLogMessagePublishedEventArgs e)
     {
         var output = new StringBuilder();
+#pragma warning disable CA1305
         output.AppendLine($">> [{e.LogMessage.Timestamp:O}] [{e.LogMessage.ThreadId}] [{e.LogMessage.Source}] [{e.LogMessage.Level}]: {e.LogMessage.Message}");
+#pragma warning restore CA1305
         if (e.LogMessage.Exception != null)
         {
             output.AppendLine(e.LogMessage.Exception.ToString());

@@ -12,30 +12,13 @@
     <PropertyGroup>
         <AssemblyName>MQTTnet</AssemblyName>
         <RootNamespace>MQTTnet</RootNamespace>
-        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <IsAotCompatible>true</IsAotCompatible>
+
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <Description>MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (broker) and supports v3.1.0, v3.1.1 and v5.0.0 of the MQTT protocol.</Description>
         <PackageId>MQTTnet</PackageId>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</PackageTags>
-        <NeutralLanguage>en-US</NeutralLanguage>
-        <EnableNETAnalyzers>true</EnableNETAnalyzers>
-        <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
-        <PackageIcon>nuget.png</PackageIcon>
-        <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
-        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NuGetAuditMode>all</NuGetAuditMode>
-        <NuGetAudit>true</NuGetAudit>
-        <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
-        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
@@ -44,14 +27,4 @@
 
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     </PropertyGroup>
-
-    <ItemGroup>
-        <None Include="..\..\Images\nuget.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
-    </ItemGroup>
-
 </Project>

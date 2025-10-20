@@ -129,12 +129,12 @@ public static class ServerTest
 
             mqttServer.InterceptingSubscriptionAsync += e =>
             {
-                if (e.TopicFilter.Topic.StartsWith("admin/foo/bar") && e.ClientId != "theAdmin")
+                if (e.TopicFilter.Topic.StartsWith("admin/foo/bar", StringComparison.InvariantCulture) && e.ClientId != "theAdmin")
                 {
                     e.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
                 }
 
-                if (e.TopicFilter.Topic.StartsWith("the/secret/stuff") && e.ClientId != "Imperator")
+                if (e.TopicFilter.Topic.StartsWith("the/secret/stuff", StringComparison.InvariantCulture) && e.ClientId != "Imperator")
                 {
                     e.Response.ReasonCode = MqttSubscribeReasonCode.ImplementationSpecificError;
                     e.CloseConnection = true;

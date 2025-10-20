@@ -13,7 +13,7 @@ public sealed class MqttClientConnectionContextFactory : IMqttClientAdapterFacto
 {
     public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
     {
-        if (options == null) throw new ArgumentNullException(nameof(options));
+        ArgumentNullException.ThrowIfNull(options);
 
         switch (options.ChannelOptions)
         {

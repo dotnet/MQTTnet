@@ -4,8 +4,7 @@
         <OutputType>Exe</OutputType>
         <DebugType>Full</DebugType>
         <IsPackable>false</IsPackable>
-        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
-        <NoWarn>$(NoWarn);CS8892</NoWarn>
+        <NoWarn>$(NoWarn);CS8892;CA1707;CA1051;CA1822</NoWarn>
         <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     </PropertyGroup>
 

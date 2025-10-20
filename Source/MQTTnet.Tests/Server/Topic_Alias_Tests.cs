@@ -71,6 +71,6 @@ public sealed class Topic_Alias_Tests : BaseTestClass
 
         Assert.HasCount(3, receivedTopics);
         CollectionAssert.AllItemsAreNotNull(receivedTopics);
-        Assert.IsTrue(receivedTopics.All(t => t.Equals("this_is_the_topic")));
+        Assert.IsTrue(receivedTopics.All(t => t.Equals("this_is_the_topic", System.StringComparison.Ordinal)));
     }
 }

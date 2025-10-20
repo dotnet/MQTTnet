@@ -14,7 +14,7 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Tests.Server;
 
 [TestClass]
-public sealed class SubscriptionTopicHashTests
+public sealed class SubscriptionTopicHashTests : IDisposable
 {
     MqttSession _clientSession;
 
@@ -82,6 +82,11 @@ public sealed class SubscriptionTopicHashTests
         CheckTopicHash("client1/+/level1/+", 0x65004A0000000000, 0xFF00FF00FFFFFFFF);
         CheckTopicHash("client1/building1/level1/#", 0x655D4A0000000000, 0xFFFFFF0000000000);
         CheckTopicHash("client1/+/level1/#", 0x65004A0000000000, 0xFF00FF0000000000);
+    }
+
+    public void Dispose()
+    {
+        _clientSession?.Dispose();
     }
 
     /// <summary>
@@ -414,7 +419,7 @@ public sealed class SubscriptionTopicHashTests
                 foreach (var t in topics)
                 {
                     // replace last letter with x
-                    topicsToFind.Add(t.Substring(0, t.Length - 1) + "x");
+                    topicsToFind.Add(string.Concat(t.AsSpan(0, t.Length - 1), "x"));
                 }
 
                 matchCount = CheckTopicSubscriptions(_clientSession, topicsToFind, "No Wildcard No Match (Replace X)");
@@ -468,7 +473,7 @@ public sealed class SubscriptionTopicHashTests
         Assert.AreEqual(0xff, hashMaskBytes[7], "mask 7 mismatch");
     }
 
-    void CheckTopicHash(string topic, ulong expectedHash, ulong expectedHashMask)
+    static void CheckTopicHash(string topic, ulong expectedHash, ulong expectedHashMask)
     {
         MqttTopicHash.Calculate(topic, out var topicHash, out var hashMask, out _);
 
@@ -481,7 +486,7 @@ public sealed class SubscriptionTopicHashTests
         Assert.AreEqual(expectedHashMask, hashMask, "Topic hash mask not as expected");
     }
 
-    int CheckTopicSubscriptions(MqttSession clientSession, List<string> topicsToFind, string subject)
+    static int CheckTopicSubscriptions(MqttSession clientSession, List<string> topicsToFind, string subject)
     {
         var matchCount = 0;
 
@@ -517,7 +522,7 @@ public sealed class SubscriptionTopicHashTests
         return matchCount;
     }
 
-    byte[] GetBytes(ulong value)
+    static byte[] GetBytes(ulong value)
     {
         var bytes = BitConverter.GetBytes(value);
         // Ensure that highest byte comes first for comparison left to right

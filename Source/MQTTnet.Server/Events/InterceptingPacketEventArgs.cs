@@ -10,7 +10,7 @@ namespace MQTTnet.Server;
 
 public sealed class InterceptingPacketEventArgs : EventArgs
 {
-    public InterceptingPacketEventArgs(CancellationToken cancellationToken, string clientId, string userName, EndPoint remoteEndPoint, MqttPacket packet, IDictionary sessionItems)
+    public InterceptingPacketEventArgs(string clientId, string userName, EndPoint remoteEndPoint, MqttPacket packet, IDictionary sessionItems, CancellationToken cancellationToken)
     {
         CancellationToken = cancellationToken;
         ClientId = clientId ?? throw new ArgumentNullException(nameof(clientId));

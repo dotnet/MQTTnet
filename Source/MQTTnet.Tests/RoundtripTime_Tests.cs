@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Internal;
@@ -45,7 +46,7 @@ public class RoundtripTime_Tests
         for (var i = 0; i < 100; i++)
         {
             response = new TaskCompletionSource<string>();
-            await senderClient.PublishStringAsync("test", DateTime.UtcNow.Ticks.ToString());
+            await senderClient.PublishStringAsync("test", DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture));
             if (!response.Task.Wait(TimeSpan.FromSeconds(5)))
             {
                 throw new TimeoutException();

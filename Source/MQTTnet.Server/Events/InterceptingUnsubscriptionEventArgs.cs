@@ -9,7 +9,7 @@ namespace MQTTnet.Server;
 
 public sealed class InterceptingUnsubscriptionEventArgs : EventArgs
 {
-    public InterceptingUnsubscriptionEventArgs(CancellationToken cancellationToken, string clientId, string userName, IDictionary sessionItems, string topic, List<MqttUserProperty> userProperties)
+    public InterceptingUnsubscriptionEventArgs(string clientId, string userName, IDictionary sessionItems, string topic, List<MqttUserProperty> userProperties, CancellationToken cancellationToken)
     {
         CancellationToken = cancellationToken;
         ClientId = clientId;

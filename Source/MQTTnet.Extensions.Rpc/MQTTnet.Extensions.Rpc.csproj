@@ -3,37 +3,16 @@
     <PropertyGroup>
         <AssemblyName>MQTTnet.Extensions.Rpc</AssemblyName>
         <RootNamespace>MQTTnet.Extensions.Rpc</RootNamespace>
+        <IsAotCompatible>true</IsAotCompatible>
+
         <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
         <Description>This is an extension library which allows executing synchronous device calls including a response using MQTTnet.</Description>
         <PackageId>MQTTnet.Extensions.Rpc</PackageId>
-        <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <IncludeSymbols>true</IncludeSymbols>
-        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
         <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient MQTTServer Server MQTTBroker Broker NETStandard IoT InternetOfThings Messaging Hardware Arduino Sensor Actuator M2M ESP Smart Home Cities Automation Xamarin Blazor</PackageTags>
-        <PackageIcon>nuget.png</PackageIcon>
         <EmbedUntrackedSources>true</EmbedUntrackedSources>
-        <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <PackageLicenseFile>LICENSE</PackageLicenseFile>
         <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
-        <DisableImplicitAspNetCoreAnalyzers>true</DisableImplicitAspNetCoreAnalyzers>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <NoWarn>1591;NETSDK1138;NU1803;NU1901;NU1902</NoWarn>
-        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-        <NuGetAuditMode>all</NuGetAuditMode>
-        <NuGetAudit>true</NuGetAudit>
-        <NuGetAuditLevel>low</NuGetAuditLevel>
-        <AnalysisLevel>latest-Recommended</AnalysisLevel>
-        <IsAotCompatible>true</IsAotCompatible>
     </PropertyGroup>
-
-    <ItemGroup>
-        <None Include="..\..\Images\nuget.png" Pack="true" PackagePath="" />
-        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
-    </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>

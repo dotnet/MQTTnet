@@ -14,7 +14,7 @@ public static class MqttRpcClientExtensions
 {
     public static Task<byte[]> ExecuteAsync(this IMqttRpcClient client, TimeSpan timeout, string methodName, string payload, MqttQualityOfServiceLevel qualityOfServiceLevel, IDictionary<string,object> parameters = null)
     {
-        if (client == null) throw new ArgumentNullException(nameof(client));
+        ArgumentNullException.ThrowIfNull(client);
 
         var buffer = Encoding.UTF8.GetBytes(payload ?? string.Empty);
 

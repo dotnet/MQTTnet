@@ -204,7 +204,7 @@ public static class PerformanceTest
         };
     }
 
-    static Task PublishSingleMessage(IMqttClient client, MqttApplicationMessage applicationMessage, ref int count)
+    static Task<MqttClientPublishResult> PublishSingleMessage(IMqttClient client, MqttApplicationMessage applicationMessage, ref int count)
     {
         Interlocked.Increment(ref count);
         return Task.Run(() => client.PublishAsync(applicationMessage));

@@ -10,12 +10,12 @@ namespace MQTTnet.Server;
 public sealed class InterceptingSubscriptionEventArgs : EventArgs
 {
     public InterceptingSubscriptionEventArgs(
-        CancellationToken cancellationToken,
         string clientId,
         string userName,
         MqttSessionStatus session,
         MqttTopicFilter topicFilter,
-        List<MqttUserProperty> userProperties)
+        List<MqttUserProperty> userProperties,
+        CancellationToken cancellationToken)
     {
         CancellationToken = cancellationToken;
         ClientId = clientId;
@@ -37,11 +37,6 @@ public sealed class InterceptingSubscriptionEventArgs : EventArgs
     public string ClientId { get; }
 
     /// <summary>
-    /// Gets the user name of the client.
-    /// </summary>
-    public string UserName { get; }
-
-    /// <summary>
     ///     Gets or sets whether the broker should close the client connection.
     /// </summary>
     public bool CloseConnection { get; set; }
@@ -61,7 +56,7 @@ public sealed class InterceptingSubscriptionEventArgs : EventArgs
     /// <summary>
     ///     Gets the response which will be sent to the client via the SUBACK packet.
     /// </summary>
-    public SubscribeResponse Response { get; } = new SubscribeResponse();
+    public SubscribeResponse Response { get; } = new();
 
     /// <summary>
     ///     Gets the current client session.
@@ -78,6 +73,11 @@ public sealed class InterceptingSubscriptionEventArgs : EventArgs
     ///     The topic filter can contain topics and wildcards.
     /// </summary>
     public MqttTopicFilter TopicFilter { get; set; }
+
+    /// <summary>
+    ///     Gets the user name of the client.
+    /// </summary>
+    public string UserName { get; }
 
     /// <summary>
     ///     Gets or sets the user properties.

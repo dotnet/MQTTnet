@@ -53,10 +53,7 @@ public sealed class ExchangeEnhancedAuthenticationOptionsFactory
 
     public ExchangeEnhancedAuthenticationOptionsFactory WithUserProperty(string name, string value)
     {
-        if (name == null)
-        {
-            throw new ArgumentNullException(nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
 
         if (_options.UserProperties == null)
         {

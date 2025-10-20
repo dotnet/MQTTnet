@@ -15,7 +15,7 @@ using MQTTnet.Tests.Mockups;
 namespace MQTTnet.Benchmarks;
 
 [MemoryDiagnoser]
-public sealed class ChannelAdapterBenchmark : BaseBenchmark
+public sealed class ChannelAdapterBenchmark : BaseBenchmark, IDisposable
 {
     MqttChannelAdapter _channelAdapter;
     int _iterations;
@@ -85,5 +85,11 @@ public sealed class ChannelAdapterBenchmark : BaseBenchmark
         }
 
         return buffer.ToArray();
+    }
+
+    public void Dispose()
+    {
+        _channelAdapter?.Dispose();
+        _stream?.Dispose();
     }
 }

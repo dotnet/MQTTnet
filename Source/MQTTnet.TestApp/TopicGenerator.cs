@@ -6,7 +6,7 @@ namespace MQTTnet.TestApp;
 
 public class TopicGenerator
 {
-    public void Generate(
+    public static void Generate(
         int numPublishers, int numTopicsPerPublisher,
         out Dictionary<string, List<string>> topicsByPublisher,
         out Dictionary<string, List<string>> singleWildcardTopicsByPublisher,
@@ -84,14 +84,14 @@ public class TopicGenerator
         }
     }
 
-    void AddPublisherTopic(string publisherName, string topic, Dictionary<string, List<string>> topicsByPublisher)
+    static void AddPublisherTopic(string publisherName, string topic, Dictionary<string, List<string>> topicsByPublisher)
     {
-        List<string> topicList;
-        if (!topicsByPublisher.TryGetValue(publisherName, out topicList))
+        if (!topicsByPublisher.TryGetValue(publisherName, out var topicList))
         {
             topicList = new List<string>();
             topicsByPublisher.Add(publisherName, topicList);
         }
+
         topicList.Add(topic);
     }
 }

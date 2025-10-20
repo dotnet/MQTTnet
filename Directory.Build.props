@@ -9,8 +9,8 @@
         <DelaySign>false</DelaySign>
         <SignAssembly>false</SignAssembly>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <EnableNETAnalyzers>false</EnableNETAnalyzers>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
+        <ImplicitUsings>enable</ImplicitUsings>
 
         <NeutralLanguage>en-US</NeutralLanguage>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -20,37 +20,36 @@
         <NuGetAudit>true</NuGetAudit>
         <NuGetAuditLevel>low</NuGetAuditLevel>
 
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <PackageProjectUrl>https://github.com/dotnet/MQTTnet</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/dotnet/MQTTnet.git</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-
-        <!--https://developercommunity.visualstudio.com/t/Code-Rules-that-were-Informational-are-n/10789409#TPIN-N10795393-->
+        <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AnalysisLevel>latest</AnalysisLevel>
         <AnalysisMode>recommended</AnalysisMode>
         <AnalysisModeStyle>default</AnalysisModeStyle>
+
+        <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
+        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
 
-  <PropertyGroup>
-    <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
-    <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-    <EnableMSTestRunner>true</EnableMSTestRunner>
-  </PropertyGroup>
-
-    <!--https://learn.microsoft.com/en-us/dotnet/core/project-sdk/msbuild-props#continuousintegrationbuild-->
-    <PropertyGroup Condition="'$(TF_BUILD)' == 'true' OR '$(GITHUB_ACTIONS)' == 'true'">
+    <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(GeneratePackageOnBuild)'=='true'">
+        <PackageLicenseFile>LICENSE</PackageLicenseFile>
+        <PackageIcon>nuget.png</PackageIcon>
+        <PackageProjectUrl>https://github.com/dotnet/MQTTnet</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/dotnet/MQTTnet.git</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <IncludeSymbols>true</IncludeSymbols>
+        <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+        <PublishRepositoryUrl>true</PublishRepositoryUrl>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    </PropertyGroup>
+
     <ItemGroup Condition="'$(GeneratePackageOnBuild)'=='true'">
-        <None Include="README.md" Condition="Exists('README.md')">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
-        <None Include="..\..\Images\nuget.png">
-            <Pack>True</Pack>
-            <PackagePath>\</PackagePath>
-        </None>
+        <None Include="README.md" Pack="true" PackagePath="" Condition="Exists('README.md')" />
+        <None Include="..\..\Images\nuget.png" Pack="true" PackagePath="" />
+        <None Include="..\..\LICENSE" Pack="true" PackagePath="" />
     </ItemGroup>
 
     <ItemGroup Condition="'$(IncludeSymbols)'=='true'">

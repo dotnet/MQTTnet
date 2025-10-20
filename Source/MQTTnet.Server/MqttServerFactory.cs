@@ -2,12 +2,14 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Diagnostics.CodeAnalysis;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Server.EnhancedAuthentication;
 using MQTTnet.Server.Internal.Adapter;
 
 namespace MQTTnet.Server;
 
+[SuppressMessage("Performance", "CA1822:Mark members as static")]
 public sealed class MqttServerFactory
 {
     public MqttServerFactory() : this(new MqttNetNullLogger())

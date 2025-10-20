@@ -7,14 +7,14 @@ namespace MQTTnet.PowerShell.Cmdlets;
 public class RegisterMqttMessageHandlerCmdlet : PSCmdlet
 {
     [Parameter(Mandatory = true, ValueFromPipeline = true)]
-    public required MqttSession Session { get; set; }
+    public required PsMqttSession Session { get; set; }
 
     [Parameter(Mandatory = true)]
     public ScriptBlock? Action { get; set; }
 
     protected override void ProcessRecord()
     {
-        EventHandler<MqttMessage> handler = (s, e) =>
+        EventHandler<PsMqttMessage> handler = (s, e) =>
         {
             //throw new NotImplementedException();
             //InvokeCommand.InvokeScript(Action, false, PipelineResultTypes.Output, null, new object[] { e.Topic, e.Payload });

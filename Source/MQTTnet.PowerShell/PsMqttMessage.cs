@@ -2,11 +2,22 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Management.Automation;
 using MQTTnet.Packets;
 
 namespace MQTTnet.PowerShell;
 
-public class MqttMessage
+public class PsMqttPublishResult
+{
+
+}
+
+public class PsMqttConnectResult
+{
+
+}
+
+public class PsMqttMessage
 {
     public required string? ContentType { get; init; }
     public required string Payload { get; init; }

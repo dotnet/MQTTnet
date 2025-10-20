@@ -12,18 +12,18 @@ public class DisconnectMqttSessionCmdlet : PSCmdlet
     public string? ReasonString { get; set; }
 
     [Parameter(Mandatory = true, ValueFromPipeline = true)]
-    public required MqttSession Session { get; set; }
+    public required PsMqttSession Session { get; set; }
 
     [Parameter]
     public uint SessionExpiryInterval { get; set; }
 
     protected override void ProcessRecord()
     {
-        if (Session.Client.IsConnected)
+        if (Session.GetClient().IsConnected)
         {
             var options = new MqttClientDisconnectOptionsBuilder().WithSessionExpiryInterval(SessionExpiryInterval).WithReason(Reason).WithReasonString(ReasonString).Build();
 
-            Session.Client.DisconnectAsync(options).GetAwaiter().GetResult();
+            Session.GetClient().DisconnectAsync(options).GetAwaiter().GetResult();
         }
 
         WriteObject("Disconnected.");

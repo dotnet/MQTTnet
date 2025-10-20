@@ -17,10 +17,18 @@ public class PublishMqttMessageCmdlet : PSCmdlet
     public SwitchParameter Retain { get; set; }
 
     [Parameter(Mandatory = true, ValueFromPipeline = true)]
-    public required MqttSession Session { get; set; }
+    public required PsMqttSession Session { get; set; }
 
     [Parameter(Mandatory = true)]
     public required string Topic { get; set; }
+
+    public string? ContentType { get; set; }
+
+    public string? ResponseTopic { get; set; }
+
+    public ushort TopicAlias { get; set; }
+
+    public uint MessageExpiryInterval { get; set; }
 
     protected override void ProcessRecord()
     {
@@ -31,9 +39,13 @@ public class PublishMqttMessageCmdlet : PSCmdlet
             .WithPayload(Encoding.UTF8.GetBytes(Payload ?? string.Empty))
             .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)QoS)
             .WithRetainFlag(Retain)
+            .WithContentType(ContentType)
+            .WithResponseTopic(ResponseTopic)
+            .WithTopicAlias(TopicAlias)
+            .WithMessageExpiryInterval(MessageExpiryInterval)
             .Build();
 
-        var response = Session.Client.PublishAsync(msg).GetAwaiter().GetResult();
+        var response = Session.GetClient().PublishAsync(msg).GetAwaiter().GetResult();
 
         WriteObject(response);
     }

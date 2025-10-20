@@ -22,7 +22,7 @@ public class ConnectMqttSessionCmdlet : PSCmdlet
     public int Port { get; set; } = 1883;
 
     [Parameter(Mandatory = true, ValueFromPipeline = true)]
-    public required MqttSession Session { get; set; }
+    public required PsMqttSession Session { get; set; }
 
     [Parameter]
     public string? Username { get; set; }
@@ -40,7 +40,7 @@ public class ConnectMqttSessionCmdlet : PSCmdlet
             clientOptionsBuilder.WithCredentials(Username, Password);
         }
 
-        var response = Session.Client.ConnectAsync(clientOptionsBuilder.Build()).GetAwaiter().GetResult();
+        var response = Session.GetClient().ConnectAsync(clientOptionsBuilder.Build()).GetAwaiter().GetResult();
 
         WriteObject(response);
     }

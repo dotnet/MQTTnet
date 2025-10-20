@@ -7,11 +7,11 @@ using System.Management.Automation;
 namespace MQTTnet.PowerShell.Cmdlets;
 
 [Cmdlet(VerbsCommunications.Receive, "MqttMessage")]
-[OutputType(typeof(MqttMessage))]
+[OutputType(typeof(PsMqttMessage))]
 public class ReceiveMqttMessageCmdlet : PSCmdlet
 {
     [Parameter(Mandatory = true, ValueFromPipeline = true)]
-    public required MqttSession Session { get; set; }
+    public required PsMqttSession Session { get; set; }
 
     [Parameter]
     [ValidateRange(0, int.MaxValue)]
@@ -19,8 +19,8 @@ public class ReceiveMqttMessageCmdlet : PSCmdlet
 
     protected override void ProcessRecord()
     {
-        var tcs = new TaskCompletionSource<MqttMessage>();
-        EventHandler<MqttMessage>? handler = null;
+        var tcs = new TaskCompletionSource<PsMqttMessage>();
+        EventHandler<PsMqttMessage>? handler = null;
         CancellationTokenSource? cts = null;
 
         try

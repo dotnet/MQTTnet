@@ -7,14 +7,16 @@ namespace MQTTnet.PowerShell.Cmdlets;
 public class UnsubscribeMqttTopicCmdlet : PSCmdlet
 {
     [Parameter(Mandatory = true, ValueFromPipeline = true)]
-    public required MqttSession Session { get; set; }
+    public required PsMqttSession Session { get; set; }
 
     [Parameter(Mandatory = true)]
     public required string Topic { get; set; }
 
     protected override void ProcessRecord()
     {
-        var response = Session.Client.UnsubscribeAsync(Topic).GetAwaiter().GetResult();
+        var options = new MqttClientUnsubscribeOptionsBuilder().WithTopicFilter(Topic).Build();
+
+        var response = Session.GetClient().UnsubscribeAsync(options).GetAwaiter().GetResult();
 
         WriteObject(response);
     }

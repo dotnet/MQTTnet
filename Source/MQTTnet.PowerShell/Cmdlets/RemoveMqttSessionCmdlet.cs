@@ -6,7 +6,7 @@ namespace MQTTnet.PowerShell.Cmdlets;
 public class RemoveMqttSessionCmdlet : PSCmdlet
 {
     [Parameter(Mandatory = true, ValueFromPipeline = true)]
-    public required MqttSession Session { get; set; }
+    public required PsMqttSession Session { get; set; }
 
     protected override void ProcessRecord()
     {

@@ -9,6 +9,7 @@
 // ReSharper disable MemberCanBeMadeStatic.Local
 
 using MQTTnet.Internal;
+using MQTTnet.Protocol;
 using MQTTnet.Server;
 
 namespace MQTTnet.Samples.Server;
@@ -32,6 +33,34 @@ public static class Server_Intercepting_Samples
             // but also changing the payload etc. is required. Changing the QoS after
             // transmitting is not supported and makes no sense at all.
             args.ApplicationMessage.Topic += "/manipulated";
+
+            return CompletedTask.Instance;
+        };
+
+        await mqttServer.StartAsync();
+
+        Console.WriteLine("Press Enter to exit.");
+        Console.ReadLine();
+        await mqttServer.StopAsync();
+    }
+
+    public static async Task Intercept_Subscription()
+    {
+        /*
+         * This sample starts a simple MQTT server which does not allow to subscribe to '#'
+         * Start the server and try to subscribe to '#' with a client of choice.
+         */
+
+        var mqttServerFactory = new MqttServerFactory();
+        var mqttServerOptions = new MqttServerOptionsBuilder().WithDefaultEndpoint().Build();
+
+        using var mqttServer = mqttServerFactory.CreateMqttServer(mqttServerOptions);
+        mqttServer.InterceptingSubscriptionAsync += args =>
+        {
+            if (args.TopicFilter.Topic.Equals("#", StringComparison.Ordinal))
+            {
+                args.Response.ReasonCode = MqttSubscribeReasonCode.NotAuthorized;
+            }
 
             return CompletedTask.Instance;
         };

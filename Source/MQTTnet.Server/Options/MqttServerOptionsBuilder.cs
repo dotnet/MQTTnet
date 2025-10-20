@@ -5,8 +5,8 @@
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
-using MQTTnet.Certificates;
 using System.Security.Cryptography.X509Certificates;
+using MQTTnet.Certificates;
 
 // ReSharper disable UnusedMember.Global
 namespace MQTTnet.Server;
@@ -47,12 +47,22 @@ public class MqttServerOptionsBuilder
         return this;
     }
 
+    /// <summary>
+    ///     Sets the IPv4 network address to bind.
+    ///     Defaults to any available IPv4 address of the machine.
+    ///     Set this to `IPAddress.None` to disable the IPv4 support entirely.
+    /// </summary>
     public MqttServerOptionsBuilder WithDefaultEndpointBoundIPAddress(IPAddress value)
     {
         _options.DefaultEndpointOptions.BoundInterNetworkAddress = value ?? IPAddress.Any;
         return this;
     }
 
+    /// <summary>
+    ///     Sets the IPv6 network address to bind.
+    ///     Defaults to any available IPv6 address of the machine.
+    ///     Set this to `IPAddress.None` to disable the IPv6 support entirely.
+    /// </summary>
     public MqttServerOptionsBuilder WithDefaultEndpointBoundIPV6Address(IPAddress value)
     {
         _options.DefaultEndpointOptions.BoundInterNetworkV6Address = value ?? IPAddress.Any;
@@ -77,12 +87,22 @@ public class MqttServerOptionsBuilder
         return this;
     }
 
+    /// <summary>
+    ///     Sets the IPv4 network address to bind.
+    ///     Defaults to any available IPv4 address of the machine.
+    ///     Set this to `IPAddress.None` to disable the IPv4 support entirely.
+    /// </summary>
     public MqttServerOptionsBuilder WithEncryptedEndpointBoundIPAddress(IPAddress value)
     {
         _options.TlsEndpointOptions.BoundInterNetworkAddress = value;
         return this;
     }
 
+    /// <summary>
+    ///     Sets the IPv6 network address to bind.
+    ///     Defaults to any available IPv6 address of the machine.
+    ///     Set this to `IPAddress.None` to disable the IPv6 support entirely.
+    /// </summary>
     public MqttServerOptionsBuilder WithEncryptedEndpointBoundIPV6Address(IPAddress value)
     {
         _options.TlsEndpointOptions.BoundInterNetworkV6Address = value;
@@ -92,6 +112,35 @@ public class MqttServerOptionsBuilder
     public MqttServerOptionsBuilder WithEncryptedEndpointPort(int value)
     {
         _options.TlsEndpointOptions.Port = value;
+        return this;
+    }
+
+    public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCertificateCredentials credentials = null)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+
+        _options.TlsEndpointOptions.CertificateProvider = new BlobCertificateProvider(value)
+        {
+            Password = credentials?.Password
+        };
+
+        return this;
+    }
+
+    public MqttServerOptionsBuilder WithEncryptionCertificate(X509Certificate2 certificate)
+    {
+        ArgumentNullException.ThrowIfNull(certificate);
+
+        _options.TlsEndpointOptions.CertificateProvider = new X509CertificateProvider(certificate);
+        return this;
+    }
+
+    public MqttServerOptionsBuilder WithEncryptionCertificate(ICertificateProvider certificateProvider)
+    {
+        ArgumentNullException.ThrowIfNull(certificateProvider);
+
+        _options.TlsEndpointOptions.CertificateProvider = certificateProvider;
+
         return this;
     }
 
@@ -111,12 +160,6 @@ public class MqttServerOptionsBuilder
     public MqttServerOptionsBuilder WithMaxPendingMessagesPerClient(int value)
     {
         _options.MaxPendingMessagesPerClient = value;
-        return this;
-    }
-
-    public MqttServerOptionsBuilder WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy value)
-    {
-        _options.PendingMessagesOverflowStrategy = value;
         return this;
     }
 
@@ -141,6 +184,12 @@ public class MqttServerOptionsBuilder
     {
         _options.DefaultEndpointOptions.AllowPacketFragmentation = false;
         _options.TlsEndpointOptions.AllowPacketFragmentation = false;
+        return this;
+    }
+
+    public MqttServerOptionsBuilder WithPendingMessagesOverflowStrategy(MqttPendingMessagesOverflowStrategy value)
+    {
+        _options.PendingMessagesOverflowStrategy = value;
         return this;
     }
 
@@ -180,35 +229,6 @@ public class MqttServerOptionsBuilder
     public MqttServerOptionsBuilder WithTlsEndpointReuseAddress()
     {
         _options.TlsEndpointOptions.ReuseAddress = true;
-        return this;
-    }
-
-    public MqttServerOptionsBuilder WithEncryptionCertificate(byte[] value, IMqttServerCertificateCredentials credentials = null)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        _options.TlsEndpointOptions.CertificateProvider = new BlobCertificateProvider(value)
-        {
-            Password = credentials?.Password
-        };
-
-        return this;
-    }
-
-    public MqttServerOptionsBuilder WithEncryptionCertificate(X509Certificate2 certificate)
-    {
-        ArgumentNullException.ThrowIfNull(certificate);
-
-        _options.TlsEndpointOptions.CertificateProvider = new X509CertificateProvider(certificate);
-        return this;
-    }
-
-    public MqttServerOptionsBuilder WithEncryptionCertificate(ICertificateProvider certificateProvider)
-    {
-        ArgumentNullException.ThrowIfNull(certificateProvider);
-
-        _options.TlsEndpointOptions.CertificateProvider = certificateProvider;
-
         return this;
     }
 }

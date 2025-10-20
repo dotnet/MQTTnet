@@ -9,13 +9,30 @@ namespace MQTTnet.Server;
 
 public abstract class MqttServerTcpEndpointBaseOptions
 {
-    public bool IsEnabled { get; set; }
+    /// <summary>
+    ///     Usually the MQTT packets can be sent partially. This is done by using multiple TCP packets
+    ///     or WebSocket frames etc. Unfortunately not all clients do support this feature and
+    ///     will close the connection when receiving such packets. If such clients are connecting to this
+    ///     server the flag must be set to _false_.
+    /// </summary>
+    public bool AllowPacketFragmentation { get; set; } = true;
 
-    public int Port { get; set; }
+    /// <summary>
+    ///     Gets or sets the IPv4 network address to bind.
+    ///     Defaults to any available IPv4 address of the machine.
+    ///     Set this to `IPAddress.None` to disable the IPv4 support entirely.
+    /// </summary>
+    public IPAddress BoundInterNetworkAddress { get; set; } = IPAddress.Any;
+
+    /// <summary>
+    ///     Gets or sets the IPv6 network address to bind.
+    ///     Defaults to any available IPv6 address of the machine.
+    ///     Set this to `IPAddress.None` to disable the IPv6 support entirely.
+    /// </summary>
+    public IPAddress BoundInterNetworkV6Address { get; set; } = IPAddress.IPv6Any;
 
     public int ConnectionBacklog { get; set; } = 100;
-
-    public bool NoDelay { get; set; } = true;
+    public bool IsEnabled { get; set; }
 
     /// <summary>
     ///     Gets or sets whether the sockets keep alive feature should be used.
@@ -23,13 +40,16 @@ public abstract class MqttServerTcpEndpointBaseOptions
     /// </summary>
     public bool? KeepAlive { get; set; }
 
+    public LingerOption LingerState { get; set; } = new(true, 0);
+
+    public bool NoDelay { get; set; } = true;
+
+    public int Port { get; set; }
+
     /// <summary>
-    ///     Usually the MQTT packets can be send partially. This is done by using multiple TCP packets
-    ///     or WebSocket frames etc. Unfortunately not all clients do support this feature and
-    ///     will close the connection when receiving such packets. If such clients are connecting to this
-    ///     server the flag must be set to _false_.
+    ///     This requires admin permissions on Linux.
     /// </summary>
-    public bool AllowPacketFragmentation { get; set; } = true;
+    public bool ReuseAddress { get; set; }
 
     /// <summary>
     ///     Gets or sets the TCP keep alive interval.
@@ -48,15 +68,4 @@ public abstract class MqttServerTcpEndpointBaseOptions
     ///     The value _null_ indicates that the OS and framework defaults should be used.
     /// </summary>
     public int? TcpKeepAliveTime { get; set; }
-
-    public LingerOption LingerState { get; set; } = new LingerOption(true, 0);
-
-    public IPAddress BoundInterNetworkAddress { get; set; } = IPAddress.Any;
-
-    public IPAddress BoundInterNetworkV6Address { get; set; } = IPAddress.IPv6Any;
-
-    /// <summary>
-    ///     This requires admin permissions on Linux.
-    /// </summary>
-    public bool ReuseAddress { get; set; }
 }

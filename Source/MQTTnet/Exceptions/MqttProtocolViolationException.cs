@@ -6,4 +6,15 @@ using System;
 
 namespace MQTTnet.Exceptions;
 
-public class MqttProtocolViolationException(string message) : Exception(message);
+public class MqttProtocolViolationException(string message) : Exception(message)
+{
+    public const uint VariableByteIntegerMaxValue = 268435455;
+
+    public static void ThrowIfVariableByteIntegerExceedsLimit(uint value)
+    {
+        if (value > VariableByteIntegerMaxValue)
+        {
+            throw new MqttProtocolViolationException($"The value {value} is too large for a variable byte integer ({VariableByteIntegerMaxValue}).");
+        }
+    }
+}

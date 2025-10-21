@@ -4,7 +4,6 @@
 
 using MQTTnet.Adapter;
 using MQTTnet.Formatter;
-using System;
 using MQTTnet.Channel;
 using MQTTnet.Diagnostics.Logger;
 

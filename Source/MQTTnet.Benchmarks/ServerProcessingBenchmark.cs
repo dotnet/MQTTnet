@@ -5,7 +5,6 @@
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Jobs;
 using MQTTnet.Tests.Mockups;
-using MQTTnet.Tests.Server;
 
 namespace MQTTnet.Benchmarks;
 

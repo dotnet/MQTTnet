@@ -4,9 +4,7 @@ using MQTTnet.AspNetCore;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using System.Buffers;
-using System.IO;
 using System.IO.Pipelines;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Benchmarks;
 

@@ -5,9 +5,7 @@
 using MQTTnet.Internal;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
-using System;
 using System.Buffers;
-using System.Collections.Generic;
 
 namespace MQTTnet;
 

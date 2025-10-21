@@ -4,10 +4,7 @@
 
 using BenchmarkDotNet.Attributes;
 using MQTTnet.Packets;
-using System;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Adapter;
 using MQTTnet.Channel;
 using MQTTnet.Formatter;

@@ -7,7 +7,6 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
 
-using MQTTnet.Extensions.TopicTemplate;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Samples.Helpers;
@@ -16,8 +15,6 @@ namespace MQTTnet.Samples.Client;
 
 public static class Client_Subscribe_Samples
 {
-    static readonly MqttTopicTemplate sampleTemplate = new("mqttnet/samples/topic/{id}");
-
     public static async Task Handle_Received_Application_Message()
     {
         /*
@@ -42,7 +39,7 @@ public static class Client_Subscribe_Samples
 
         await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "2")).Build();
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter("mqttnet/samples/topic/2").Build();
 
         await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
@@ -55,7 +52,7 @@ public static class Client_Subscribe_Samples
     public static async Task Send_Responses()
     {
         /*
-         * This sample subscribes to a topic and sends a response to the broker. This requires at least QoS level 1 to work!
+         * This sample subscribes to a topic and sends a detailed response to the client. This requires at least QoS level 1 to work!
          */
 
         var mqttFactory = new MqttClientFactory();
@@ -80,7 +77,7 @@ public static class Client_Subscribe_Samples
 
         await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter("topic/test").Build();
 
         var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 
@@ -106,9 +103,10 @@ public static class Client_Subscribe_Samples
         // Create the subscribe options including several topics with different options.
         // It is also possible to all of these topics using a dedicated call of _SubscribeAsync_ per topic.
         var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder()
-            .WithTopicTemplate(sampleTemplate.WithParameter("id", "1"))
-            .WithTopicTemplate(sampleTemplate.WithParameter("id", "2"), noLocal: true)
-            .WithTopicTemplate(sampleTemplate.WithParameter("id", "3"), retainHandling: MqttRetainHandling.SendAtSubscribe)
+            .WithTopicFilter(t => t.WithTopic("topic/1").WithAtLeastOnceQoS())
+            .WithTopicFilter(t => t.WithTopic("topic/2").WithAtMostOnceQoS())
+            .WithTopicFilter(t => t.WithTopic("topic/3").WithNoLocal())
+            .WithTopicFilter(t => t.WithRetainHandling(MqttRetainHandling.SendAtSubscribe))
             .Build();
 
         var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
@@ -132,7 +130,9 @@ public static class Client_Subscribe_Samples
 
         await mqttClient.ConnectAsync(mqttClientOptions, CancellationToken.None);
 
-        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicTemplate(sampleTemplate.WithParameter("id", "1")).Build();
+        var topicFilter = mqttFactory.CreateTopicFilterBuilder().WithTopic("mqttnet/samples/topic/2").WithAtLeastOnceQoS();
+
+        var mqttSubscribeOptions = mqttFactory.CreateSubscribeOptionsBuilder().WithTopicFilter(topicFilter).Build();
 
         var response = await mqttClient.SubscribeAsync(mqttSubscribeOptions, CancellationToken.None);
 

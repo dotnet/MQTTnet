@@ -4,9 +4,6 @@
 
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using MQTTnet.Internal;
 
 namespace MQTTnet.PacketDispatcher;

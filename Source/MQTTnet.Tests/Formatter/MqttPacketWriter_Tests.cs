@@ -1,5 +1,3 @@
-using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 

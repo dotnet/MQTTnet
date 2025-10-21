@@ -1,5 +1,3 @@
-using System;
-using System.Threading;
 using MQTTnet.Adapter;
 using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Formatter;

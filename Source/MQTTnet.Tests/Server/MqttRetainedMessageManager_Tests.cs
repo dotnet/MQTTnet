@@ -1,5 +1,3 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Threading.Tasks;
 using MQTTnet.Server.Internal;
 
 namespace MQTTnet.Tests.Server;

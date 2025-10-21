@@ -1,15 +1,10 @@
-using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Certificates;
 using MQTTnet.Formatter;
 using MQTTnet.Protocol;

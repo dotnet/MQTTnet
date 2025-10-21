@@ -5,11 +5,8 @@
 using MQTTnet.Channel;
 using MQTTnet.Internal;
 using System.Buffers;
-using System.IO;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MQTTnet.Tests.Mockups;
 

@@ -4,10 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;

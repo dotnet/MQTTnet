@@ -21,7 +21,7 @@ public static class MqttApplicationMessageFactory
             Dup = publishPacket.Dup,
             ResponseTopic = publishPacket.ResponseTopic,
             ContentType = publishPacket.ContentType,
-            CorrelationData = publishPacket.CorrelationData,
+            CorrelationData = publishPacket.CorrelationData.ToArray(),
             MessageExpiryInterval = publishPacket.MessageExpiryInterval,
             SubscriptionIdentifiers = publishPacket.SubscriptionIdentifiers,
             TopicAlias = publishPacket.TopicAlias,

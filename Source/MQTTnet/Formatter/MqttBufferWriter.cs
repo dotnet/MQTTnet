@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Exceptions;
@@ -108,29 +110,45 @@ public sealed class MqttBufferWriter
         WriteBinary(propertyWriter._buffer, 0, propertyWriter.Length);
     }
 
-    public void WriteBinary(byte[] value)
+    public void WriteBinary(ReadOnlySequence<byte> value)
     {
-        if (value == null || value.Length == 0)
+        if (value.IsEmpty)
         {
-            EnsureAdditionalCapacity(2);
-
-            _buffer[_position] = 0;
-            _buffer[_position + 1] = 0;
-
-            IncreasePosition(2);
+            WriteEmptyBinary();
+            return;
         }
-        else
+
+        EnsureAdditionalCapacity(value.Length + 2);
+
+        _buffer[_position] = (byte)(value.Length >> 8);
+        _buffer[_position + 1] = (byte)value.Length;
+
+        Advance(2);
+
+        foreach (var segment in value)
         {
-            var valueLength = value.Length;
-
-            EnsureAdditionalCapacity(valueLength + 2);
-
-            _buffer[_position] = (byte)(valueLength >> 8);
-            _buffer[_position + 1] = (byte)valueLength;
-
-            MqttMemoryHelper.Copy(value, 0, _buffer, _position + 2, valueLength);
-            IncreasePosition(valueLength + 2);
+            MqttMemoryHelper.Copy(segment, 0, _buffer, _position + 2, segment.Length);
+            Advance(segment.Length);
         }
+    }
+
+    public void WriteBinary(ReadOnlyMemory<byte> value)
+    {
+        if (value.Length == 0)
+        {
+            WriteEmptyBinary();
+            return;
+        }
+
+        EnsureAdditionalCapacity(value.Length + 2);
+
+        _buffer[_position] = (byte)(value.Length >> 8);
+        _buffer[_position + 1] = (byte)value.Length;
+
+        Advance(2);
+
+        MqttMemoryHelper.Copy(value, 0, _buffer, _position + 2, (int)value.Length);
+        Advance(value.Length);
     }
 
     public void WriteBinary(byte[] buffer, int offset, int count)
@@ -145,15 +163,7 @@ public sealed class MqttBufferWriter
         EnsureAdditionalCapacity(count);
 
         MqttMemoryHelper.Copy(buffer, offset, _buffer, _position, count);
-        IncreasePosition(count);
-    }
-
-    public void WriteByte(byte @byte)
-    {
-        EnsureAdditionalCapacity(1);
-
-        _buffer[_position] = @byte;
-        IncreasePosition(1);
+        Advance(count);
     }
 
     public void WriteString(string value)
@@ -165,7 +175,7 @@ public sealed class MqttBufferWriter
             _buffer[_position] = 0;
             _buffer[_position + 1] = 0;
 
-            IncreasePosition(2);
+            Advance(2);
         }
         else
         {
@@ -189,26 +199,52 @@ public sealed class MqttBufferWriter
             _buffer[_position] = (byte)(writtenBytes >> 8);
             _buffer[_position + 1] = (byte)writtenBytes;
 
-            IncreasePosition(writtenBytes + 2);
+            Advance(writtenBytes + 2);
         }
+    }
+
+    public void WriteByte(byte @byte)
+    {
+        const int size = sizeof(byte);
+        var span = GetSpan(size);
+
+        span[0] = @byte;
+        Advance(size);
     }
 
     public void WriteTwoByteInteger(ushort value)
     {
-        EnsureAdditionalCapacity(2);
+        const int size = sizeof(ushort);
+        var span = GetSpan(size);
 
-        _buffer[_position] = (byte)(value >> 8);
-        IncreasePosition(1);
-        _buffer[_position] = (byte)value;
-        IncreasePosition(1);
+        BinaryPrimitives.WriteUInt16BigEndian(span, value);
+
+        Advance(size);
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    Span<byte> GetSpan(int size)
+    {
+        var freeSpace = _buffer.Length - _position;
+        if (freeSpace < size)
+        {
+            EnsureCapacity(_buffer.Length + size - freeSpace);
+        }
+
+        return _buffer.AsSpan(_position, size);
+    }
+
+
+
+
+
 
     public void WriteVariableByteInteger(uint value)
     {
         if (value == 0)
         {
             _buffer[_position] = 0;
-            IncreasePosition(1);
+            Advance(1);
 
             return;
         }
@@ -216,7 +252,7 @@ public sealed class MqttBufferWriter
         if (value <= 127)
         {
             _buffer[_position] = (byte)value;
-            IncreasePosition(1);
+            Advance(1);
 
             return;
         }
@@ -238,11 +274,11 @@ public sealed class MqttBufferWriter
             size++;
         } while (x > 0);
 
-        IncreasePosition(size);
+        Advance(size);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    void EnsureAdditionalCapacity(int additionalCapacity)
+    void EnsureAdditionalCapacity(long additionalCapacity)
     {
         var bufferLength = _buffer.Length;
 
@@ -256,7 +292,7 @@ public sealed class MqttBufferWriter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    void EnsureCapacity(int capacity)
+    void EnsureCapacity(long capacity)
     {
         var newBufferLength = _buffer.Length;
 
@@ -275,7 +311,7 @@ public sealed class MqttBufferWriter
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    void IncreasePosition(int length)
+    void Advance(int length)
     {
         _position += length;
 
@@ -285,5 +321,15 @@ public sealed class MqttBufferWriter
             // pre allocated buffer.
             Length = _position;
         }
+    }
+
+    void WriteEmptyBinary()
+    {
+        EnsureAdditionalCapacity(2);
+
+        _buffer[_position] = 0;
+        _buffer[_position + 1] = 0;
+
+        Advance(2);
     }
 }

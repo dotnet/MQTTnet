@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using MQTTnet.Adapter;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
@@ -314,7 +315,7 @@ public sealed class MqttV5PacketDecoder
             }
 
             packet.WillTopic = _bufferReader.ReadString();
-            packet.WillMessage = _bufferReader.ReadBinaryData();
+            packet.WillMessage = new ReadOnlySequence<byte>(_bufferReader.ReadBinaryData());
             packet.WillUserProperties = willPropertiesReader.CollectedUserProperties;
         }
 
@@ -521,7 +522,7 @@ public sealed class MqttV5PacketDecoder
 
         if (!_bufferReader.EndOfStream)
         {
-            packet.PayloadSegment = new ArraySegment<byte>(_bufferReader.ReadRemainingData());
+            packet.Payload = new  ReadOnlySequence<byte>(_bufferReader.ReadBinaryData());
         }
 
         return packet;

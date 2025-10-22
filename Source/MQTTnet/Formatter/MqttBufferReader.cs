@@ -58,7 +58,7 @@ public sealed class MqttBufferReader
         return value;
     }
 
-    public byte[] ReadRemainingData()
+    public ReadOnlyMemory<byte> ReadRemainingData()
     {
         var bufferLength = BytesLeft;
         if (bufferLength == 0)

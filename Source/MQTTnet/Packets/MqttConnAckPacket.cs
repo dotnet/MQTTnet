@@ -13,7 +13,7 @@ public sealed class MqttConnAckPacket : MqttPacket
     /// </summary>
     public string AssignedClientIdentifier { get; set; }
 
-    public byte[] AuthenticationData { get; set; }
+    public ReadOnlyMemory<byte> AuthenticationData { get; set; }
 
     public string AuthenticationMethod { get; set; }
 

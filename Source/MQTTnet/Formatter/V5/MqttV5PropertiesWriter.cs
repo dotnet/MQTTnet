@@ -29,7 +29,7 @@ public sealed class MqttV5PropertiesWriter
         Write(MqttPropertyId.AssignedClientIdentifier, value);
     }
 
-    public void WriteAuthenticationData(byte[] value)
+    public void WriteAuthenticationData(ReadOnlyMemory<byte> value)
     {
         Write(MqttPropertyId.AuthenticationData, value);
     }
@@ -44,7 +44,7 @@ public sealed class MqttV5PropertiesWriter
         Write(MqttPropertyId.ContentType, value);
     }
 
-    public void WriteCorrelationData(byte[] value)
+    public void WriteCorrelationData(ReadOnlyMemory<byte> value)
     {
         Write(MqttPropertyId.CorrelationData, value);
     }
@@ -315,9 +315,9 @@ public sealed class MqttV5PropertiesWriter
         _bufferWriter.WriteString(value);
     }
 
-    void Write(MqttPropertyId id, byte[] value)
+    void Write(MqttPropertyId id, ReadOnlyMemory<byte> value)
     {
-        if (value == null)
+        if (value.Length == 0)
         {
             return;
         }

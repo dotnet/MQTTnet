@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Buffers;
 using MQTTnet.Packets;
 
 namespace MQTTnet.Formatter;
@@ -40,7 +41,7 @@ public static class MqttConnectPacketFactory
         connectPacket.WillFlag = true;
         connectPacket.WillTopic = clientOptions.WillTopic;
         connectPacket.WillQoS = clientOptions.WillQualityOfServiceLevel;
-        connectPacket.WillMessage = clientOptions.WillPayload;
+        connectPacket.WillMessage = new ReadOnlySequence<byte>(clientOptions.WillPayload);
         connectPacket.WillRetain = clientOptions.WillRetain;
         connectPacket.WillDelayInterval = clientOptions.WillDelayInterval;
         connectPacket.WillContentType = clientOptions.WillContentType;

@@ -26,7 +26,7 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
     ///     Gets the authentication data.
     ///     Hint: MQTT 5 feature only.
     /// </summary>
-    public byte[] AuthenticationData => _initialAuthPacket.AuthenticationData;
+    public byte[] AuthenticationData => _initialAuthPacket.AuthenticationData.ToArray();
 
     /// <summary>
     ///     Gets the authentication method.
@@ -67,7 +67,7 @@ public class MqttEnhancedAuthenticationEventArgs : EventArgs
         {
             return new ReceiveMqttEnhancedAuthenticationDataResult
             {
-                AuthenticationData = authPacket.AuthenticationData,
+                AuthenticationData = authPacket.AuthenticationData.ToArray(),
                 AuthenticationMethod = authPacket.AuthenticationMethod,
                 ReasonString = authPacket.ReasonString,
                 ReasonCode = authPacket.ReasonCode,

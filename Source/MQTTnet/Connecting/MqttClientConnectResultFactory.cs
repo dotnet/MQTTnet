@@ -63,7 +63,7 @@ public static class MqttClientConnectResultFactory
             RetainAvailable = connAckPacket.RetainAvailable,
             AssignedClientIdentifier = connAckPacket.AssignedClientIdentifier,
             AuthenticationMethod = connAckPacket.AuthenticationMethod,
-            AuthenticationData = connAckPacket.AuthenticationData,
+            AuthenticationData = connAckPacket.AuthenticationData.ToArray(),
             MaximumPacketSize = connAckPacket.MaximumPacketSize,
             ReasonString = connAckPacket.ReasonString,
             ReceiveMaximum = connAckPacket.ReceiveMaximum,

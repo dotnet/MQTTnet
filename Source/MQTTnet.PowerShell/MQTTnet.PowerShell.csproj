@@ -16,4 +16,13 @@
     <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="bin\Debug\net8.0\MQTTnet.dll" />
+    <Content Include="bin\Debug\net8.0\MQTTnet.pdb" />
+    <Content Include="bin\Debug\net8.0\MQTTnet.PowerShell.deps.json" />
+    <Content Include="bin\Debug\net8.0\MQTTnet.PowerShell.dll" />
+    <Content Include="bin\Debug\net8.0\MQTTnet.PowerShell.pdb" />
+    <Content Include="bin\Debug\net8.0\MQTTnet.xml" />
+  </ItemGroup>
+
 </Project>

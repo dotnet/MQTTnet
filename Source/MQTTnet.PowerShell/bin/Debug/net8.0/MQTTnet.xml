@@ -1,0 +1,1182 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MQTTnet</name>
+    </assembly>
+    <members>
+        <member name="P:MQTTnet.MqttClientConnectedEventArgs.ConnectResult">
+            <summary>
+                Gets the authentication result.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.AssignedClientIdentifier">
+            <summary>
+                Gets the client identifier which was chosen by the server.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.AuthenticationData">
+            <summary>
+                Gets the authentication data.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.AuthenticationMethod">
+            <summary>
+                Gets the authentication method.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.IsSessionPresent">
+            <summary>
+                Gets a value indicating whether a session was already available or not.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.MaximumQoS">
+            <summary>
+                Gets the maximum QoS which is supported by the server.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.ReasonString">
+            <summary>
+                Gets the reason string.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.ResponseInformation">
+            <summary>
+                Gets the response information.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.ResultCode">
+            <summary>
+                Gets the result code.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.RetainAvailable">
+            <summary>
+                Gets whether the server supports retained messages.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.ServerKeepAlive">
+            <summary>
+                MQTTv5 only.
+                Gets the keep alive interval which was chosen by the server instead of the
+                keep alive interval from the client CONNECT packet.
+                A value of 0 indicates that the feature is not used.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.ServerReference">
+            <summary>
+                Gets an alternate server which should be used instead of the current one.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.SharedSubscriptionAvailable">
+            <summary>
+                Gets a value indicating whether the shared subscriptions are available or not.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.SubscriptionIdentifiersAvailable">
+            <summary>
+                Gets a value indicating whether the subscription identifiers are available or not.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.TopicAliasMaximum">
+            <summary>
+                Gets the maximum value for a topic alias. 0 means not supported.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.UserProperties">
+            <summary>
+                Gets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientConnectResult.WildcardSubscriptionAvailable">
+            <summary>
+                Gets a value indicating whether wildcards can be used in subscriptions at the current server.
+                MQTTv5 only.
+            </summary>
+        </member>
+        <member name="T:MQTTnet.Diagnostics.Logger.MqttNetEventLogger">
+            <summary>
+                This logger fires an event when a new message was published.
+            </summary>
+        </member>
+        <member name="M:MQTTnet.Diagnostics.Logger.MqttNetEventLogger.#ctor(System.String)">
+            <summary>
+                This logger fires an event when a new message was published.
+            </summary>
+        </member>
+        <member name="T:MQTTnet.Diagnostics.Logger.MqttNetNullLogger">
+            <summary>
+                This logger does nothing with the messages.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientDisconnectedEventArgs.ConnectResult">
+            <summary>
+                Gets the authentication result.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientDisconnectedEventArgs.Reason">
+            <summary>
+                Gets or sets the reason.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientDisconnectOptions.Reason">
+            <summary>
+                Gets or sets the reason code.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientDisconnectOptions.ReasonString">
+            <summary>
+                Gets or sets the reason string.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientDisconnectOptions.SessionExpiryInterval">
+            <summary>
+                Gets or sets the session expiry interval.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientDisconnectOptions.UserProperties">
+            <summary>
+                Gets or sets the user properties.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="T:MQTTnet.MqttClientDisconnectOptionsReason">
+            <summary>
+                This enum only contains values which are valid when a client sends the reason to the server.
+            </summary>
+        </member>
+        <member name="T:MQTTnet.Formatter.MqttBufferWriter">
+            <summary>
+                This is a custom implementation of a memory stream which provides only MQTTnet relevant features.
+                The goal is to avoid lots of argument checks like in the original stream. The growth rule is the
+                same as for the original MemoryStream in .net. Also this implementation allows accessing the internal
+                buffer for all platforms and .net framework versions (which is not available at the regular MemoryStream).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.ContentType">
+            <summary>
+                Gets or sets the content type.
+                The content type must be a UTF-8 encoded string. The content type value identifies the kind of UTF-8 encoded
+                payload.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.CorrelationData">
+            <summary>
+                Gets or sets the correlation data.
+                In order for the sender to know what sent message the response refers to it can also send correlation data with the
+                published message.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.Dup">
+            <summary>
+                If the DUP flag is set to 0, it indicates that this is the first occasion that the Client or Server has attempted
+                to send this MQTT PUBLISH Packet.
+                If the DUP flag is set to 1, it indicates that this might be re-delivery of an earlier attempt to send the Packet.
+                The DUP flag MUST be set to 1 by the Client or Server when it attempts to re-deliver a PUBLISH Packet
+                [MQTT-3.3.1.-1].
+                The DUP flag MUST be set to 0 for all QoS 0 messages [MQTT-3.3.1-2].
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.MessageExpiryInterval">
+            <summary>
+                Gets or sets the message expiry interval.
+                A client can set the message expiry interval in seconds for each PUBLISH message individually.
+                This interval defines the period of time that the broker stores the PUBLISH message for any matching subscribers
+                that are not currently connected.
+                When no message expiry interval is set, the broker must store the message for matching subscribers indefinitely.
+                When the retained=true option is set on the PUBLISH message, this interval also defines how long a message is
+                retained on a topic.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.PayloadSegment">
+            <summary>
+                Set an ArraySegment as Payload.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.Payload">
+            <summary>
+                Get or set ReadOnlySequence style of Payload.
+                This payload type is used internally and is recommended for public use.
+                It can be used in combination with a RecyclableMemoryStream to publish
+                large buffered messages without allocating large chunks of memory.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.PayloadFormatIndicator">
+            <summary>
+                Gets or sets the payload format indicator.
+                The payload format indicator is part of any MQTT packet that can contain a payload. The indicator is an optional
+                byte value.
+                A value of 0 indicates an “unspecified byte stream”.
+                A value of 1 indicates a "UTF-8 encoded payload".
+                If no payload format indicator is provided, the default value is 0.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.QualityOfServiceLevel">
+            <summary>
+                Gets or sets the quality of service level.
+                The Quality of Service (QoS) level is an agreement between the sender of a message and the receiver of a message
+                that defines the guarantee of delivery for a specific message.
+                There are 3 QoS levels in MQTT:
+                - At most once  (0): Message gets delivered no time, once or multiple times.
+                - At least once (1): Message gets delivered at least once (one time or more often).
+                - Exactly once  (2): Message gets delivered exactly once (It's ensured that the message only comes once).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.ResponseTopic">
+            <summary>
+                Gets or sets the response topic.
+                In MQTT 5 the ability to publish a response topic was added in the publish message which allows you to implement
+                the request/response pattern between clients that is common in web applications.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.Retain">
+            <summary>
+                Gets or sets a value indicating whether the message should be retained or not.
+                A retained message is a normal MQTT message with the retained flag set to true.
+                The broker stores the last retained message and the corresponding QoS for that topic.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.SubscriptionIdentifiers">
+            <summary>
+                Gets or sets the subscription identifiers.
+                The client can specify a subscription identifier when subscribing.
+                The broker will establish and store the mapping relationship between this subscription and subscription identifier
+                when successfully create or modify subscription.
+                The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to
+                the client when need to forward PUBLISH packets matching this subscription to this client.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.Topic">
+            <summary>
+                Gets or sets the MQTT topic.
+                In MQTT, the word topic refers to an UTF-8 string that the broker uses to filter messages for each connected
+                client.
+                The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level
+                separator).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.TopicAlias">
+            <summary>
+                Gets or sets the topic alias.
+                Topic aliases were introduced are a mechanism for reducing the size of published packets by reducing the size of
+                the topic field.
+                A value of 0 indicates no topic alias is used.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessage.UserProperties">
+            <summary>
+                Gets or sets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithContentType(System.String)">
+            <summary>
+                Adds the content type to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithCorrelationData(System.Byte[])">
+            <summary>
+                Adds the correlation data to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithMessageExpiryInterval(System.UInt32)">
+            <summary>
+                Adds the message expiry interval in seconds to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithPayloadFormatIndicator(MQTTnet.Protocol.MqttPayloadFormatIndicator)">
+            <summary>
+                Adds the payload format indicator to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithQualityOfServiceLevel(MQTTnet.Protocol.MqttQualityOfServiceLevel)">
+            <summary>
+                The quality of service level.
+                The Quality of Service (QoS) level is an agreement between the sender of a message and the receiver of a message
+                that defines the guarantee of delivery for a specific message.
+                There are 3 QoS levels in MQTT:
+                - At most once  (0): Message gets delivered no time, once or multiple times.
+                - At least once (1): Message gets delivered at least once (one time or more often).
+                - Exactly once  (2): Message gets delivered exactly once (It's ensured that the message only comes once).
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithResponseTopic(System.String)">
+            <summary>
+                Adds the response topic to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithRetainFlag(System.Boolean)">
+            <summary>
+                A value indicating whether the message should be retained or not.
+                A retained message is a normal MQTT message with the retained flag set to true.
+                The broker stores the last retained message and the corresponding QoS for that topic.
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithSubscriptionIdentifier(System.UInt32)">
+            <summary>
+                Adds the subscription identifier to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithTopic(System.String)">
+            <summary>
+                The MQTT topic.
+                In MQTT, the word topic refers to an UTF-8 string that the broker uses to filter messages for each connected
+                client.
+                The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level
+                separator).
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithTopicAlias(System.UInt16)">
+            <summary>
+                Adds the topic alias to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttApplicationMessageBuilder.WithUserProperty(System.String,System.String)">
+            <summary>
+                Adds the user property to the message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="F:MQTTnet.MqttTopicFilterBuilder._qualityOfServiceLevel">
+            <summary>
+            The quality of service level.
+            The Quality of Service (QoS) level is an agreement between the sender of a message and the receiver of a message that defines the guarantee of delivery for a specific message.
+            There are 3 QoS levels in MQTT:
+            - At most once  (0): Message gets delivered no time, once or multiple times.
+            - At least once (1): Message gets delivered at least once (one time or more often).
+            - Exactly once  (2): Message gets delivered exactly once (It's ensured that the message only comes once).
+            </summary>
+        </member>
+        <member name="F:MQTTnet.MqttTopicFilterBuilder._topic">
+            <summary>
+            The MQTT topic.
+            In MQTT, the word topic refers to an UTF-8 string that the broker uses to filter messages for each connected client.
+            The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level separator).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.AllowPacketFragmentation">
+            <summary>
+                Usually the MQTT packets can be sent partially. This is done by using multiple TCP packets
+                or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
+                will close the connection when receiving such packets. If such a service is used this flag must
+                be set to _false_.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.AuthenticationData">
+            <summary>
+                Gets or sets the authentication data.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.AuthenticationMethod">
+            <summary>
+                Gets or sets the authentication method.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.CleanSession">
+            <summary>
+                Gets or sets a value indicating whether clean sessions are used or not.
+                When a client connects to a broker it can connect using either a non persistent connection (clean session) or a
+                persistent connection.
+                With a non-persistent connection the broker doesn't store any subscription information or undelivered messages for
+                the client.
+                This mode is ideal when the client only publishes messages.
+                It can also connect as a durable client using a persistent connection.
+                In this mode, the broker will store subscription information, and undelivered messages for the client.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.ClientId">
+            <summary>
+                Gets the client identifier.
+                Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.EnhancedAuthenticationHandler">
+            <summary>
+                Gets or sets the handler for AUTH packets.
+                This can happen when connecting or at any time while being already connected.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.KeepAlivePeriod">
+            <summary>
+                Gets or sets the keep alive period.
+                The connection is normally left open by the client so that is can send and receive data at any time.
+                If no data flows over an open connection for a certain time period then the client will generate a PINGREQ and
+                expect to receive a PINGRESP from the broker.
+                This message exchange confirms that the connection is open and working.
+                This period is known as the keep alive period.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.MaximumPacketSize">
+            <summary>
+                Gets or sets the maximum packet size.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.ProtocolVersion">
+            <summary>
+                Gets or sets the protocol version.
+                Default: 5.0.0.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.ReceiveMaximum">
+            <summary>
+                Gets or sets the receive maximum.
+                This gives the maximum length of the received messages.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.RequestProblemInformation">
+            <summary>
+                Gets or sets the request problem information.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.RequestResponseInformation">
+            <summary>
+                Gets or sets the request response information.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.SessionExpiryInterval">
+            <summary>
+                Gets or sets the session expiry interval.
+                The time after a session expires when it's not actively used.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.Timeout">
+            <summary>
+                Gets or sets the timeout which will be applied at socket level and internal operations.
+                The default value is the same as for sockets in .NET in general.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.TopicAliasMaximum">
+            <summary>
+                Gets or sets the topic alias maximum.
+                This gives the maximum length of the topic alias.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.TryPrivate">
+            <summary>
+                If set to true, the bridge will attempt to indicate to the remote broker that it is a bridge not an ordinary
+                client.
+                If successful, this means that loop detection will be more effective and that retained messages will be propagated
+                correctly.
+                <remarks>
+                    Not all brokers support this feature so it may be necessary to set it to false if your bridge does not
+                    connect properly.
+                </remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.UserProperties">
+            <summary>
+                Gets or sets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.ValidateFeatures">
+            <summary>
+                When this feature is enabled the client will check if used properties are supported in the selected protocol
+                version.
+                This feature can be validated if an application message is generated one time but sent via different protocol
+                versions.
+                Default values are applied if the validation is off and features are not supported.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillContentType">
+            <summary>
+                Gets or sets the content type of the will message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillCorrelationData">
+            <summary>
+                Gets or sets the correlation data of the will message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillDelayInterval">
+            <summary>
+                Gets or sets the will delay interval.
+                This is the time between the client disconnect and the time the will message will be sent.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillMessageExpiryInterval">
+            <summary>
+                Gets or sets the message expiry interval of the will message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillPayload">
+            <summary>
+                Gets or sets the payload of the will message.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillPayloadFormatIndicator">
+            <summary>
+                Gets or sets the payload format indicator of the will message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillQualityOfServiceLevel">
+            <summary>
+                Gets or sets the QoS level of the will message.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillResponseTopic">
+            <summary>
+                Gets or sets the response topic of the will message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillRetain">
+            <summary>
+                Gets or sets the retain flag of the will message.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillTopic">
+            <summary>
+                Gets or sets the topic of the will message.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WillUserProperties">
+            <summary>
+                Gets or sets the user properties of the will message.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WriterBufferSize">
+            <summary>
+                Gets or sets the default and initial size of the packet write buffer.
+                It is recommended to set this to a value close to the usual expected packet size * 1.5.
+                Do not change this value when no memory issues are experienced.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientOptions.WriterBufferSizeMax">
+            <summary>
+                Gets or sets the maximum size of the buffer writer. The writer will reduce its internal buffer
+                to this value after serializing a packet.
+                Do not change this value when no memory issues are experienced.
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientOptionsBuilder.WithCleanSession(System.Boolean)">
+            <summary>
+                Clean session is used in MQTT versions below 5.0.0. It is the same as setting "CleanStart".
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientOptionsBuilder.WithCleanStart(System.Boolean)">
+            <summary>
+                Clean start is used in MQTT versions 5.0.0 and higher. It is the same as setting "CleanSession".
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientOptionsBuilder.WithoutPacketFragmentation">
+            <summary>
+                Usually the MQTT packets can be sent partially. This is done by using multiple TCP packets
+                or WebSocket frames etc. Unfortunately not all brokers (like Amazon Web Services (AWS)) do support this feature and
+                will close the connection when receiving such packets. If such a service is used this flag must
+                be set to _true_.
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientOptionsBuilder.WithTimeout(System.TimeSpan)">
+            <summary>
+                Sets the timeout which will be applied at socket level and internal operations.
+                The default value is the same as for sockets in .NET in general.
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientOptionsBuilder.WithTryPrivate(System.Boolean)">
+            <summary>
+                If set to true, the bridge will attempt to indicate to the remote broker that it is a bridge not an ordinary
+                client.
+                If successful, this means that loop detection will be more effective and that retained messages will be propagated
+                correctly.
+                Not all brokers support this feature so it may be necessary to set it to false if your bridge does not connect
+                properly.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientTcpOptions.DualMode">
+            <summary>
+                Gets or sets whether the underlying socket should run in dual mode.
+                Leaving this _null_ will avoid setting this value at socket level.
+                Setting this a value other than _null_ will throw an exception when only IPv4 is supported on the machine.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientTcpOptions.LocalEndpoint">
+            <summary>
+                Gets the local endpoint (network card) which is used by the client.
+                Set it to _null_ to let the OS select the network card.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientTcpOptions.NoDelay">
+            <summary>
+                Enables or disables the Nagle algorithm for the socket.
+                This is only supported for TCP.
+                For other protocol types the value is ignored.
+                Default: true
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientTcpOptions.ProtocolType">
+            <summary>
+                The MQTT transport is usually TCP but when using other endpoint types like
+                unix sockets it must be changed (IP for unix sockets).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientTlsOptions.ClientCertificatesProvider">
+            <summary>
+                Gets or sets the provider for certificates.
+                This provider gets called whenever the client wants to connect
+                with the server and requires certificates for authentication.
+                The implementation may return different certificates each time.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientTlsOptions.TargetHost">
+            <summary>
+                Gets or sets the target host.
+                If the value is null or empty the same host as the TCP socket host will be used.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientWebSocketOptions.KeepAliveInterval">
+            <summary>
+                Gets or sets the keep alive interval for the Web Socket connection.
+                This is not related to the keep alive interval for the MQTT protocol.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientWebSocketOptions.UseDefaultCredentials">
+            <summary>
+                Gets or sets whether the default (system) credentials should be used when connecting via Web Socket connection.
+                This is not related to the credentials which are used for the MQTT protocol.
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientWebSocketOptionsBuilder.WithDangerousDeflateOptions(System.Net.WebSockets.WebSocketDeflateOptions)">
+            <summary>
+            Allows the client to negotiate deflate compression on every message, by using the permessage-deflate WebSocket extension.
+            This adds the Sec-WebSocket-Extensions: permessage-deflate; client_max_window_bits header.
+            </summary>
+            <param name="dangerousDeflateOptions"></param>
+            <returns></returns>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationEventArgs.AuthenticationData">
+            <summary>
+                Gets the authentication data.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationEventArgs.AuthenticationMethod">
+            <summary>
+                Gets the authentication method.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationEventArgs.ReasonCode">
+            <summary>
+                Gets the reason code.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationEventArgs.ReasonString">
+            <summary>
+                Gets the reason string.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationEventArgs.UserProperties">
+            <summary>
+                Gets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationExchangeData.AuthenticationData">
+            <summary>
+                Gets or sets the authentication data.
+                Authentication data is binary information used to transmit multiple iterations of cryptographic secrets of protocol
+                steps.
+                The content of the authentication data is highly dependent on the specific implementation of the authentication
+                method.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationExchangeData.ReasonCode">
+            <summary>
+                Gets or sets the reason code.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationExchangeData.ReasonString">
+            <summary>
+                Gets or sets the reason string.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttEnhancedAuthenticationExchangeData.UserProperties">
+            <summary>
+                Gets or sets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                Hint: MQTT 5 feature only.
+            </summary>
+        </member>
+        <member name="T:MQTTnet.Packets.MqttAuthPacket">
+            <summary>Added in MQTTv5.0.0.</summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttConnAckPacket.AssignedClientIdentifier">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttConnAckPacket.IsSessionPresent">
+            <summary>
+                Added in MQTTv3.1.1.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttConnAckPacket.ReasonCode">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttConnectPacket.CleanSession">
+            <summary>
+                Also called "Clean Start" in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttDisconnectPacket.ReasonCode">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttDisconnectPacket.ReasonString">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttDisconnectPacket.ServerReference">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttDisconnectPacket.SessionExpiryInterval">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttDisconnectPacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubAckPacket.ReasonCode">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubAckPacket.ReasonString">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubAckPacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubCompPacket.ReasonCode">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubCompPacket.ReasonString">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubCompPacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubRecPacket.ReasonCode">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubRecPacket.ReasonString">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubRecPacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubRelPacket.ReasonCode">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubRelPacket.ReasonString">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttPubRelPacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttSubAckPacket.ReasonCodes">
+            <summary>
+                Reason Code is used in MQTTv5.0.0 and backward compatible to v.3.1.1. Return Code is used in MQTTv3.1.1
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttSubAckPacket.ReasonString">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttSubAckPacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttSubscribePacket.SubscriptionIdentifier">
+            <summary>
+                It is a Protocol Error if the Subscription Identifier has a value of 0.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttSubscribePacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttTopicFilter.NoLocal">
+            <summary>
+                Gets or sets a value indicating whether the sender will not receive its own published application messages.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttTopicFilter.QualityOfServiceLevel">
+            <summary>
+                Gets or sets the quality of service level.
+                The Quality of Service (QoS) level is an agreement between the sender of a message and the receiver of a message
+                that defines the guarantee of delivery for a specific message.
+                There are 3 QoS levels in MQTT:
+                - At most once  (0): Message gets delivered no time, once or multiple times.
+                - At least once (1): Message gets delivered at least once (one time or more often).
+                - Exactly once  (2): Message gets delivered exactly once (It's ensured that the message only comes once).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttTopicFilter.RetainAsPublished">
+            <summary>
+                Gets or sets a value indicating whether messages are retained as published or not.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttTopicFilter.RetainHandling">
+            <summary>
+                Gets or sets the retain handling.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttTopicFilter.Topic">
+            <summary>
+                Gets or sets the MQTT topic.
+                In MQTT, the word topic refers to an UTF-8 string that the broker uses to filter messages for each connected
+                client.
+                The topic consists of one or more topic levels. Each topic level is separated by a forward slash (topic level
+                separator).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttUnsubAckPacket.ReasonCodes">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttUnsubAckPacket.ReasonString">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttUnsubAckPacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.Packets.MqttUnsubscribePacket.UserProperties">
+            <summary>
+                Added in MQTTv5.
+            </summary>
+        </member>
+        <member name="F:MQTTnet.Protocol.MqttPubAckReasonCode.NoMatchingSubscribers">
+            <summary>
+            The message is accepted but there are no subscribers. This is sent only by the Server. If the Server knows that there are no matching subscribers, it MAY use this Reason Code instead of 0x00 (Success).
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientPublishResult.IsSuccess">
+            <summary>
+                Returns if the overall status of the publish is a success. This can be the reason code _Success_ or
+                _NoMatchingSubscribers_. _NoMatchingSubscribers_ usually indicates only that no other client is interested in the
+                topic but overall transmit
+                to the server etc. was a success.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientPublishResult.PacketIdentifier">
+            <summary>
+                Gets the packet identifier which was used for this publish.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientPublishResult.ReasonCode">
+            <summary>
+                Gets or sets the reason code.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientPublishResult.ReasonString">
+            <summary>
+                Gets or sets the reason string.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientPublishResult.UserProperties">
+            <summary>
+                Gets or sets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.AutoAcknowledge">
+            <summary>
+                Gets or sets whether the library should send MQTT ACK packets automatically if required.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.ClientId">
+            <summary>
+                Gets the client identifier.
+                Hint: This identifier needs to be unique over all used clients / devices on the broker to avoid connection issues.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.IsHandled">
+            <summary>
+                Gets or sets whether this message was handled.
+                This value can be used in user code for custom control flow.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.PacketIdentifier">
+            <summary>
+                Gets the identifier of the MQTT packet
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.ProcessingFailed">
+            <summary>
+                Indicates if the processing of this PUBLISH packet has failed.
+                If the processing has failed the client will not send an ACK packet etc.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.ReasonCode">
+            <summary>
+                Gets or sets the reason code which will be sent to the server.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.ResponseReasonString">
+            <summary>
+                Gets or sets the reason string which will be sent to the server in the ACK packet.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttApplicationMessageReceivedEventArgs.ResponseUserProperties">
+            <summary>
+                Gets or sets the user properties which will be sent to the server in the ACK packet etc.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeOptions.SubscriptionIdentifier">
+            <summary>
+                Gets or sets the subscription identifier.
+                The client can specify a subscription identifier when subscribing.
+                The broker will establish and store the mapping relationship between this subscription and subscription identifier
+                when successfully create or modify subscription.
+                The broker will return the subscription identifier associated with this PUBLISH packet and the PUBLISH packet to
+                the client when need to forward PUBLISH packets matching this subscription to this client.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeOptions.TopicFilters">
+            <summary>
+                Gets or sets a list of topic filters the client wants to subscribe to.
+                Topic filters can include regular topics or wild cards.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeOptions.UserProperties">
+            <summary>
+                Gets or sets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientSubscribeOptionsBuilder.WithUserProperty(System.String,System.String)">
+            <summary>
+                Adds the user property to the subscribe options.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeResult.Items">
+            <summary>
+                Gets the result for every topic filter item.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeResult.PacketIdentifier">
+            <summary>
+                Gets the packet identifier which was used.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeResult.ReasonString">
+            <summary>
+                Gets the reason string.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeResult.UserProperties">
+            <summary>
+                Gets the user properties which were part of the SUBACK packet.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeResultItem.ResultCode">
+            <summary>
+                Gets or sets the result code.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientSubscribeResultItem.TopicFilter">
+            <summary>
+                Gets or sets the topic filter.
+                The topic filter can contain topics and wildcards.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeOptions.TopicFilters">
+            <summary>
+                Gets or sets a list of topic filters the client wants to unsubscribe from.
+                Topic filters can include regular topics or wild cards.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeOptions.UserProperties">
+            <summary>
+                Gets or sets the user properties.
+                In MQTT 5, user properties are basic UTF-8 string key-value pairs that you can append to almost every type of MQTT
+                packet.
+                As long as you don’t exceed the maximum message size, you can use an unlimited number of user properties to add
+                metadata to MQTT messages and pass information between publisher, broker, and subscriber.
+                The feature is very similar to the HTTP header concept.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientUnsubscribeOptionsBuilder.WithUserProperty(System.String,System.String)">
+            <summary>
+                Adds the user property to the unsubscribe options.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="M:MQTTnet.MqttClientUnsubscribeOptionsBuilder.WithUserProperty(MQTTnet.Packets.MqttUserProperty)">
+            <summary>
+                Adds the user property to the unsubscribe options.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeResult.Items">
+            <summary>
+                Gets the result for every topic filter item.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeResult.PacketIdentifier">
+            <summary>
+                Gets the packet identifier which was used.
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeResult.ReasonString">
+            <summary>
+                Gets the reason string.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeResult.UserProperties">
+            <summary>
+                Gets the user properties which were part of the UNSUBACK packet.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeResultItem.ResultCode">
+            <summary>
+                Gets or sets the result code.
+                <remarks>MQTT 5.0.0+ feature.</remarks>
+            </summary>
+        </member>
+        <member name="P:MQTTnet.MqttClientUnsubscribeResultItem.TopicFilter">
+            <summary>
+                Gets or sets the topic filter.
+                The topic filter can contain topics and wildcards.
+            </summary>
+        </member>
+    </members>
+</doc>

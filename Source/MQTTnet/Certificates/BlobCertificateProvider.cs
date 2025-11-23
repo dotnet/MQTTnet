@@ -14,6 +14,17 @@ public class BlobCertificateProvider(byte[] blob) : ICertificateProvider
 
     public X509Certificate2 GetCertificate()
     {
+        #if NET10_0_OR_GREATER
+
+        if (string.IsNullOrEmpty(Password))
+        {
+            return X509CertificateLoader.LoadCertificate(Blob);
+        }
+
+        return X509CertificateLoader.LoadPkcs12(Blob, Password);
+
+        #else
+
         if (string.IsNullOrEmpty(Password))
         {
             // Use a different overload when no password is specified. Otherwise, the constructor will fail.
@@ -21,5 +32,7 @@ public class BlobCertificateProvider(byte[] blob) : ICertificateProvider
         }
 
         return new X509Certificate2(Blob, Password);
+
+        #endif
     }
 }

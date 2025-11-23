@@ -122,10 +122,12 @@ public sealed class HotSwapCerts_Tests
         certRequest.CertificateExtensions.Add(sanBuilder.Build());
 
         using var certificate = certRequest.CreateSelfSigned(DateTimeOffset.Now.AddMinutes(-10), DateTimeOffset.Now.AddMinutes(10));
+#pragma warning disable SYSLIB0057
         var pfxCertificate = new X509Certificate2(
             certificate.Export(X509ContentType.Pfx),
             (string)null,
             X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.Exportable);
+#pragma warning restore SYSLIB0057
 
         return pfxCertificate;
     }

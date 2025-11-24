@@ -268,6 +268,36 @@ public class MqttServer : Disposable
             cancellationToken);
     }
 
+    /// <summary>
+    /// Injects multiple application messages at once for better performance.
+    /// </summary>
+    public Task InjectApplicationMessages(IReadOnlyList<InjectedMqttApplicationMessage> injectedApplicationMessages, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(injectedApplicationMessages);
+
+        if (injectedApplicationMessages.Count == 0)
+        {
+            return Task.CompletedTask;
+        }
+
+        ThrowIfNotStarted();
+
+        foreach (var injectedApplicationMessage in injectedApplicationMessages)
+        {
+            ArgumentNullException.ThrowIfNull(injectedApplicationMessage);
+            ArgumentNullException.ThrowIfNull(injectedApplicationMessage.ApplicationMessage);
+
+            MqttTopicValidator.ThrowIfInvalid(injectedApplicationMessage.ApplicationMessage.Topic);
+
+            if (string.IsNullOrEmpty(injectedApplicationMessage.ApplicationMessage.Topic))
+            {
+                throw new NotSupportedException("Injected application messages must contain a topic (topic alias is not supported)");
+            }
+        }
+
+        return _clientSessionsManager.DispatchApplicationMessages(injectedApplicationMessages, ServerSessionItems, cancellationToken);
+    }
+
     public async Task StartAsync()
     {
         ThrowIfStarted();

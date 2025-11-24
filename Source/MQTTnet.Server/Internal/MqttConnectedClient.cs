@@ -489,40 +489,73 @@ public sealed class MqttConnectedClient : IDisposable
     async Task SendPacketsLoop(CancellationToken cancellationToken)
     {
         MqttPacketBusItem packetBusItem = null;
+        var batchBuffer = new MqttPacketBusItem[64];
 
         try
         {
             while (!cancellationToken.IsCancellationRequested && !IsTakenOver && IsRunning)
             {
-                packetBusItem = await Session.DequeuePacketAsync(cancellationToken).ConfigureAwait(false);
+                var batchCount = Session.DequeuePackets(batchBuffer, batchBuffer.Length);
+                if (batchCount == 0)
+                {
+                    // Queue is empty, wait for next packet
+                    packetBusItem = await Session.DequeuePacketAsync(cancellationToken).ConfigureAwait(false);
 
-                // Also check the cancellation token here because the dequeue is blocking and may take some time.
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    return;
-                }
+                    // Also check the cancellation token here because the dequeue is blocking and may take some time.
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
 
-                if (IsTakenOver || !IsRunning)
-                {
-                    return;
-                }
+                    if (IsTakenOver || !IsRunning)
+                    {
+                        return;
+                    }
 
-                try
-                {
-                    await SendPacketAsync(packetBusItem.Packet, cancellationToken).ConfigureAwait(false);
-                    packetBusItem.Complete();
+                    try
+                    {
+                        await SendPacketAsync(packetBusItem.Packet, cancellationToken).ConfigureAwait(false);
+                        packetBusItem.Complete();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        packetBusItem.Cancel();
+                    }
+                    catch (Exception exception)
+                    {
+                        packetBusItem.Fail(exception);
+                    }
                 }
-                catch (OperationCanceledException)
+                else
                 {
-                    packetBusItem.Cancel();
-                }
-                catch (Exception exception)
-                {
-                    packetBusItem.Fail(exception);
-                }
-                finally
-                {
-                    await Task.Yield();
+                    // Process batch
+                    for (var i = 0; i < batchCount; i++)
+                    {
+                        if (cancellationToken.IsCancellationRequested || IsTakenOver || !IsRunning)
+                        {
+                            // Cancel remaining items
+                            for (var j = i; j < batchCount; j++)
+                            {
+                                batchBuffer[j].Cancel();
+                            }
+                            return;
+                        }
+
+                        packetBusItem = batchBuffer[i];
+                        try
+                        {
+                            await SendPacketAsync(packetBusItem.Packet, cancellationToken).ConfigureAwait(false);
+                            packetBusItem.Complete();
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            packetBusItem.Cancel();
+                        }
+                        catch (Exception exception)
+                        {
+                            packetBusItem.Fail(exception);
+                        }
+                    }
                 }
             }
         }

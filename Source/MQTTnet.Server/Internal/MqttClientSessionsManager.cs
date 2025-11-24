@@ -32,6 +32,9 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     readonly MqttSessionsStorage _sessionsStorage = new();
     readonly HashSet<MqttSession> _subscriberSessions = [];
 
+    // Cached array to avoid allocations on every message dispatch
+    MqttSession[] _subscriberSessionsCache;
+
     public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, MqttServerEventContainer eventContainer, IMqttNetLogger logger)
     {
         ArgumentNullException.ThrowIfNull(logger);
@@ -78,6 +81,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             if (_sessionsStorage.TryRemoveSession(clientId, out session))
             {
                 _subscriberSessions.Remove(session);
+                _subscriberSessionsCache = null;
             }
         }
         finally
@@ -161,11 +165,12 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     await _retainedMessagesManager.UpdateMessage(senderId, applicationMessage).ConfigureAwait(false);
                 }
 
-                List<MqttSession> subscriberSessions;
+                MqttSession[] subscriberSessions;
                 _sessionsManagementLock.EnterReadLock();
                 try
                 {
-                    subscriberSessions = _subscriberSessions.ToList();
+                    // Use cached array to avoid allocation on every message
+                    subscriberSessions = _subscriberSessionsCache ??= [.. _subscriberSessions];
                 }
                 finally
                 {
@@ -174,6 +179,9 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
                 // Calculate application message topic hash once for subscription checks
                 MqttTopicHash.Calculate(applicationMessage.Topic, out var topicHash, out _, out _);
+
+                // For QoS 0 messages, we can reuse the same packet for all subscribers
+                MqttPublishPacket sharedQos0Packet = null;
 
                 foreach (var session in subscriberSessions)
                 {
@@ -194,28 +202,46 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                         continue;
                     }
 
-                    var publishPacketCopy = MqttPublishPacketFactory.Create(applicationMessage);
-                    publishPacketCopy.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
-                    publishPacketCopy.SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers;
+                    MqttPublishPacket publishPacket;
 
-                    if (publishPacketCopy.QualityOfServiceLevel > 0)
+                    // For QoS 0, reuse the same packet to avoid allocations
+                    if (checkSubscriptionsResult.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce &&
+                        checkSubscriptionsResult.SubscriptionIdentifiers == null &&
+                        !checkSubscriptionsResult.RetainAsPublished)
                     {
-                        publishPacketCopy.PacketIdentifier = session.PacketIdentifierProvider.GetNextPacketIdentifier();
-                    }
-
-                    if (checkSubscriptionsResult.RetainAsPublished)
-                    {
-                        // Transfer the original retain state from the publisher. This is a MQTTv5 feature.
-                        publishPacketCopy.Retain = applicationMessage.Retain;
+                        if (sharedQos0Packet == null)
+                        {
+                            sharedQos0Packet = MqttPublishPacketFactory.Create(applicationMessage);
+                            sharedQos0Packet.QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
+                            sharedQos0Packet.Retain = false;
+                        }
+                        publishPacket = sharedQos0Packet;
                     }
                     else
                     {
-                        publishPacketCopy.Retain = false;
+                        publishPacket = MqttPublishPacketFactory.Create(applicationMessage);
+                        publishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
+                        publishPacket.SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers;
+
+                        if (publishPacket.QualityOfServiceLevel > 0)
+                        {
+                            publishPacket.PacketIdentifier = session.PacketIdentifierProvider.GetNextPacketIdentifier();
+                        }
+
+                        if (checkSubscriptionsResult.RetainAsPublished)
+                        {
+                            // Transfer the original retain state from the publisher. This is a MQTTv5 feature.
+                            publishPacket.Retain = applicationMessage.Retain;
+                        }
+                        else
+                        {
+                            publishPacket.Retain = false;
+                        }
                     }
 
                     matchingSubscribersCount++;
 
-                    var result = session.EnqueueDataPacket(new MqttPacketBusItem(publishPacketCopy));
+                    var result = session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
 
                     if (_eventContainer.ApplicationMessageEnqueuedOrDroppedEvent.HasHandlers)
                     {
@@ -437,6 +463,116 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         }
     }
 
+    /// <summary>
+    /// Dispatch multiple application messages at once for better performance.
+    /// </summary>
+    public async Task DispatchApplicationMessages(
+        IReadOnlyList<InjectedMqttApplicationMessage> messages,
+        IDictionary defaultSessionItems,
+        CancellationToken cancellationToken)
+    {
+        // Get subscriber sessions once for all messages
+        MqttSession[] subscriberSessions;
+        _sessionsManagementLock.EnterReadLock();
+        try
+        {
+            subscriberSessions = _subscriberSessionsCache ??= [.. _subscriberSessions];
+        }
+        finally
+        {
+            _sessionsManagementLock.ExitReadLock();
+        }
+
+        if (subscriberSessions.Length == 0)
+        {
+            return;
+        }
+
+        // Process each message
+        foreach (var injectedMessage in messages)
+        {
+            var applicationMessage = injectedMessage.ApplicationMessage;
+            var senderId = injectedMessage.SenderClientId;
+            var sessionItems = injectedMessage.CustomSessionItems ?? defaultSessionItems;
+
+            // Check interception
+            if (_eventContainer.InterceptingPublishEvent.HasHandlers)
+            {
+                var interceptingPublishEventArgs = new InterceptingPublishEventArgs(applicationMessage, senderId, injectedMessage.SenderUserName, sessionItems, cancellationToken);
+                await _eventContainer.InterceptingPublishEvent.InvokeAsync(interceptingPublishEventArgs).ConfigureAwait(false);
+
+                if (!interceptingPublishEventArgs.ProcessPublish)
+                {
+                    continue;
+                }
+
+                applicationMessage = interceptingPublishEventArgs.ApplicationMessage;
+            }
+
+            if (applicationMessage == null)
+            {
+                continue;
+            }
+
+            // Handle retained messages
+            if (applicationMessage.Retain)
+            {
+                await _retainedMessagesManager.UpdateMessage(senderId, applicationMessage).ConfigureAwait(false);
+            }
+
+            // Calculate topic hash once
+            MqttTopicHash.Calculate(applicationMessage.Topic, out var topicHash, out _, out _);
+
+            // For QoS 0 messages, we can reuse the same packet for all subscribers
+            MqttPublishPacket sharedQos0Packet = null;
+
+            // Dispatch to all subscribers
+            foreach (var session in subscriberSessions)
+            {
+                if (!session.TryCheckSubscriptions(applicationMessage.Topic, topicHash, applicationMessage.QualityOfServiceLevel, senderId, out var checkSubscriptionsResult))
+                {
+                    continue;
+                }
+
+                if (!checkSubscriptionsResult.IsSubscribed)
+                {
+                    continue;
+                }
+
+                MqttPublishPacket publishPacket;
+
+                // For QoS 0, reuse the same packet to avoid allocations
+                if (checkSubscriptionsResult.QualityOfServiceLevel == MqttQualityOfServiceLevel.AtMostOnce &&
+                    checkSubscriptionsResult.SubscriptionIdentifiers == null &&
+                    !checkSubscriptionsResult.RetainAsPublished)
+                {
+                    if (sharedQos0Packet == null)
+                    {
+                        sharedQos0Packet = Formatter.MqttPublishPacketFactory.Create(applicationMessage);
+                        sharedQos0Packet.QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce;
+                        sharedQos0Packet.Retain = false;
+                    }
+                    publishPacket = sharedQos0Packet;
+                }
+                else
+                {
+                    publishPacket = Formatter.MqttPublishPacketFactory.Create(applicationMessage);
+                    publishPacket.QualityOfServiceLevel = checkSubscriptionsResult.QualityOfServiceLevel;
+                    publishPacket.SubscriptionIdentifiers = checkSubscriptionsResult.SubscriptionIdentifiers;
+
+                    if (publishPacket.QualityOfServiceLevel > 0)
+                    {
+                        publishPacket.PacketIdentifier = session.PacketIdentifierProvider.GetNextPacketIdentifier();
+                    }
+
+                    publishPacket.Retain = checkSubscriptionsResult.RetainAsPublished && applicationMessage.Retain;
+                }
+
+                session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+            }
+        }
+    }
+
     public void OnSubscriptionsAdded(MqttSession clientSession, List<string> subscriptionsTopics)
     {
         _sessionsManagementLock.EnterWriteLock();
@@ -446,6 +582,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             {
                 // first subscribed topic
                 _subscriberSessions.Add(clientSession);
+                _subscriberSessionsCache = null;
             }
 
             foreach (var topic in subscriptionsTopics)
@@ -473,6 +610,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
             {
                 // last subscription removed
                 _subscriberSessions.Remove(clientSession);
+                _subscriberSessionsCache = null;
             }
         }
         finally
@@ -563,6 +701,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                     {
                         _logger.Verbose("Deleting existing session of client '{0}' due to clean start", connectPacket.ClientId);
                         _subscriberSessions.Remove(oldSession);
+                        _subscriberSessionsCache = null;
                         session = CreateSession(connectPacket, validatingConnectionEventArgs);
                     }
                     else

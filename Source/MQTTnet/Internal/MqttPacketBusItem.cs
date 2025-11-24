@@ -8,7 +8,7 @@ namespace MQTTnet.Internal;
 
 public sealed class MqttPacketBusItem
 {
-    readonly AsyncTaskCompletionSource<MqttPacket> _promise = new();
+    AsyncTaskCompletionSource<MqttPacket> _promise;
 
     public MqttPacketBusItem(MqttPacket packet)
     {
@@ -21,22 +21,24 @@ public sealed class MqttPacketBusItem
 
     public void Cancel()
     {
-        _promise.TrySetCanceled();
+        _promise?.TrySetCanceled();
     }
 
     public void Complete()
     {
-        _promise.TrySetResult(Packet);
+        _promise?.TrySetResult(Packet);
         Completed?.Invoke(this, EventArgs.Empty);
     }
 
     public void Fail(Exception exception)
     {
-        _promise.TrySetException(exception);
+        _promise?.TrySetException(exception);
     }
 
     public Task<MqttPacket> WaitAsync()
     {
+        // Lazy initialization - only allocate when actually needed
+        _promise ??= new AsyncTaskCompletionSource<MqttPacket>();
         return _promise.Task;
     }
 }

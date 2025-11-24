@@ -99,6 +99,11 @@ public sealed class MqttSession : IDisposable
         return _packetBus.DequeueItemAsync(cancellationToken);
     }
 
+    public int DequeuePackets(MqttPacketBusItem[] buffer, int maxCount)
+    {
+        return _packetBus.DequeueItems(buffer, maxCount);
+    }
+
     public void Dispose()
     {
         _packetBus.Dispose();

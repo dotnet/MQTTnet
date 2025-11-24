@@ -523,7 +523,7 @@ public sealed class SubscriptionTopicHashTests : IDisposable
         // Ensure that highest byte comes first for comparison left to right
         if (BitConverter.IsLittleEndian)
         {
-            return bytes.Reverse().ToArray();
+            return ((IEnumerable<byte>)bytes).Reverse().ToArray();
         }
 
         return bytes;

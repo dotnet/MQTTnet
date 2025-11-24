@@ -128,6 +128,39 @@ public sealed class MqttPacketBus : IDisposable
         }
     }
 
+    public int DequeueItems(MqttPacketBusItem[] buffer, int maxCount)
+    {
+        var count = 0;
+        lock (_syncRoot)
+        {
+            while (count < maxCount)
+            {
+                MqttPacketBusItem item = null;
+
+                for (var i = 0; i < 3; i++)
+                {
+                    MoveActivePartition();
+
+                    var activePartition = _partitions[_activePartition];
+                    if (activePartition.First != null)
+                    {
+                        item = activePartition.First.Value;
+                        activePartition.RemoveFirst();
+                        break;
+                    }
+                }
+
+                if (item == null)
+                {
+                    break;
+                }
+
+                buffer[count++] = item;
+            }
+        }
+        return count;
+    }
+
     public List<MqttPacket> ExportPackets(MqttPacketBusPartition partition)
     {
         lock (_syncRoot)

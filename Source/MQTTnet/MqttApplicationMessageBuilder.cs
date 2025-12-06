@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -264,6 +265,28 @@ public sealed class MqttApplicationMessageBuilder
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
     public MqttApplicationMessageBuilder WithUserProperty(string name, string value)
+    {
+        _userProperties ??= [];
+        _userProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    /// <summary>
+    ///     Adds the user property to the message using a pre-encoded UTF-8 value buffer.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttApplicationMessageBuilder WithUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        _userProperties ??= [];
+        _userProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    /// <summary>
+    ///     Adds the user property to the message using a pre-encoded UTF-8 value buffer.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttApplicationMessageBuilder WithUserProperty(string name, ArraySegment<byte> value)
     {
         _userProperties ??= [];
         _userProperties.Add(new MqttUserProperty(name, value));

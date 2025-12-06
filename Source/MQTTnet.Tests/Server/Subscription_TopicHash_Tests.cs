@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -523,7 +524,8 @@ public sealed class SubscriptionTopicHashTests : IDisposable
         // Ensure that highest byte comes first for comparison left to right
         if (BitConverter.IsLittleEndian)
         {
-            return bytes.Reverse().ToArray();
+            Array.Reverse(bytes);
+            return bytes;
         }
 
         return bytes;

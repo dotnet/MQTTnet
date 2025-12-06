@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -368,6 +369,28 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
+    public MqttClientOptionsBuilder WithUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        if (_options.UserProperties == null)
+        {
+            _options.UserProperties = new List<MqttUserProperty>();
+        }
+
+        _options.UserProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    public MqttClientOptionsBuilder WithUserProperty(string name, ArraySegment<byte> value)
+    {
+        if (_options.UserProperties == null)
+        {
+            _options.UserProperties = new List<MqttUserProperty>();
+        }
+
+        _options.UserProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
     public MqttClientOptionsBuilder WithWebSocketServer(Action<MqttClientWebSocketOptionsBuilder> configure)
     {
         ArgumentNullException.ThrowIfNull(configure);
@@ -463,6 +486,20 @@ public sealed class MqttClientOptionsBuilder
     }
 
     public MqttClientOptionsBuilder WithWillUserProperty(string name, string value)
+    {
+        _options.WillUserProperties ??= [];
+        _options.WillUserProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    public MqttClientOptionsBuilder WithWillUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        _options.WillUserProperties ??= [];
+        _options.WillUserProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    public MqttClientOptionsBuilder WithWillUserProperty(string name, ArraySegment<byte> value)
     {
         _options.WillUserProperties ??= [];
         _options.WillUserProperties.Add(new MqttUserProperty(name, value));

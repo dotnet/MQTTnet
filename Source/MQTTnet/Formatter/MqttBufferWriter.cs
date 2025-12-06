@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 using MQTTnet.Exceptions;
@@ -191,6 +192,29 @@ public sealed class MqttBufferWriter
 
             IncreasePosition(writtenBytes + 2);
         }
+    }
+
+    public void WriteString(ReadOnlyMemory<byte> value)
+    {
+        var span = value.Span;
+        var length = span.Length;
+
+        if (length > EncodedStringMaxLength)
+        {
+            throw new MqttProtocolViolationException($"The maximum string length is 65535. The current string has a length of {length}.");
+        }
+
+        EnsureAdditionalCapacity(length + 2);
+
+        _buffer[_position] = (byte)(length >> 8);
+        _buffer[_position + 1] = (byte)length;
+
+        if (length > 0)
+        {
+            span.CopyTo(_buffer.AsSpan(_position + 2));
+        }
+
+        IncreasePosition(length + 2);
     }
 
     public void WriteTwoByteInteger(ushort value)

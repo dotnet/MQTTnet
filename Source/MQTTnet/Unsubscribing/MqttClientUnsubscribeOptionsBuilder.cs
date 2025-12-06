@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using MQTTnet.Packets;
 
 namespace MQTTnet;
@@ -37,6 +38,24 @@ public sealed class MqttClientUnsubscribeOptionsBuilder
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
     public MqttClientUnsubscribeOptionsBuilder WithUserProperty(string name, string value)
+    {
+        return WithUserProperty(new MqttUserProperty(name, value));
+    }
+
+    /// <summary>
+    ///     Adds the user property to the unsubscribe options.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttClientUnsubscribeOptionsBuilder WithUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        return WithUserProperty(new MqttUserProperty(name, value));
+    }
+
+    /// <summary>
+    ///     Adds the user property to the unsubscribe options.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttClientUnsubscribeOptionsBuilder WithUserProperty(string name, ArraySegment<byte> value)
     {
         return WithUserProperty(new MqttUserProperty(name, value));
     }

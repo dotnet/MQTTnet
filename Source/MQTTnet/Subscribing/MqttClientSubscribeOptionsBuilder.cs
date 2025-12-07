@@ -78,6 +78,7 @@ public sealed class MqttClientSubscribeOptionsBuilder
     ///     Adds the user property to the subscribe options.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
+    [Obsolete("Use the WithUserProperty accepting a ReadOnlyMemory<byte> for better performance.")]
     public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, string value)
     {
         _subscribeOptions.UserProperties ??= [];

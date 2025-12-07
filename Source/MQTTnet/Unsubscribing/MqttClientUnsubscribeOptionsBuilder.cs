@@ -37,6 +37,7 @@ public sealed class MqttClientUnsubscribeOptionsBuilder
     ///     Adds the user property to the unsubscribe options.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
+    [Obsolete("Use the WithUserProperty accepting a ReadOnlyMemory<byte> for better performance.")]
     public MqttClientUnsubscribeOptionsBuilder WithUserProperty(string name, string value)
     {
         return WithUserProperty(new MqttUserProperty(name, value));

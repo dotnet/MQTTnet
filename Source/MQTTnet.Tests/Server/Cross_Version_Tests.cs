@@ -43,7 +43,7 @@ public sealed class Cross_Version_Tests : BaseTestClass
 
         var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("My/Message")
             .WithPayload("My_Payload")
-            .WithUserProperty("A", "B")
+            .WithUserProperty("A", Encoding.UTF8.GetBytes("B"))
             .WithResponseTopic("Response")
             .WithCorrelationData(Encoding.UTF8.GetBytes("Correlation"))
             .Build();

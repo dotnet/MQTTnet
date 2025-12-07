@@ -260,14 +260,7 @@ public sealed class MqttV5PropertiesWriter
         {
             _bufferWriter.WriteByte((byte)MqttPropertyId.UserProperty);
             _bufferWriter.WriteString(property.Name);
-            if (property.HasValueBuffer)
-            {
-                _bufferWriter.WriteString(property.ValueBuffer);
-            }
-            else
-            {
-                _bufferWriter.WriteString(property.Value);
-            }
+            _bufferWriter.WriteString(property.ValueBuffer);
         }
     }
 

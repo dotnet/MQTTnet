@@ -2,22 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Text;
 
 namespace MQTTnet.Packets;
 
 public sealed class MqttUserProperty
 {
-    readonly string _stringValue;
     readonly ReadOnlyMemory<byte> _valueBuffer;
-    readonly bool _hasValueBuffer;
-    string _cachedValue;
 
     public MqttUserProperty(string name, string value)
+        : this(name, new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(value ?? throw new ArgumentNullException(nameof(value)))))
     {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        _stringValue = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     public MqttUserProperty(string name, ArraySegment<byte> value)
@@ -29,44 +24,13 @@ public sealed class MqttUserProperty
     {
         Name = name ?? throw new ArgumentNullException(nameof(name));
         _valueBuffer = value;
-        _hasValueBuffer = true;
-
-        if (value.Length == 0)
-        {
-            _stringValue = string.Empty;
-        }
     }
 
     public string Name { get; }
 
-    public bool HasValueBuffer => _hasValueBuffer;
-
     public ReadOnlyMemory<byte> ValueBuffer => _valueBuffer;
 
-    public string Value
-    {
-        get
-        {
-            if (!_hasValueBuffer)
-            {
-                return _stringValue;
-            }
-
-            if (_cachedValue != null)
-            {
-                return _cachedValue;
-            }
-
-            if (_stringValue != null)
-            {
-                _cachedValue = _stringValue;
-                return _cachedValue;
-            }
-
-            _cachedValue = Encoding.UTF8.GetString(_valueBuffer.Span);
-            return _cachedValue;
-        }
-    }
+    public string Value => this.ReadValueAsString();
 
     public override bool Equals(object obj)
     {
@@ -90,12 +54,7 @@ public sealed class MqttUserProperty
             return false;
         }
 
-        if (_hasValueBuffer && other._hasValueBuffer)
-        {
-            return _valueBuffer.Span.SequenceEqual(other._valueBuffer.Span);
-        }
-
-        return string.Equals(Value, other.Value, StringComparison.Ordinal);
+        return _valueBuffer.Span.SequenceEqual(other._valueBuffer.Span);
     }
 
 
@@ -112,14 +71,7 @@ public sealed class MqttUserProperty
             hashCode.Add(0);
         }
 
-        if (_hasValueBuffer)
-        {
-            hashCode.AddBytes(_valueBuffer.Span);
-        }
-        else
-        {
-            hashCode.Add(_stringValue ?? string.Empty, StringComparer.Ordinal);
-        }
+        hashCode.AddBytes(_valueBuffer.Span);
 
         return hashCode.ToHashCode();
     }

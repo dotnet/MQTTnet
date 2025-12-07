@@ -264,6 +264,7 @@ public sealed class MqttApplicationMessageBuilder
     ///     Adds the user property to the message.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
+    [Obsolete("Use the WithUserProperty accepting a ReadOnlyMemory<byte> for better performance.")]
     public MqttApplicationMessageBuilder WithUserProperty(string name, string value)
     {
         _userProperties ??= [];

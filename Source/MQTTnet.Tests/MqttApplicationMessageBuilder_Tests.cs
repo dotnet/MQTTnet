@@ -77,7 +77,6 @@ public sealed class MqttApplicationMessageBuilder_Tests
         Assert.HasCount(1, message.UserProperties);
 
         var userProperty = message.UserProperties[0];
-        Assert.IsTrue(userProperty.HasValueBuffer);
         CollectionAssert.AreEqual(buffer, userProperty.ValueBuffer.ToArray());
         Assert.AreEqual(value, userProperty.Value);
     }
@@ -94,7 +93,6 @@ public sealed class MqttApplicationMessageBuilder_Tests
         Assert.HasCount(1, message.UserProperties);
 
         var userProperty = message.UserProperties[0];
-        Assert.IsTrue(userProperty.HasValueBuffer);
         CollectionAssert.AreEqual(buffer, userProperty.ValueBuffer.ToArray());
         Assert.AreEqual("segment", userProperty.Value);
     }

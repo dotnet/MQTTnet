@@ -1,19 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-
         <OutputType>Exe</OutputType>
         <IsPackable>false</IsPackable>
         <LangVersion>default</LangVersion>
         <Nullable>disable</Nullable>
         <NoWarn>$(NoWarn);CA1707</NoWarn>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-        <PackageReference Include="MSTest.TestFramework" Version="4.0.2" />
         <PackageReference Include="MSTest" Version="4.0.2" />
-        <PackageReference Include="MSTest.TestAdapter" Version="4.0.2" />
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 

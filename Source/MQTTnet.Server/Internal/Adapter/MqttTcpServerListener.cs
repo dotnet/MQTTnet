@@ -202,9 +202,14 @@ public sealed class MqttTcpServerListener : IDisposable
 
                 clientCertificate = sslStream.RemoteCertificate as X509Certificate2;
 
+                // TODO: Check why this export is needed. Is there something else in the RemoteCertificate as a X509Certificate2???
                 if (clientCertificate == null && sslStream.RemoteCertificate != null)
                 {
+                    #if NET10_0_OR_GREATER
+                    clientCertificate = X509CertificateLoader.LoadCertificate(sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+                    #else
                     clientCertificate = new X509Certificate2(sslStream.RemoteCertificate.Export(X509ContentType.Cert));
+                    #endif
                 }
             }
 

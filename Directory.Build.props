@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
         <Product>MQTTnet</Product>
         <Authors>The contributors of MQTTnet</Authors>
         <Company>The contributors of MQTTnet</Company>
@@ -11,6 +11,7 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
         <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
 
         <NeutralLanguage>en-US</NeutralLanguage>
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -24,10 +25,6 @@
         <AnalysisLevel>latest</AnalysisLevel>
         <AnalysisMode>recommended</AnalysisMode>
         <AnalysisModeStyle>default</AnalysisModeStyle>
-
-        <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
-        <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">

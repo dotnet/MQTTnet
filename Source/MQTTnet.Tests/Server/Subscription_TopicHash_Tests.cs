@@ -520,10 +520,11 @@ public sealed class SubscriptionTopicHashTests : IDisposable
     static byte[] GetBytes(ulong value)
     {
         var bytes = BitConverter.GetBytes(value);
+
         // Ensure that highest byte comes first for comparison left to right
         if (BitConverter.IsLittleEndian)
         {
-            return bytes.Reverse().ToArray();
+            bytes = bytes.AsEnumerable().Reverse().ToArray();
         }
 
         return bytes;

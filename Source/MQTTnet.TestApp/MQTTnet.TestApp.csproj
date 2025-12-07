@@ -2,7 +2,6 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <DebugType>Full</DebugType>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
 

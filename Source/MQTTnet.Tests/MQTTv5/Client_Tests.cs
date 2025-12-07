@@ -4,6 +4,7 @@
 
 using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Microsoft.IO;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -64,8 +65,8 @@ public sealed class Client_Tests : BaseTestClass
         await client.PublishAsync(
             new MqttApplicationMessageBuilder().WithTopic("a")
                 .WithPayload("x")
-                .WithUserProperty("a", "1")
-                .WithUserProperty("b", "2")
+                .WithUserProperty("a", Encoding.UTF8.GetBytes("1"))
+                .WithUserProperty("b", Encoding.UTF8.GetBytes("2"))
                 .WithPayloadFormatIndicator(MqttPayloadFormatIndicator.CharacterData)
                 .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtLeastOnce)
                 .Build());
@@ -98,8 +99,8 @@ public sealed class Client_Tests : BaseTestClass
         var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("Hello")
             .WithPayload("World")
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-            .WithUserProperty("x", "1")
-            .WithUserProperty("y", "2")
+            .WithUserProperty("x", Encoding.UTF8.GetBytes("1"))
+            .WithUserProperty("y", Encoding.UTF8.GetBytes("2"))
             .WithResponseTopic("response")
             .WithContentType("text")
             .WithMessageExpiryInterval(50)
@@ -214,8 +215,8 @@ public sealed class Client_Tests : BaseTestClass
         var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("Hello")
             .WithPayload("World")
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-            .WithUserProperty("x", "1")
-            .WithUserProperty("y", "2")
+            .WithUserProperty("x", Encoding.UTF8.GetBytes("1"))
+            .WithUserProperty("y", Encoding.UTF8.GetBytes("2"))
             .WithResponseTopic("response")
             .WithContentType("text")
             .WithMessageExpiryInterval(50)
@@ -250,8 +251,8 @@ public sealed class Client_Tests : BaseTestClass
         var applicationMessage = new MqttApplicationMessageBuilder().WithTopic("Hello")
             .WithPayload(memoryStream.GetReadOnlySequence())
             .WithQualityOfServiceLevel(MqttQualityOfServiceLevel.AtMostOnce)
-            .WithUserProperty("x", "1")
-            .WithUserProperty("y", "2")
+            .WithUserProperty("x", Encoding.UTF8.GetBytes("1"))
+            .WithUserProperty("y", Encoding.UTF8.GetBytes("2"))
             .WithResponseTopic("response")
             .WithContentType("text")
             .WithMessageExpiryInterval(50)

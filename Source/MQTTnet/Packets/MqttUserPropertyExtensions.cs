@@ -1,0 +1,27 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+using System;
+using System.Text;
+
+namespace MQTTnet.Packets;
+
+internal static class MqttUserPropertyExtensions
+{
+    /// <summary>
+    ///     Reads the value of the user property as a UTF-8 string.
+    /// </summary>
+    public static string ReadValueAsString(this MqttUserProperty userProperty)
+    {
+        ArgumentNullException.ThrowIfNull(userProperty);
+
+        var buffer = userProperty.ValueBuffer;
+        if (buffer.IsEmpty)
+        {
+            return string.Empty;
+        }
+
+        return Encoding.UTF8.GetString(buffer.Span);
+    }
+}

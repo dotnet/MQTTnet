@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Text;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
 using MQTTnet.Packets;
@@ -26,10 +27,10 @@ public class Feature_Tests
 
         var message = new MqttApplicationMessageBuilder()
             .WithTopic("A")
-            .WithUserProperty("x", "1")
-            .WithUserProperty("y", "2")
-            .WithUserProperty("z", "3")
-            .WithUserProperty("z", "4"); // z is here two times to test list of items
+            .WithUserProperty("x", Encoding.UTF8.GetBytes("1"))
+            .WithUserProperty("y", Encoding.UTF8.GetBytes("2"))
+            .WithUserProperty("z", Encoding.UTF8.GetBytes("3"))
+            .WithUserProperty("z", Encoding.UTF8.GetBytes("4")); // z is here two times to test list of items
 
         await receiver.SubscribeAsync(new MqttClientSubscribeOptions
         {

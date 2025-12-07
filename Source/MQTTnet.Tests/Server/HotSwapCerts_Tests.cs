@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Security;
+using System.Net.Sockets;
 using System.Security.Authentication;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -26,6 +27,7 @@ public sealed class HotSwapCerts_Tests
         using var client01 = new ClientTestHarness();
         server.InstallNewClientCert(client01.GetCurrentClientCert());
         client01.InstallNewServerCert(server.GetCurrentServerCert());
+        client01.SetServerPort(server.EncryptedPort);
 
         await server.StartServer();
 
@@ -47,6 +49,7 @@ public sealed class HotSwapCerts_Tests
         using var client01 = new ClientTestHarness();
         server.InstallNewClientCert(client01.GetCurrentClientCert());
         client01.InstallNewServerCert(server.GetCurrentServerCert());
+        client01.SetServerPort(server.EncryptedPort);
 
         await server.StartServer();
 
@@ -70,6 +73,7 @@ public sealed class HotSwapCerts_Tests
         using var client01 = new ClientTestHarness();
         server.InstallNewClientCert(client01.GetCurrentClientCert());
         client01.InstallNewServerCert(server.GetCurrentServerCert());
+        client01.SetServerPort(server.EncryptedPort);
 
         await server.StartServer();
         await client01.Connect();
@@ -91,6 +95,7 @@ public sealed class HotSwapCerts_Tests
         using var client01 = new ClientTestHarness();
         server.InstallNewClientCert(client01.GetCurrentClientCert());
         client01.InstallNewServerCert(server.GetCurrentServerCert());
+        client01.SetServerPort(server.EncryptedPort);
 
         await server.StartServer();
         await client01.Connect();
@@ -135,10 +140,11 @@ public sealed class HotSwapCerts_Tests
     sealed class ClientTestHarness : IDisposable
     {
         readonly HotSwappableClientCertProvider _hotSwapClient = new HotSwappableClientCertProvider();
+        int _serverPort = 8883;
 
         IMqttClient _client;
 
-        public string ClientId => _client.Options.ClientId;
+        public string ClientId => _client?.Options?.ClientId;
 
         public Task Connect()
         {
@@ -147,8 +153,13 @@ public sealed class HotSwapCerts_Tests
 
         public void Dispose()
         {
-            _client.Dispose();
+            _client?.Dispose();
             _hotSwapClient.Dispose();
+        }
+
+        public void SetServerPort(int port)
+        {
+            _serverPort = port;
         }
 
         public X509Certificate2 GetCurrentClientCert()
@@ -216,7 +227,7 @@ public sealed class HotSwapCerts_Tests
                     o => o.WithClientCertificatesProvider(_hotSwapClient)
                         .WithCertificateValidationHandler(_hotSwapClient.OnCertificateValidation)
                         .WithSslProtocols(SslProtocols.Tls12))
-                .WithTcpServer("localhost")
+                .WithTcpServer("localhost", _serverPort)
                 .WithCleanSession()
                 .WithProtocolVersion(MqttProtocolVersion.V500);
 
@@ -242,6 +253,7 @@ public sealed class HotSwapCerts_Tests
     sealed class ServerTestHarness : IDisposable
     {
         readonly HotSwappableServerCertProvider _hotSwapServer = new HotSwappableServerCertProvider();
+        readonly int _encryptedPort = GetFreeTcpPort();
 
         MqttServer _server;
 
@@ -260,6 +272,8 @@ public sealed class HotSwapCerts_Tests
         {
             return _server.DisconnectClientAsync(client.ClientId, MqttDisconnectReasonCode.UnspecifiedError);
         }
+
+        public int EncryptedPort => _encryptedPort;
 
         public X509Certificate2 GetCurrentServerCert()
         {
@@ -281,6 +295,7 @@ public sealed class HotSwapCerts_Tests
             var mqttServerFactory = new MqttServerFactory();
 
             var mqttServerOptions = new MqttServerOptionsBuilder().WithEncryptionCertificate(_hotSwapServer)
+                .WithEncryptedEndpointPort(_encryptedPort)
                 .WithRemoteCertificateValidationCallback(_hotSwapServer.RemoteCertificateValidationCallback)
                 .WithEncryptedEndpoint()
                 .Build();
@@ -289,6 +304,17 @@ public sealed class HotSwapCerts_Tests
 
             _server = mqttServerFactory.CreateMqttServer(mqttServerOptions);
             return _server.StartAsync();
+        }
+
+        static int GetFreeTcpPort()
+        {
+            var listener = new TcpListener(IPAddress.Loopback, 0);
+            listener.Start();
+
+            var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+            listener.Stop();
+
+            return port;
         }
     }
 

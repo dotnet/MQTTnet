@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Globalization;
+using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -98,7 +99,7 @@ public sealed class Subscribe_Tests : BaseTestClass
 
         var client = await testEnvironment.ConnectClient();
 
-        var subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", "1").Build();
+        var subscribeOptions = testEnvironment.ClientFactory.CreateSubscribeOptionsBuilder().WithTopicFilter("X").WithUserProperty("A", Encoding.UTF8.GetBytes("1")).Build();
         await client.SubscribeAsync(subscribeOptions);
 
         CollectionAssert.AreEqual(subscribeOptions.UserProperties.ToList(), eventArgs.UserProperties);

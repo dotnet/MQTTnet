@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -77,7 +78,32 @@ public sealed class MqttClientSubscribeOptionsBuilder
     ///     Adds the user property to the subscribe options.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
+    [Obsolete("Use the WithUserProperty accepting a ReadOnlyMemory<byte> for better performance.")]
     public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, string value)
+    {
+        _subscribeOptions.UserProperties ??= [];
+        _subscribeOptions.UserProperties.Add(new MqttUserProperty(name, value));
+
+        return this;
+    }
+
+    /// <summary>
+    ///     Adds the user property to the subscribe options.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        _subscribeOptions.UserProperties ??= [];
+        _subscribeOptions.UserProperties.Add(new MqttUserProperty(name, value));
+
+        return this;
+    }
+
+    /// <summary>
+    ///     Adds the user property to the subscribe options.
+    ///     <remarks>MQTT 5.0.0+ feature.</remarks>
+    /// </summary>
+    public MqttClientSubscribeOptionsBuilder WithUserProperty(string name, ArraySegment<byte> value)
     {
         _subscribeOptions.UserProperties ??= [];
         _subscribeOptions.UserProperties.Add(new MqttUserProperty(name, value));

@@ -6,13 +6,12 @@
         <LangVersion>default</LangVersion>
         <Nullable>disable</Nullable>
         <NoWarn>$(NoWarn);CA1707</NoWarn>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
     </PropertyGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
-        <PackageReference Include="MSTest" Version="4.0.1" />
-
+        <PackageReference Include="MSTest" Version="4.0.2" />
         <FrameworkReference Include="Microsoft.AspNetCore.App" />
     </ItemGroup>
 
@@ -24,4 +23,10 @@
         <ProjectReference Include="..\MQTTnet.Extensions.TopicTemplate\MQTTnet.Extensions.TopicTemplate.csproj" />
     </ItemGroup>
 
+
+    <ItemGroup>
+    <None Include=".\..\..\global.json"
+            Link="global.json"
+            CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
 </Project>

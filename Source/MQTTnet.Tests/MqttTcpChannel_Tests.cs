@@ -20,7 +20,8 @@ public class MqttTcpChannel_Tests
 
         try
         {
-            serverSocket.Bind(new IPEndPoint(IPAddress.Any, 50001));
+            serverSocket.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+            var serverPort = ((IPEndPoint)serverSocket.LocalEndPoint).Port;
             serverSocket.Listen(0);
 
 #pragma warning disable 4014
@@ -37,7 +38,7 @@ public class MqttTcpChannel_Tests
                 },
                 ct.Token);
 
-            var remoteEndPoint = new DnsEndPoint("localhost", 50001);
+            var remoteEndPoint = new DnsEndPoint("localhost", serverPort);
             using var clientSocket = new CrossPlatformSocket(AddressFamily.InterNetwork, ProtocolType.Tcp);
             await clientSocket.ConnectAsync(remoteEndPoint, CancellationToken.None);
 

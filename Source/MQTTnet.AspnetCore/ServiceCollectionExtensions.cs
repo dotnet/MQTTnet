@@ -44,8 +44,9 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton(new MqttServerFactory());
 
         services.AddSingleton<MqttHostedServer>();
-        services.AddSingleton<IHostedService>(s => s.GetService<MqttHostedServer>());
-        services.AddSingleton<MqttServer>(s => s.GetService<MqttHostedServer>());
+        services.AddHostedService(s => s.GetService<MqttHostedServer>());
+        services.AddSingleton(s => s.GetService<MqttHostedServer>().MqttServer);
+
     }
 
     public static IServiceCollection AddHostedMqttServerWithServices(this IServiceCollection services, Action<AspNetMqttServerOptionsBuilder> configure)

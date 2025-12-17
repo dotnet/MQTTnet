@@ -40,7 +40,30 @@ public sealed class MqttServerClientDisconnectOptionsBuilder
         return this;
     }
 
+    [Obsolete("Please use more performance `WithUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
     public MqttServerClientDisconnectOptionsBuilder WithUserProperty(string name, string value)
+    {
+        if (_options.UserProperties == null)
+        {
+            _options.UserProperties = new List<MqttUserProperty>();
+        }
+
+        _options.UserProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    public MqttServerClientDisconnectOptionsBuilder WithUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        if (_options.UserProperties == null)
+        {
+            _options.UserProperties = new List<MqttUserProperty>();
+        }
+
+        _options.UserProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    public MqttServerClientDisconnectOptionsBuilder WithUserProperty(string name, ArraySegment<byte> value)
     {
         if (_options.UserProperties == null)
         {

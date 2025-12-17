@@ -51,7 +51,36 @@ public sealed class ExchangeEnhancedAuthenticationOptionsFactory
         return this;
     }
 
+    [Obsolete("Please use more performance `WithUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
     public ExchangeEnhancedAuthenticationOptionsFactory WithUserProperty(string name, string value)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+
+        if (_options.UserProperties == null)
+        {
+            _options.UserProperties = new List<MqttUserProperty>();
+        }
+
+        _options.UserProperties.Add(new MqttUserProperty(name, value));
+
+        return this;
+    }
+
+    public ExchangeEnhancedAuthenticationOptionsFactory WithUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        ArgumentNullException.ThrowIfNull(name);
+
+        if (_options.UserProperties == null)
+        {
+            _options.UserProperties = new List<MqttUserProperty>();
+        }
+
+        _options.UserProperties.Add(new MqttUserProperty(name, value));
+
+        return this;
+    }
+
+    public ExchangeEnhancedAuthenticationOptionsFactory WithUserProperty(string name, ArraySegment<byte> value)
     {
         ArgumentNullException.ThrowIfNull(name);
 

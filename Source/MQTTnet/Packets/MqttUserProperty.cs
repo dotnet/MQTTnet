@@ -10,6 +10,7 @@ public sealed class MqttUserProperty
 {
     readonly ReadOnlyMemory<byte> _valueBuffer;
 
+    [Obsolete("Please use more performance constructor with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
     public MqttUserProperty(string name, string value)
         : this(name, new ReadOnlyMemory<byte>(Encoding.UTF8.GetBytes(value ?? throw new ArgumentNullException(nameof(value)))))
     {
@@ -30,6 +31,7 @@ public sealed class MqttUserProperty
 
     public ReadOnlyMemory<byte> ValueBuffer => _valueBuffer;
 
+    [Obsolete("Please use more performance property ValueBuffer or the MqttUserPropertyExtensionMethod `ReadValueAsString`")]
     public string Value => this.ReadValueAsString();
 
     public override bool Equals(object obj)
@@ -79,7 +81,7 @@ public sealed class MqttUserProperty
 
     public override string ToString()
     {
-        return $"{Name} = {Value}";
+        return $"{Name} = {this.ReadValueAsString()}";
     }
 
     static ReadOnlyMemory<byte> CreateMemory(ArraySegment<byte> value)

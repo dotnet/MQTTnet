@@ -7,6 +7,7 @@
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
 
+using System.Text;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Samples.Helpers;
@@ -67,7 +68,7 @@ public static class Client_Subscribe_Samples
             args.ResponseReasonString = "That did not work!";
 
             // User properties require MQTT v5!
-            args.ResponseUserProperties.Add(new MqttUserProperty("My", "Data"));
+            args.ResponseUserProperties.Add(new MqttUserProperty("My", Encoding.UTF8.GetBytes("Data")));
 
             // Now the broker will resend the message again.
             return Task.CompletedTask;

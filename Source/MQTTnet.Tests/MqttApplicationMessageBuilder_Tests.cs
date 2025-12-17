@@ -78,7 +78,7 @@ public sealed class MqttApplicationMessageBuilder_Tests
 
         var userProperty = message.UserProperties[0];
         CollectionAssert.AreEqual(buffer, userProperty.ValueBuffer.ToArray());
-        Assert.AreEqual(value, userProperty.Value);
+        Assert.AreEqual(value, userProperty.ReadValueAsString());
     }
 
     [TestMethod]
@@ -94,7 +94,7 @@ public sealed class MqttApplicationMessageBuilder_Tests
 
         var userProperty = message.UserProperties[0];
         CollectionAssert.AreEqual(buffer, userProperty.ValueBuffer.ToArray());
-        Assert.AreEqual("segment", userProperty.Value);
+        Assert.AreEqual("segment", userProperty.ReadValueAsString());
     }
 
     [TestMethod]
@@ -110,7 +110,9 @@ public sealed class MqttApplicationMessageBuilder_Tests
 
         var stringWriter = new MqttBufferWriter(32, 256);
         var stringPropertiesWriter = new MqttV5PropertiesWriter(stringWriter);
+#pragma warning disable CS0618 // Type or member is obsolete
         stringPropertiesWriter.WriteUserProperties(new List<MqttUserProperty> { new(name, value) });
+#pragma warning restore CS0618 // Type or member is obsolete
 
         CollectionAssert.AreEqual(GetWrittenBytes(stringWriter), GetWrittenBytes(binaryWriter));
     }

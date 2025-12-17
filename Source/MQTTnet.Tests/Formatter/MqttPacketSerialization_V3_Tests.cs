@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Buffers;
+using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
@@ -45,7 +46,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             SubscriptionIdentifiersAvailable = true,
             TopicAliasMaximum = 963,
             WildcardSubscriptionAvailable = true,
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connAckPacket, MqttProtocolVersion.V311);
@@ -96,7 +97,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             SubscriptionIdentifiersAvailable = true,
             TopicAliasMaximum = 963,
             WildcardSubscriptionAvailable = true,
-            UserProperties = [new MqttUserProperty("Foo", "Bar")]
+            UserProperties = [new MqttUserProperty("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connAckPacket, MqttProtocolVersion.V310);
@@ -152,8 +153,8 @@ public sealed class MqttPacketSerialization_V3_Tests
             WillResponseTopic = "WillResponseTopic",
             WillMessageExpiryInterval = 542,
             WillPayloadFormatIndicator = MqttPayloadFormatIndicator.CharacterData,
-            UserProperties = [new("Foo", "Bar")],
-            WillUserProperties = [new("WillFoo", "WillBar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))],
+            WillUserProperties = [new("WillFoo", Encoding.UTF8.GetBytes("WillBar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(connectPacket, MqttProtocolVersion.V311);
@@ -195,7 +196,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             ReasonString = "ReasonString",
             ServerReference = "ServerReference",
             SessionExpiryInterval = 234,
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(disconnectPacket, MqttProtocolVersion.V311);
@@ -235,7 +236,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             PacketIdentifier = 123,
             ReasonCode = MqttPubAckReasonCode.NoMatchingSubscribers,
             ReasonString = "ReasonString",
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(pubAckPacket, MqttProtocolVersion.V311);
@@ -254,7 +255,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             PacketIdentifier = 123,
             ReasonCode = MqttPubCompReasonCode.PacketIdentifierNotFound,
             ReasonString = "ReasonString",
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(pubCompPacket, MqttProtocolVersion.V311);
@@ -284,7 +285,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             SubscriptionIdentifiers = [123],
             MessageExpiryInterval = 38,
             PayloadFormatIndicator = MqttPayloadFormatIndicator.CharacterData,
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(publishPacket, MqttProtocolVersion.V311);
@@ -313,7 +314,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             PacketIdentifier = 123,
             ReasonCode = MqttPubRecReasonCode.UnspecifiedError,
             ReasonString = "ReasonString",
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(pubRecPacket, MqttProtocolVersion.V311);
@@ -333,7 +334,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             PacketIdentifier = 123,
             ReasonCode = MqttPubRelReasonCode.PacketIdentifierNotFound,
             ReasonString = "ReasonString",
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(pubRelPacket, MqttProtocolVersion.V311);
@@ -353,7 +354,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             PacketIdentifier = 123,
             ReasonString = "ReasonString",
             ReasonCodes = [MqttSubscribeReasonCode.GrantedQoS1],
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(subAckPacket, MqttProtocolVersion.V311);
@@ -383,7 +384,7 @@ public sealed class MqttPacketSerialization_V3_Tests
                     QualityOfServiceLevel = MqttQualityOfServiceLevel.AtMostOnce
                 }
             ],
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(subscribePacket, MqttProtocolVersion.V311);
@@ -407,7 +408,7 @@ public sealed class MqttPacketSerialization_V3_Tests
             PacketIdentifier = 123,
             ReasonCodes = [MqttUnsubscribeReasonCode.ImplementationSpecificError],
             ReasonString = "ReasonString",
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(unsubAckPacket, MqttProtocolVersion.V311);
@@ -425,7 +426,7 @@ public sealed class MqttPacketSerialization_V3_Tests
         {
             PacketIdentifier = 123,
             TopicFilters = ["TopicFilter1"],
-            UserProperties = [new("Foo", "Bar")]
+            UserProperties = [new("Foo", Encoding.UTF8.GetBytes("Bar"))]
         };
 
         var deserialized = MqttPacketSerializationHelper.EncodeAndDecodePacket(unsubscribePacket, MqttProtocolVersion.V311);

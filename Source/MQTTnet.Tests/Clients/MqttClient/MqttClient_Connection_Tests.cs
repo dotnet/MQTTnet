@@ -6,6 +6,7 @@ using System.Text;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 using MQTTnet.Server;
 using MQTTnet.Server.EnhancedAuthentication;
@@ -143,7 +144,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
 
         var client = await testEnvironment.ConnectClient();
 
-        var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithUserProperty("test_name", "test_value").Build();
+        var disconnectOptions = testEnvironment.ClientFactory.CreateClientDisconnectOptionsBuilder().WithUserProperty("test_name", Encoding.UTF8.GetBytes("test_value")).Build();
 
         // Perform a clean disconnect.
         await client.DisconnectAsync(disconnectOptions);
@@ -154,7 +155,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
         Assert.IsNotNull(eventArgs.UserProperties);
         Assert.HasCount(1, eventArgs.UserProperties);
         Assert.AreEqual("test_name", eventArgs.UserProperties[0].Name);
-        Assert.AreEqual("test_value", eventArgs.UserProperties[0].Value);
+        Assert.AreEqual("test_value", eventArgs.UserProperties[0].ReadValueAsString());
     }
 
     sealed class TestClientKerberosAuthenticationHandler : IMqttEnhancedAuthenticationHandler
@@ -260,7 +261,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
 
         server.ValidatingConnectionAsync += args =>
         {
-            args.ResponseUserProperties = [new("Property", "Value")];
+            args.ResponseUserProperties = [new("Property", Encoding.UTF8.GetBytes("Value"))];
 
             args.ReasonCode = MqttConnectReasonCode.QuotaExceeded;
 
@@ -274,7 +275,7 @@ public sealed class MqttClient_Connection_Tests : BaseTestClass
         Assert.IsNotNull(response);
         Assert.AreEqual(MqttClientConnectResultCode.QuotaExceeded, response.ResultCode);
         Assert.AreEqual("Property", response.UserProperties[0].Name);
-        Assert.AreEqual("Value", response.UserProperties[0].Value);
+        Assert.AreEqual("Value", response.UserProperties[0].ReadValueAsString());
     }
 
     [TestMethod]

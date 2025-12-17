@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MQTTnet.Packets;
 
-internal static class MqttUserPropertyExtensions
+public static class MqttUserPropertyExtensions
 {
     /// <summary>
     ///     Reads the value of the user property as a UTF-8 string.

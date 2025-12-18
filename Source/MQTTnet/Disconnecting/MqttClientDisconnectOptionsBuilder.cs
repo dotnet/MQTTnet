@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using MQTTnet.Packets;
 
 namespace MQTTnet;
@@ -48,7 +49,22 @@ public sealed class MqttClientDisconnectOptionsBuilder
         return this;
     }
 
+    [Obsolete("Please use more performance `WithUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
     public MqttClientDisconnectOptionsBuilder WithUserProperty(string name, string value)
+    {
+        _userProperties ??= [];
+        _userProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    public MqttClientDisconnectOptionsBuilder WithUserProperty(string name, ReadOnlyMemory<byte> value)
+    {
+        _userProperties ??= [];
+        _userProperties.Add(new MqttUserProperty(name, value));
+        return this;
+    }
+
+    public MqttClientDisconnectOptionsBuilder WithUserProperty(string name, ArraySegment<byte> value)
     {
         _userProperties ??= [];
         _userProperties.Add(new MqttUserProperty(name, value));

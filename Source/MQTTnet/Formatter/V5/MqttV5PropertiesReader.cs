@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using MQTTnet.Exceptions;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -59,14 +60,14 @@ public struct MqttV5PropertiesReader
             if (CurrentPropertyId == MqttPropertyId.UserProperty)
             {
                 var name = _body.ReadString();
-                var value = _body.ReadString();
+                var valueBuffer = ReadUserPropertyValueBuffer();
 
                 if (CollectedUserProperties == null)
                 {
                     CollectedUserProperties = new List<MqttUserProperty>();
                 }
 
-                CollectedUserProperties.Add(new MqttUserProperty(name, value));
+                CollectedUserProperties.Add(new MqttUserProperty(name, valueBuffer));
                 continue;
             }
 
@@ -188,6 +189,11 @@ public struct MqttV5PropertiesReader
     public ushort ReadTopicAliasMaximum()
     {
         return _body.ReadTwoByteInteger();
+    }
+
+    public ReadOnlyMemory<byte> ReadUserPropertyValueBuffer()
+    {
+        return _body.ReadBinaryData();
     }
 
     public bool ReadWildcardSubscriptionAvailable()

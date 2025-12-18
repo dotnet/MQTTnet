@@ -6,6 +6,9 @@
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
 
+using System;
+using System.Text;
+
 namespace MQTTnet.Samples.Client;
 
 public static class Client_Publish_Samples
@@ -83,5 +86,22 @@ public static class Client_Publish_Samples
         await mqttClient.DisconnectAsync();
 
         Console.WriteLine("MQTT application message is published.");
+    }
+
+    public static MqttApplicationMessage Create_Message_With_Binary_User_Property()
+    {
+        /*
+         * MQTT v5 user properties are encoded as UTF-8 strings. When the UTF-8 payload is already available
+         * as a byte buffer, the builder APIs can avoid creating intermediate strings.
+         */
+
+        var encodedValue = Encoding.UTF8.GetBytes("sensor-01");
+
+        return new MqttApplicationMessageBuilder()
+            .WithTopic("samples/metadata/binary")
+            .WithUserProperty("client-id", encodedValue.AsMemory())
+            .WithUserProperty("checksum", new ArraySegment<byte>(encodedValue))
+            .WithPayload("metadata")
+            .Build();
     }
 }

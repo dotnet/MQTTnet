@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;

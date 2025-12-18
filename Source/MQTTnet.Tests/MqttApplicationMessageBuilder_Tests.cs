@@ -2,7 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+using System.Collections.Generic;
 using System.Text;
+using MQTTnet.Formatter;
+using MQTTnet.Formatter.V5;
+using MQTTnet.Packets;
 using MQTTnet.Protocol;
 
 namespace MQTTnet.Tests;
@@ -58,5 +63,65 @@ public sealed class MqttApplicationMessageBuilder_Tests
         Assert.AreEqual("rofl", message.Topic);
         Assert.IsTrue(message.Retain);
         Assert.AreEqual(MqttQualityOfServiceLevel.ExactlyOnce, message.QualityOfServiceLevel);
+    }
+
+    [TestMethod]
+    public void CreateApplicationMessage_UserProperty_ReadOnlyMemoryValue()
+    {
+        var value = "utf8";
+        var buffer = Encoding.UTF8.GetBytes(value);
+
+        var message = new MqttApplicationMessageBuilder().WithTopic("topic").WithUserProperty("name", buffer.AsMemory()).Build();
+
+        Assert.IsNotNull(message.UserProperties);
+        Assert.HasCount(1, message.UserProperties);
+
+        var userProperty = message.UserProperties[0];
+        CollectionAssert.AreEqual(buffer, userProperty.ValueBuffer.ToArray());
+        Assert.AreEqual(value, userProperty.ReadValueAsString());
+    }
+
+    [TestMethod]
+    public void CreateApplicationMessage_UserProperty_ArraySegmentValue()
+    {
+        var buffer = Encoding.UTF8.GetBytes("segment");
+        var segment = new ArraySegment<byte>(buffer);
+
+        var message = new MqttApplicationMessageBuilder().WithTopic("topic").WithUserProperty("name", segment).Build();
+
+        Assert.IsNotNull(message.UserProperties);
+        Assert.HasCount(1, message.UserProperties);
+
+        var userProperty = message.UserProperties[0];
+        CollectionAssert.AreEqual(buffer, userProperty.ValueBuffer.ToArray());
+        Assert.AreEqual("segment", userProperty.ReadValueAsString());
+    }
+
+    [TestMethod]
+    public void WriteUserProperty_FromBinaryBuffer_EqualsStringEncoding()
+    {
+        var name = "name";
+        var value = "value";
+        var encoded = Encoding.UTF8.GetBytes(value);
+
+        var binaryWriter = new MqttBufferWriter(32, 256);
+        var binaryPropertiesWriter = new MqttV5PropertiesWriter(binaryWriter);
+        binaryPropertiesWriter.WriteUserProperties(new List<MqttUserProperty> { new(name, encoded.AsMemory()) });
+
+        var stringWriter = new MqttBufferWriter(32, 256);
+        var stringPropertiesWriter = new MqttV5PropertiesWriter(stringWriter);
+#pragma warning disable CS0618 // Type or member is obsolete
+        stringPropertiesWriter.WriteUserProperties(new List<MqttUserProperty> { new(name, value) });
+#pragma warning restore CS0618 // Type or member is obsolete
+
+        CollectionAssert.AreEqual(GetWrittenBytes(stringWriter), GetWrittenBytes(binaryWriter));
+    }
+
+    static byte[] GetWrittenBytes(MqttBufferWriter writer)
+    {
+        var length = writer.Length;
+        var copy = new byte[length];
+        Array.Copy(writer.GetBuffer(), copy, length);
+        return copy;
     }
 }

@@ -68,12 +68,6 @@ jobs:
     runs-on: windows-latest # Code signing must run on a Windows agent for Authenticode signing (dll/exe)
     if: github.repository == 'dotnet/MQTTnet' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository)
     steps:
-      - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: |
-            6.0.x
-
       - name: Download nuget packages
         uses: actions/download-artifact@v4
         with:
@@ -81,7 +75,7 @@ jobs:
           path: nugets
 
       - name: Install sign CLI tool
-        run: dotnet tool install --tool-path . sign --version 0.9.0-beta.23127.3
+        run: dotnet tool install --tool-path . sign --version 0.9.1-beta.25379.1
 
       - name: Sign nugets
         shell: pwsh

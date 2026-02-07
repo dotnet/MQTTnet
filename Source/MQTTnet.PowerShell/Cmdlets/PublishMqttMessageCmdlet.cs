@@ -1,6 +1,8 @@
+using System.Collections;
 using System.Management.Automation;
 using System.Text;
 using MQTTnet.Protocol;
+using MQTTnet.Packets;
 
 namespace MQTTnet.PowerShell.Cmdlets;
 
@@ -22,29 +24,44 @@ public class PublishMqttMessageCmdlet : PSCmdlet
     [Parameter(Mandatory = true)]
     public required string Topic { get; set; }
 
+    [Parameter]
     public string? ContentType { get; set; }
 
+    [Parameter]
     public string? ResponseTopic { get; set; }
 
+    [Parameter]
     public ushort TopicAlias { get; set; }
 
+    [Parameter]
     public uint MessageExpiryInterval { get; set; }
+
+    [Parameter]
+    public Hashtable? UserProperties { get; set; }
 
     protected override void ProcessRecord()
     {
-        // if (Session == null || !Session.IsConnected)
-        //     throw new InvalidOperationException("Session not connected.");
-
-        var msg = new MqttApplicationMessageBuilder().WithTopic(Topic)
+        var msgBuilder = new MqttApplicationMessageBuilder()
+            .WithTopic(Topic)
             .WithPayload(Encoding.UTF8.GetBytes(Payload ?? string.Empty))
             .WithQualityOfServiceLevel((MqttQualityOfServiceLevel)QoS)
             .WithRetainFlag(Retain)
             .WithContentType(ContentType)
             .WithResponseTopic(ResponseTopic)
             .WithTopicAlias(TopicAlias)
-            .WithMessageExpiryInterval(MessageExpiryInterval)
-            .Build();
+            .WithMessageExpiryInterval(MessageExpiryInterval);
 
+        // Add user properties if provided
+        if (UserProperties != null && UserProperties.Count > 0)
+        {
+            foreach (var key in UserProperties.Keys)
+            {
+                var value = UserProperties[key]?.ToString() ?? string.Empty;
+                msgBuilder.WithUserProperty(key.ToString()!, value);
+            }
+        }
+
+        var msg = msgBuilder.Build();
         var response = Session.GetClient().PublishAsync(msg).GetAwaiter().GetResult();
 
         WriteObject(response);

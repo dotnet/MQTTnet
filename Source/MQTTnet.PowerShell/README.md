@@ -88,6 +88,15 @@ Remove-MqttSession -Session $session
 
 ## Available Cmdlets
 
+### Help and Examples
+
+#### Show-MqttExamples
+Displays quick examples for common MQTT tasks.
+
+```powershell
+Show-MqttExamples
+```
+
 ### Session Management
 
 #### New-MqttSession
@@ -173,6 +182,18 @@ Disposes the MQTT session and releases resources.
 ```powershell
 Remove-MqttSession -Session $session
 ```
+
+#### Test-MqttConnection
+Tests if the MQTT connection is alive by sending a PING packet.
+
+```powershell
+$isAlive = Test-MqttConnection -Session $session -TimeoutSeconds 5
+Write-Host "Connection is alive: $isAlive"
+```
+
+**Parameters:**
+- `Session`: The MQTT session (mandatory)
+- `TimeoutSeconds`: Timeout for the ping operation (default: 5)
 
 ### Publishing
 

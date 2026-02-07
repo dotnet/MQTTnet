@@ -1,5 +1,5 @@
 # Quick smoke test for MQTTnet PowerShell Module
-Import-Module ./bin/Debug/net8.0/MQTTnet.PowerShell.dll
+Import-Module ./bin/Debug/net8.0/MQTTnet.PowerShell.dll -WarningAction SilentlyContinue
 
 Write-Host "Testing module load..." -ForegroundColor Yellow
 $commands = Get-Command -Module MQTTnet.PowerShell
@@ -9,6 +9,14 @@ $commands | ForEach-Object { Write-Host "  - $($_.Name)" -ForegroundColor Cyan }
 Write-Host "`nTesting session creation..." -ForegroundColor Yellow
 $session = New-MqttSession
 Write-Host "Session created successfully!" -ForegroundColor Green
+
+Write-Host "`nTesting Show-MqttExamples..." -ForegroundColor Yellow
+$examples = Show-MqttExamples
+if ($examples) {
+    Write-Host "Examples retrieved successfully!" -ForegroundColor Green
+} else {
+    Write-Host "Failed to retrieve examples!" -ForegroundColor Red
+}
 
 Write-Host "`nTesting session cleanup..." -ForegroundColor Yellow
 Remove-MqttSession -Session $session

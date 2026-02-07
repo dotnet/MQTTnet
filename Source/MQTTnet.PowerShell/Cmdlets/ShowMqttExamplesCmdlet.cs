@@ -31,7 +31,7 @@ MQTTnet PowerShell Module - Quick Examples
 
 3. WebSocket Connection:
    $session = New-MqttSession
-   Connect-MqttSession -Session $session -WebSocketUri 'broker.hivemq.com:8000/mqtt'
+   Connect-MqttSession -Session $session -WebSocketUri 'ws://broker.hivemq.com:8000/mqtt'
    Publish-MqttMessage -Session $session -Topic 'test/ws' -Payload 'Hello WS'
 
 4. TLS/SSL Connection:

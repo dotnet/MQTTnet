@@ -122,7 +122,7 @@ Connect-MqttSession -Session $session -Host "broker.hivemq.com" -Port 8883 `
 
 **WebSocket Connection:**
 ```powershell
-Connect-MqttSession -Session $session -WebSocketUri "broker.hivemq.com:8000/mqtt"
+Connect-MqttSession -Session $session -WebSocketUri "ws://broker.hivemq.com:8000/mqtt"
 ```
 
 **With Authentication:**

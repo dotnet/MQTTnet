@@ -57,7 +57,7 @@ public class PublishMqttMessageCmdlet : PSCmdlet
             foreach (var key in UserProperties.Keys)
             {
                 var value = UserProperties[key]?.ToString() ?? string.Empty;
-                msgBuilder.WithUserProperty(key.ToString()!, value);
+                msgBuilder.WithUserProperty(key.ToString(), value);
             }
         }
 

@@ -78,7 +78,7 @@ Write-Host "`nTesting WebSocket connection..." -ForegroundColor Yellow
 $wsSession = New-MqttSession
 
 try {
-    Connect-MqttSession -Session $wsSession -WebSocketUri "broker.hivemq.com:8000/mqtt"
+    Connect-MqttSession -Session $wsSession -WebSocketUri "ws://broker.hivemq.com:8000/mqtt"
     Write-Host "Connected via WebSocket!" -ForegroundColor Green
     
     Publish-MqttMessage -Session $wsSession -Topic "test/websocket" -Payload "Hello via WebSocket!"

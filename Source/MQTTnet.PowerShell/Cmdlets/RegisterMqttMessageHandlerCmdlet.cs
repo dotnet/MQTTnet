@@ -14,10 +14,43 @@ public class RegisterMqttMessageHandlerCmdlet : PSCmdlet
 
     protected override void ProcessRecord()
     {
-        EventHandler<PsMqttMessage> handler = (s, e) =>
+        // Capture the ScriptBlock and current default runspace (available during cmdlet execution)
+        var scriptBlock = Action ?? throw new ArgumentNullException(nameof(Action));
+        var capturedRunspace = Runspace.DefaultRunspace ?? throw new InvalidOperationException("No default runspace available during cmdlet execution.");
+        var capturedHost = Host;
+
+        EventHandler<PsMqttMessage> handler = (sender, e) =>
         {
-            //throw new NotImplementedException();
-            //InvokeCommand.InvokeScript(Action, false, PipelineResultTypes.Output, null, new object[] { e.Topic, e.Payload });
+            // Run asynchronously to avoid blocking the event thread
+            Task.Run(() =>
+            {
+                // Temporarily set the default runspace for this thread
+                var originalRunspace = Runspace.DefaultRunspace;
+                Runspace.DefaultRunspace = capturedRunspace;
+
+                try
+                {
+                    // Invoke the ScriptBlock directly with arguments (returns Collection<PSObject>)
+                    var results = scriptBlock.Invoke(e.Topic, e.Payload, e); // Pass topic, payload, and full message
+
+                    // Handle output manually (e.g., write to host/console)
+                    foreach (var result in results)
+                    {
+                        capturedHost.UI.WriteLine(result?.ToString() ?? string.Empty);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Handle errors by writing to host error stream
+                    capturedHost.UI.WriteErrorLine($"MQTT handler error: {ex.Message}");
+                    // Optionally: capturedHost.UI.WriteVerboseLine(ex.StackTrace); for more details
+                }
+                finally
+                {
+                    // Restore the original default runspace for this thread
+                    Runspace.DefaultRunspace = originalRunspace;
+                }
+            });
         };
 
         Session.MessageReceived += handler;

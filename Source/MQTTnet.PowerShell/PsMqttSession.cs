@@ -38,6 +38,18 @@ public sealed class PsMqttSession : IDisposable
 
     public event EventHandler<PsMqttMessage>? MessageReceived;
 
+    public void ClearMessageHandlers()
+    {
+        // Remove all event subscribers
+        if (MessageReceived != null)
+        {
+            foreach (var handler in MessageReceived.GetInvocationList())
+            {
+                MessageReceived -= (EventHandler<PsMqttMessage>)handler;
+            }
+        }
+    }
+
     public void Dispose()
     {
         _client.Dispose();

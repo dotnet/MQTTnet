@@ -189,6 +189,11 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                         continue;
                     }
 
+                    if (applicationMessage.DestinationClientId != null && applicationMessage.DestinationClientId != session.Id)
+                    {
+                        continue;
+                    }
+
                     if (await _eventContainer.ShouldSkipEnqueue(senderId, session.Id, applicationMessage))
                     {
                         continue;

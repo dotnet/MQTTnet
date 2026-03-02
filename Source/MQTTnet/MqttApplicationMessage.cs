@@ -140,4 +140,10 @@ public sealed class MqttApplicationMessage
     ///     Hint: MQTT 5 feature only.
     /// </summary>
     public List<MqttUserProperty> UserProperties { get; set; }
+
+    /// <summary>
+    ///     Gets or sets a destination client id. If this value is set, only the specified client is eligible to receive the message.
+    ///     The client must be subscribed to an applicable topic to receive this message.
+    /// </summary>
+    public string DestinationClientId { get; set; }
 }

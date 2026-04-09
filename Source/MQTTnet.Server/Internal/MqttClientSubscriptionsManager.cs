@@ -26,6 +26,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
 
     // Use subscription lock to maintain consistency across subscriptions and topic hash dictionaries
     readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
+    volatile bool _isDisposed;
     readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
     public MqttClientSubscriptionsManager(
@@ -42,6 +43,11 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
 
     public CheckSubscriptionsResult CheckSubscriptions(string topic, ulong topicHash, MqttQualityOfServiceLevel qualityOfServiceLevel, string senderId)
     {
+        if (_isDisposed)
+        {
+            return CheckSubscriptionsResult.NotSubscribed;
+        }
+
         var possibleSubscriptions = new List<MqttSubscription>();
 
         // Check for possible subscriptions. They might have collisions but this is fine.
@@ -156,6 +162,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
 
     public void Dispose()
     {
+        _isDisposed = true;
         _subscriptionsLock?.Dispose();
     }
 
@@ -219,6 +226,11 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
 
     public async Task<UnsubscribeResult> Unsubscribe(MqttUnsubscribePacket unsubscribePacket, CancellationToken cancellationToken)
     {
+        if (_isDisposed)
+        {
+            return new UnsubscribeResult();
+        }
+
         ArgumentNullException.ThrowIfNull(unsubscribePacket);
 
         var result = new UnsubscribeResult();
@@ -335,6 +347,15 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
             subscriptionIdentifier);
 
         bool isNewSubscription;
+
+        if (_isDisposed)
+        {
+            return new CreateSubscriptionResult
+            {
+                IsNewSubscription = false,
+                Subscription = subscription
+            };
+        }
 
         // Add to subscriptions and maintain topic hash dictionaries
 

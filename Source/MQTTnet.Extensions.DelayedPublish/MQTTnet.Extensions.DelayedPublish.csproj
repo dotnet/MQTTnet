@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>MQTTnet.Extensions.DelayedPublish</AssemblyName>
+        <RootNamespace>MQTTnet.Extensions.DelayedPublish</RootNamespace>
+        <IsAotCompatible>true</IsAotCompatible>
+
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Description>
+            Adds EMQX-compatible delayed publish support to the MQTTnet broker.
+            Clients publishing to $delayed/&lt;seconds&gt;/&lt;topic&gt; (or $delayed/&lt;unix-epoch&gt;/&lt;topic&gt;)
+            will have their messages held by the broker and dispatched at the requested time.
+        </Description>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageId>MQTTnet.Extensions.DelayedPublish</PackageId>
+        <PackageTags>MQTT Message Queue Telemetry MQTTServer Broker Delayed Scheduled EMQX</PackageTags>
+        <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj" />
+    </ItemGroup>
+
+</Project>

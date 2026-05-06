@@ -954,6 +954,21 @@ public sealed class MqttClient : Disposable, IMqttClient
                 case MqttPublishPacket publishPacket:
                     EnqueueReceivedPublishPacket(publishPacket);
                     break;
+                case MqttPubAckPacket _:
+                case MqttPubCompPacket _:
+                case MqttSubAckPacket _:
+                case MqttUnsubAckPacket _:
+                    // Acknowledgement packets are dispatched to the awaiter that issued the
+                    // matching request. If no awaiter is registered (for example because the
+                    // request was cancelled or timed out client-side before the broker replied)
+                    // the late acknowledgement is harmless and must NOT terminate the connection.
+                    // See issues #2078 and #2079.
+                    if (!_packetDispatcher.TryDispatch(packet))
+                    {
+                        _logger.Warning("Received {0} for an unknown packet identifier. Probably the matching request was cancelled or timed out.", packet.GetType().Name);
+                    }
+
+                    break;
                 case MqttPubRecPacket pubRecPacket:
                     await ProcessReceivedPubRecPacket(pubRecPacket, cancellationToken).ConfigureAwait(false);
                     break;

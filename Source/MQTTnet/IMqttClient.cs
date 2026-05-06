@@ -2,6 +2,21 @@ using MQTTnet.Diagnostics.PacketInspection;
 
 namespace MQTTnet;
 
+/// <summary>
+/// Represents an MQTT client.
+/// <para>
+/// Instances of <see cref="IMqttClient" /> are safe for concurrent use: <see cref="PublishAsync" />,
+/// <see cref="SubscribeAsync" />, <see cref="UnsubscribeAsync" /> and <see cref="PingAsync" /> may be
+/// invoked from multiple threads at the same time. Outgoing packets are serialized internally so
+/// that they reach the network in well-formed order, and incoming acknowledgements are routed back
+/// to the corresponding caller via the packet identifier.
+/// </para>
+/// <para>
+/// <see cref="ConnectAsync" /> and <see cref="DisconnectAsync" /> must not be called concurrently
+/// with each other or with publish/subscribe operations. Coordinate connection lifecycle changes on
+/// a single thread.
+/// </para>
+/// </summary>
 public interface IMqttClient : IDisposable
 {
     event Func<MqttApplicationMessageReceivedEventArgs, Task> ApplicationMessageReceivedAsync;

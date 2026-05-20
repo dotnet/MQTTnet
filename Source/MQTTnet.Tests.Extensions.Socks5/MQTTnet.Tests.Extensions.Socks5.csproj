@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <IsPackable>false</IsPackable>
+        <LangVersion>default</LangVersion>
+        <Nullable>disable</Nullable>
+        <NoWarn>$(NoWarn);CA1707;CA1859</NoWarn>
+        <EnableMSTestRunner>true</EnableMSTestRunner>
+        <RootNamespace>MQTTnet.Tests.Extensions.Socks5</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MSTest" Version="4.0.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj" />
+        <ProjectReference Include="..\MQTTnet.Server\MQTTnet.Server.csproj" />
+        <ProjectReference Include="..\MQTTnet.Extensions.Socks5\MQTTnet.Extensions.Socks5.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include=".\..\..\global.json"
+                Link="global.json"
+                CopyToOutputDirectory="PreserveNewest"/>
+    </ItemGroup>
+</Project>

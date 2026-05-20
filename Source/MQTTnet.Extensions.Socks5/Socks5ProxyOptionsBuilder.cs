@@ -26,6 +26,16 @@ public sealed class Socks5ProxyOptionsBuilder
             throw new InvalidOperationException("The SOCKS5 proxy port must be in the range 1..65535.");
         }
 
+        if (_options.HandshakeTimeout <= TimeSpan.Zero)
+        {
+            throw new InvalidOperationException("The SOCKS5 handshake timeout must be greater than zero.");
+        }
+
+        if (string.IsNullOrEmpty(_options.Username) && _options.Password is { Length: > 0 })
+        {
+            throw new InvalidOperationException("A SOCKS5 password cannot be configured without a username.");
+        }
+
         return _options;
     }
 

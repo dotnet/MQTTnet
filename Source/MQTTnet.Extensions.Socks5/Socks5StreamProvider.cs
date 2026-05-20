@@ -27,6 +27,21 @@ public sealed class Socks5StreamProvider : IMqttClientStreamProvider
         {
             throw new ArgumentException("Socks5ProxyOptions.Host must be set.", nameof(options));
         }
+
+        if (_options.Port <= 0 || _options.Port > 65535)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), _options.Port, "Socks5ProxyOptions.Port must be in the range 1..65535.");
+        }
+
+        if (_options.HandshakeTimeout <= TimeSpan.Zero)
+        {
+            throw new ArgumentOutOfRangeException(nameof(options), _options.HandshakeTimeout, "Socks5ProxyOptions.HandshakeTimeout must be greater than zero.");
+        }
+
+        if (string.IsNullOrEmpty(_options.Username) && _options.Password is { Length: > 0 })
+        {
+            throw new ArgumentException("Socks5ProxyOptions.Password cannot be set without Socks5ProxyOptions.Username.", nameof(options));
+        }
     }
 
     public async Task<Stream> ConnectAsync(EndPoint brokerEndPoint, CancellationToken cancellationToken)

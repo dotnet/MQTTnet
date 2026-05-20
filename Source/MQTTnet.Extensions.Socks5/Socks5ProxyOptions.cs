@@ -31,7 +31,7 @@ public sealed class Socks5ProxyOptions
 
     /// <summary>
     ///     The password (raw bytes per RFC 1929) used for the username/password authentication
-    ///     sub-negotiation. May be <c>null</c>.
+    ///     sub-negotiation. Must be 1..255 bytes when <see cref="Username"/> is set.
     /// </summary>
     public byte[] Password { get; set; }
 

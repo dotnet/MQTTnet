@@ -42,6 +42,11 @@ public sealed class Socks5StreamProvider : IMqttClientStreamProvider
         {
             throw new ArgumentException("Socks5ProxyOptions.Password cannot be set without Socks5ProxyOptions.Username.", nameof(options));
         }
+
+        if (!string.IsNullOrEmpty(_options.Username) && (_options.Password == null || _options.Password.Length == 0))
+        {
+            throw new ArgumentException("Socks5ProxyOptions.Password must be set when Socks5ProxyOptions.Username is set.", nameof(options));
+        }
     }
 
     public async Task<Stream> ConnectAsync(EndPoint brokerEndPoint, CancellationToken cancellationToken)
@@ -204,11 +209,27 @@ public sealed class Socks5StreamProvider : IMqttClientStreamProvider
                 _options.ToString());
         }
 
+        if (usernameBytes.Length == 0)
+        {
+            throw new MqttProxyException(
+                MqttProxyErrorCode.ProxyAuthFailed,
+                "Username must be 1..255 bytes (RFC 1929).",
+                _options.ToString());
+        }
+
         if (passwordBytes.Length > Socks5Protocol.MaxStringLength)
         {
             throw new MqttProxyException(
                 MqttProxyErrorCode.ProxyAuthFailed,
                 $"Password exceeds {Socks5Protocol.MaxStringLength} bytes (RFC 1929).",
+                _options.ToString());
+        }
+
+        if (passwordBytes.Length == 0)
+        {
+            throw new MqttProxyException(
+                MqttProxyErrorCode.ProxyAuthFailed,
+                "Password must be 1..255 bytes (RFC 1929).",
                 _options.ToString());
         }
 
@@ -258,6 +279,14 @@ public sealed class Socks5StreamProvider : IMqttClientStreamProvider
             throw new MqttProxyException(
                 MqttProxyErrorCode.ProxyProtocolError,
                 $"Unexpected SOCKS version in CONNECT response: 0x{header[0]:X2}.",
+                _options.ToString());
+        }
+
+        if (header[2] != Socks5Protocol.Reserved)
+        {
+            throw new MqttProxyException(
+                MqttProxyErrorCode.ProxyProtocolError,
+                $"Unexpected SOCKS5 reserved byte in CONNECT response: 0x{header[2]:X2}.",
                 _options.ToString());
         }
 

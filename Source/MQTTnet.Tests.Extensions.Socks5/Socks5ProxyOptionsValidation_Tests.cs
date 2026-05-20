@@ -49,6 +49,16 @@ public sealed class Socks5ProxyOptionsValidation_Tests
     }
 
     [TestMethod]
+    public void Builder_Build_With_Username_But_Without_Password_Throws()
+    {
+        var builder = new Socks5ProxyOptionsBuilder()
+            .WithHost("127.0.0.1")
+            .WithCredentials("alice", Array.Empty<byte>());
+
+        Assert.ThrowsExactly<InvalidOperationException>(() => builder.Build());
+    }
+
+    [TestMethod]
     public void StreamProvider_Ctor_With_Invalid_Port_Throws()
     {
         var options = new Socks5ProxyOptions
@@ -81,6 +91,20 @@ public sealed class Socks5ProxyOptionsValidation_Tests
             Host = "127.0.0.1",
             Port = 1080,
             Password = new byte[] { 0x01 }
+        };
+
+        Assert.ThrowsExactly<ArgumentException>(() => _ = new Socks5StreamProvider(options));
+    }
+
+    [TestMethod]
+    public void StreamProvider_Ctor_With_Username_But_Without_Password_Throws()
+    {
+        var options = new Socks5ProxyOptions
+        {
+            Host = "127.0.0.1",
+            Port = 1080,
+            Username = "alice",
+            Password = Array.Empty<byte>()
         };
 
         Assert.ThrowsExactly<ArgumentException>(() => _ = new Socks5StreamProvider(options));

@@ -206,7 +206,7 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
                 {
                     // RFC 1928 §4: only CONNECT (0x01) is supported by this fake server. BIND (0x02)
                     // and UDP ASSOCIATE (0x03) are signaled as unsupported per spec via REP=0x07.
-                    await WriteReplyAsync(clientStream, 0x07, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
+                    await WriteReplyAsync(clientStream, 0x07, Options.ReplyReservedByte, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
                     return;
                 }
 
@@ -244,7 +244,7 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
                     }
 
                     default:
-                        await WriteReplyAsync(clientStream, 0x08, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
+                        await WriteReplyAsync(clientStream, 0x08, Options.ReplyReservedByte, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
                         return;
                 }
 
@@ -259,7 +259,7 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
 
                 if (Options.ConnectReplyCode != 0x00)
                 {
-                    await WriteReplyAsync(clientStream, Options.ConnectReplyCode, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
+                    await WriteReplyAsync(clientStream, Options.ConnectReplyCode, Options.ReplyReservedByte, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
                     return;
                 }
 
@@ -279,14 +279,14 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
                 }
                 catch (Exception)
                 {
-                    await WriteReplyAsync(clientStream, 0x04, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
+                    await WriteReplyAsync(clientStream, 0x04, Options.ReplyReservedByte, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
                     return;
                 }
 
                 using (upstream)
                 using (var upstreamStream = upstream.GetStream())
                 {
-                    await WriteReplyAsync(clientStream, 0x00, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
+                    await WriteReplyAsync(clientStream, 0x00, Options.ReplyReservedByte, Options.ReplyAddressType, Options.ReplyBindHost, Options.ReplyBindPort).ConfigureAwait(false);
 
                     var c2u = RelayAsync(clientStream, upstreamStream, _cts.Token);
                     var u2c = RelayAsync(upstreamStream, clientStream, _cts.Token);
@@ -348,7 +348,7 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
         return ok;
     }
 
-    static async Task WriteReplyAsync(NetworkStream stream, byte rep, byte replyAtyp, string replyHost, ushort replyPort)
+    static async Task WriteReplyAsync(NetworkStream stream, byte rep, byte replyReserved, byte replyAtyp, string replyHost, ushort replyPort)
     {
         // VER REP RSV ATYP BND.ADDR BND.PORT
         //
@@ -365,7 +365,7 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
                 var reply = new byte[4 + 16 + 2];
                 reply[0] = 0x05;
                 reply[1] = rep;
-                reply[2] = 0x00;
+                reply[2] = replyReserved;
                 reply[3] = 0x04;
                 if (!string.IsNullOrEmpty(replyHost) && IPAddress.TryParse(replyHost, out var ip) && ip.AddressFamily == AddressFamily.InterNetworkV6)
                 {
@@ -389,7 +389,7 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
                 var reply = new byte[4 + 1 + hostBytes.Length + 2];
                 reply[0] = 0x05;
                 reply[1] = rep;
-                reply[2] = 0x00;
+                reply[2] = replyReserved;
                 reply[3] = 0x03;
                 reply[4] = (byte)hostBytes.Length;
                 Buffer.BlockCopy(hostBytes, 0, reply, 5, hostBytes.Length);
@@ -403,7 +403,7 @@ internal sealed class FakeSocks5Server : IAsyncDisposable
                 var reply = new byte[4 + 4 + 2];
                 reply[0] = 0x05;
                 reply[1] = rep;
-                reply[2] = 0x00;
+                reply[2] = replyReserved;
                 reply[3] = 0x01;
                 if (!string.IsNullOrEmpty(replyHost) && IPAddress.TryParse(replyHost, out var ip) && ip.AddressFamily == AddressFamily.InterNetwork)
                 {
@@ -480,6 +480,11 @@ internal sealed class FakeSocks5ServerOptions
     ///     server will additionally bridge bytes to the destination.
     /// </summary>
     public byte ConnectReplyCode { get; set; }
+
+    /// <summary>
+    ///     Reserved byte included in the CONNECT reply. Defaults to <c>0x00</c> per RFC 1928.
+    /// </summary>
+    public byte ReplyReservedByte { get; set; }
 
     /// <summary>
     ///     When set, the server sends this byte sequence instead of the regular greeting response.

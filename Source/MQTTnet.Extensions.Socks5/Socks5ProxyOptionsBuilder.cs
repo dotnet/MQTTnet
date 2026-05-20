@@ -36,6 +36,11 @@ public sealed class Socks5ProxyOptionsBuilder
             throw new InvalidOperationException("A SOCKS5 password cannot be configured without a username.");
         }
 
+        if (!string.IsNullOrEmpty(_options.Username) && (_options.Password == null || _options.Password.Length == 0))
+        {
+            throw new InvalidOperationException("A SOCKS5 password must be configured when a username is set.");
+        }
+
         return _options;
     }
 

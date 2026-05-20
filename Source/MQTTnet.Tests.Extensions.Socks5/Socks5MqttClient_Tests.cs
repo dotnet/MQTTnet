@@ -388,6 +388,25 @@ public sealed class Socks5MqttClient_Tests
     }
 
     [TestMethod]
+    public async Task Connect_Response_With_NonZero_Reserved_Byte_Throws_ProtocolError()
+    {
+        await using var proxy = new FakeSocks5Server(new FakeSocks5ServerOptions
+        {
+            ReplyReservedByte = 0x01
+        });
+
+        using var client = new MqttClientFactory().CreateMqttClient();
+
+        var options = new MqttClientOptionsBuilder()
+            .WithTcpServer("127.0.0.1", 1883)
+            .WithSocks5Proxy(p => p.WithHost("127.0.0.1").WithPort(proxy.Port))
+            .Build();
+
+        var ex = await Assert.ThrowsExactlyAsync<MqttProxyException>(() => client.ConnectAsync(options));
+        Assert.AreEqual(MqttProxyErrorCode.ProxyProtocolError, ex.ErrorCode);
+    }
+
+    [TestMethod]
     public async Task Reconnect_After_Proxy_Disconnect_Works()
     {
         var broker = await Socks5TestHelper.StartBrokerAsync();

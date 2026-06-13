@@ -1,1 +1,1 @@
-
+- Server: Fixed exposinbg Topic Alias to clients (#2250, thanks to @suhashollakc)

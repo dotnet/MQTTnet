@@ -218,6 +218,8 @@ public sealed class MqttConnectedClient : IDisposable
         HandleTopicAlias(publishPacket);
 
         var applicationMessage = MqttApplicationMessageFactory.Create(publishPacket);
+        // Topic aliases are scoped to this network connection and must not be forwarded to other clients.
+        applicationMessage.TopicAlias = 0;
 
         var dispatchApplicationMessageResult =
             await _sessionsManager.DispatchApplicationMessage(Id, UserName, Session.Items, applicationMessage, cancellationToken).ConfigureAwait(false);

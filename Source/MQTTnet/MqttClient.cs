@@ -1049,6 +1049,12 @@ public sealed class MqttClient : Disposable, IMqttClient
             switch (exception)
             {
                 case OperationCanceledException:
+                    // if (cancellationToken.IsCancellationRequested)
+                    // {
+                    //     return;
+                    // }
+
+                    //break;
                     return;
                 case MqttCommunicationException:
                     _logger.Warning(exception, "Communication error while sending/receiving keep alive packets");

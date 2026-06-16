@@ -114,7 +114,7 @@ public sealed class Client_Tests : BaseTestClass
 
         Assert.IsNotNull(receivedMessage);
         Assert.AreEqual(applicationMessage.Topic, receivedMessage.Topic);
-        Assert.AreEqual(applicationMessage.TopicAlias, receivedMessage.TopicAlias);
+        Assert.AreEqual(0, receivedMessage.TopicAlias);
         Assert.AreEqual(applicationMessage.ContentType, receivedMessage.ContentType);
         Assert.AreEqual(applicationMessage.ResponseTopic, receivedMessage.ResponseTopic);
         Assert.AreEqual(applicationMessage.MessageExpiryInterval, receivedMessage.MessageExpiryInterval);

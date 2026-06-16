@@ -34,6 +34,7 @@ public sealed class Topic_Alias_Tests : BaseTestClass
         await testEnvironment.StartServer();
 
         var receivedTopics = new List<string>();
+        var receivedTopicAliases = new List<ushort>();
 
         var c1 = await testEnvironment.ConnectClient(options => options.WithProtocolVersion(MqttProtocolVersion.V500));
         c1.ApplicationMessageReceivedAsync += e =>
@@ -41,6 +42,7 @@ public sealed class Topic_Alias_Tests : BaseTestClass
             lock (receivedTopics)
             {
                 receivedTopics.Add(e.ApplicationMessage.Topic);
+                receivedTopicAliases.Add(e.ApplicationMessage.TopicAlias);
             }
 
             return CompletedTask.Instance;
@@ -68,5 +70,6 @@ public sealed class Topic_Alias_Tests : BaseTestClass
         Assert.HasCount(3, receivedTopics);
         CollectionAssert.AllItemsAreNotNull(receivedTopics);
         Assert.IsTrue(receivedTopics.All(t => t.Equals("this_is_the_topic", System.StringComparison.Ordinal)));
+        Assert.IsTrue(receivedTopicAliases.All(a => a == 0));
     }
 }

@@ -455,6 +455,67 @@ public sealed class MqttClient_Tests : BaseTestClass
     }
 
     [TestMethod]
+    public async Task Raise_Disconnected_On_KeepAlive_Timeout()
+    {
+        using var listener = new TcpListener(System.Net.IPAddress.Loopback, 0);
+        listener.Start();
+
+        var port = ((System.Net.IPEndPoint)listener.LocalEndpoint).Port;
+
+        using var testEnvironment = new TestEnvironment(TestContext);
+        using var client = testEnvironment.CreateClient();
+
+        var options = new MqttClientOptionsBuilder()
+            .WithTcpServer("127.0.0.1", port)
+            .WithKeepAlivePeriod(TimeSpan.FromSeconds(5))
+            .WithTimeout(TimeSpan.FromSeconds(10)) // For ping timeout and others
+            .Build();
+
+        var disconnectedTask = new TaskCompletionSource<MqttClientDisconnectedEventArgs>();
+        client.DisconnectedAsync += e =>
+        {
+            disconnectedTask.TrySetResult(e);
+            return CompletedTask.Instance;
+        };
+
+        // Fake server implementation
+        _ = Task.Run(async () =>
+        {
+            using var clientSocket = await listener.AcceptTcpClientAsync();
+            await using var stream = clientSocket.GetStream();
+
+            // Read CONNECT
+            var buffer = new byte[1024];
+            _ = await stream.ReadAsync(buffer.AsMemory(), CancellationToken.None);
+
+            // Send CONNACK
+            var connack = new byte[] { 0x20, 0x02, 0x00, 0x00 };
+            await stream.WriteAsync(connack.AsMemory(), CancellationToken.None);
+
+            // Wait until client drops connection because of ping timeout
+            while (true)
+            {
+                var readCount = await stream.ReadAsync(buffer.AsMemory(), CancellationToken.None);
+                if (readCount == 0)
+                {
+                    break; // connection closed
+                }
+            }
+        });
+
+        await client.ConnectAsync(options, CancellationToken.None);
+
+        var timeoutTask = Task.Delay(TimeSpan.FromSeconds(10));
+        var completedTask = await Task.WhenAny(disconnectedTask.Task, timeoutTask);
+
+        listener.Stop();
+
+        Assert.AreEqual(disconnectedTask.Task, completedTask, "DisconnectedAsync was not raised.");
+        var result = await disconnectedTask.Task;
+        Assert.IsNotNull(result);
+    }
+
+    [TestMethod]
     public async Task Publish_QoS_1_In_ApplicationMessageReceiveHandler()
     {
         using var testEnvironment = new TestEnvironment(TestContext);

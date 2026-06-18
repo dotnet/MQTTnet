@@ -1,0 +1,28 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Solution Items/">
+    <File Path=".github/workflows/ci.yml" />
+    <File Path="CODE-OF-CONDUCT.md" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Build.targets" />
+    <File Path="LICENSE" />
+    <File Path="README.md" />
+    <File Path="Source/ReleaseNotes.md" />
+  </Folder>
+  <Project Path="Samples/MQTTnet.Samples.csproj" />
+  <Project Path="Source/MQTTnet.AspnetCore/MQTTnet.AspNetCore.csproj" />
+  <Project Path="Source/MQTTnet.AspTestApp/MQTTnet.AspTestApp.csproj" />
+  <Project Path="Source/MQTTnet.Benchmarks/MQTTnet.Benchmarks.csproj" />
+  <Project Path="Source/MQTTnet.Extensions.Rpc/MQTTnet.Extensions.Rpc.csproj" />
+  <Project Path="Source/MQTTnet.Extensions.Socks5/MQTTnet.Extensions.Socks5.csproj" />
+  <Project Path="Source/MQTTnet.Extensions.TopicTemplate/MQTTnet.Extensions.TopicTemplate.csproj" />
+  <Project Path="Source/MQTTnet.Server/MQTTnet.Server.csproj" />
+  <Project Path="Source/MQTTnet.TestApp/MQTTnet.TestApp.csproj" />
+  <Project Path="Source/MQTTnet.Tests.Extensions.Socks5/MQTTnet.Tests.Extensions.Socks5.csproj" />
+  <Project Path="Source/MQTTnet.Tests/MQTTnet.Tests.csproj" />
+  <Project Path="Source/MQTTnet/MQTTnet.csproj" />
+</Solution>

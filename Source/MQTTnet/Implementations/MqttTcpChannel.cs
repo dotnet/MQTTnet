@@ -55,6 +55,12 @@ public sealed class MqttTcpChannel : IMqttChannel
 
     public async Task ConnectAsync(CancellationToken cancellationToken)
     {
+        if (_tcpOptions.StreamProvider != null)
+        {
+            await ConnectViaStreamProviderAsync(cancellationToken).ConfigureAwait(false);
+            return;
+        }
+
         CrossPlatformSocket socket = null;
         try
         {
@@ -103,55 +109,7 @@ public sealed class MqttTcpChannel : IMqttChannel
 
             if (_tcpOptions.TlsOptions?.UseTls == true)
             {
-                var targetHost = _tcpOptions.TlsOptions.TargetHost;
-                if (string.IsNullOrEmpty(targetHost))
-                {
-                    if (_tcpOptions.RemoteEndpoint is DnsEndPoint dns)
-                    {
-                        targetHost = dns.Host;
-                    }
-                }
-
-                SslStream sslStream;
-                if (_tcpOptions.TlsOptions.CertificateSelectionHandler != null)
-                {
-                    sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback, InternalUserCertificateSelectionCallback);
-                }
-                else
-                {
-                    // Use a different constructor depending on the options for MQTTnet so that we do not have
-                    // to copy the exact same behavior of the selection handler.
-                    sslStream = new SslStream(networkStream, false, InternalUserCertificateValidationCallback);
-                }
-
-                try
-                {
-                    var sslOptions = CreateSslAuthenticationOptions();
-
-                    sslOptions.TargetHost = targetHost;
-
-                    if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
-                    {
-                        sslOptions.CertificateChainPolicy = new X509ChainPolicy
-                        {
-                            TrustMode = X509ChainTrustMode.CustomRootTrust,
-                            VerificationFlags = X509VerificationFlags.IgnoreEndRevocationUnknown,
-                            RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode
-                        };
-
-                        sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
-                    }
-
-                    await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
-                }
-                catch
-                {
-                    await sslStream.DisposeAsync().ConfigureAwait(false);
-
-                    throw;
-                }
-
-                _stream = sslStream;
+                _stream = await WrapWithTlsAsync(networkStream, cancellationToken).ConfigureAwait(false);
             }
             else
             {
@@ -166,6 +124,106 @@ public sealed class MqttTcpChannel : IMqttChannel
             socket?.Dispose();
             throw;
         }
+    }
+
+    async Task ConnectViaStreamProviderAsync(CancellationToken cancellationToken)
+    {
+        Stream providerStream = null;
+        try
+        {
+            providerStream = await _tcpOptions.StreamProvider.ConnectAsync(_tcpOptions.RemoteEndpoint, cancellationToken).ConfigureAwait(false);
+            if (providerStream == null)
+            {
+                throw new MqttCommunicationException("The configured stream provider returned a null stream.");
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_tcpOptions.TlsOptions?.UseTls == true)
+            {
+                _stream = await WrapWithTlsAsync(providerStream, cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                _stream = providerStream;
+            }
+
+            // Endpoints are diagnostic only. Prefer the provider's reported values if available;
+            // fall back to the broker endpoint as the "remote" so logs/diagnostics still show
+            // something meaningful when the provider does not expose its socket endpoints.
+            if (providerStream is IMqttClientStreamEndPoints connectedStream)
+            {
+                LocalEndPoint = connectedStream.LocalEndPoint;
+                RemoteEndPoint = connectedStream.RemoteEndPoint ?? _tcpOptions.RemoteEndpoint;
+            }
+            else
+            {
+                LocalEndPoint = null;
+                RemoteEndPoint = _tcpOptions.RemoteEndpoint;
+            }
+        }
+        catch
+        {
+            if (_stream == null)
+            {
+                providerStream?.Dispose();
+            }
+
+            throw;
+        }
+    }
+
+    async Task<SslStream> WrapWithTlsAsync(Stream baseStream, CancellationToken cancellationToken)
+    {
+        var targetHost = _tcpOptions.TlsOptions.TargetHost;
+        if (string.IsNullOrEmpty(targetHost))
+        {
+            if (_tcpOptions.RemoteEndpoint is DnsEndPoint dns)
+            {
+                targetHost = dns.Host;
+            }
+        }
+
+        SslStream sslStream;
+        if (_tcpOptions.TlsOptions.CertificateSelectionHandler != null)
+        {
+            sslStream = new SslStream(baseStream, false, InternalUserCertificateValidationCallback, InternalUserCertificateSelectionCallback);
+        }
+        else
+        {
+            // Use a different constructor depending on the options for MQTTnet so that we do not have
+            // to copy the exact same behavior of the selection handler.
+            sslStream = new SslStream(baseStream, false, InternalUserCertificateValidationCallback);
+        }
+
+        try
+        {
+            var sslOptions = CreateSslAuthenticationOptions();
+
+            sslOptions.TargetHost = targetHost;
+
+            if (_tcpOptions.TlsOptions.TrustChain?.Count > 0)
+            {
+                sslOptions.CertificateChainPolicy = new X509ChainPolicy
+                {
+                    TrustMode = X509ChainTrustMode.CustomRootTrust,
+                    VerificationFlags = X509VerificationFlags.IgnoreEndRevocationUnknown,
+                    RevocationMode = _tcpOptions.TlsOptions.IgnoreCertificateRevocationErrors ? X509RevocationMode.NoCheck : _tcpOptions.TlsOptions.RevocationMode
+                };
+
+                sslOptions.CertificateChainPolicy.CustomTrustStore.AddRange(_tcpOptions.TlsOptions.TrustChain);
+            }
+
+            await sslStream.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            await sslStream.DisposeAsync().ConfigureAwait(false);
+
+            throw;
+        }
+
+        return sslStream;
     }
 
     public Task DisconnectAsync(CancellationToken cancellationToken)

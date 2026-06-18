@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <AssemblyName>MQTTnet.Extensions.Socks5</AssemblyName>
+        <RootNamespace>MQTTnet.Extensions.Socks5</RootNamespace>
+        <IsAotCompatible>true</IsAotCompatible>
+
+        <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+        <Description>This is an extension library which adds SOCKS5 proxy support (RFC 1928 / RFC 1929) to the MQTTnet TCP transport.</Description>
+        <PackageId>MQTTnet.Extensions.Socks5</PackageId>
+        <PackageTags>MQTT Message Queue Telemetry Transport MQTTClient SOCKS SOCKS5 Proxy Tunnel Networking IoT InternetOfThings</PackageTags>
+        <EmbedUntrackedSources>true</EmbedUntrackedSources>
+        <PackageReleaseNotes>For release notes please go to MQTTnet release notes (https://www.nuget.org/packages/MQTTnet/).</PackageReleaseNotes>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\MQTTnet\MQTTnet.csproj"/>
+    </ItemGroup>
+
+</Project>

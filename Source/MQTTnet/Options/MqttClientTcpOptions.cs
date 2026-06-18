@@ -4,6 +4,7 @@
 
 using System.Net;
 using System.Net.Sockets;
+using MQTTnet.Channel;
 
 namespace MQTTnet;
 
@@ -43,6 +44,15 @@ public sealed class MqttClientTcpOptions : IMqttClientChannelOptions
     public ProtocolType ProtocolType { get; set; } = ProtocolType.Tcp;
 
     public EndPoint RemoteEndpoint { get; set; }
+
+    /// <summary>
+    ///     Gets or sets an optional <see cref="IMqttClientStreamProvider"/> used to obtain the
+    ///     transport stream to the broker. When set, the channel will delegate the TCP-level
+    ///     connect (including any proxy negotiation) to the provider and then optionally wrap the
+    ///     returned stream with TLS, using the broker host as SNI. When <c>null</c>, the channel
+    ///     opens a plain TCP socket directly to <see cref="RemoteEndpoint"/>.
+    /// </summary>
+    public IMqttClientStreamProvider StreamProvider { get; set; }
 
     public MqttClientTlsOptions TlsOptions { get; set; } = new();
 

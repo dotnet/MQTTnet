@@ -6,6 +6,7 @@ using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using MQTTnet.Channel;
 using MQTTnet.Formatter;
 using MQTTnet.Packets;
 using MQTTnet.Protocol;
@@ -249,6 +250,31 @@ public sealed class MqttClientOptionsBuilder
     public MqttClientOptionsBuilder WithProtocolType(ProtocolType protocolType)
     {
         _tcpOptions.ProtocolType = protocolType;
+        return this;
+    }
+
+    /// <summary>
+    ///     Configures an optional <see cref="IMqttClientStreamProvider"/> on the TCP options.
+    ///     The provider is responsible for opening the transport stream to the broker (e.g. through
+    ///     a SOCKS5 proxy). When the connection should be TLS-secured, configure TLS via
+    ///     <c>WithTlsOptions(...)</c>; TLS will be layered on top of the stream returned by the
+    ///     provider, using the broker host as SNI.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">
+    ///     Thrown when no TCP transport has been configured yet (call <c>WithTcpServer</c> or
+    ///     <c>WithEndPoint</c> before this method).
+    /// </exception>
+    public MqttClientOptionsBuilder WithStreamProvider(IMqttClientStreamProvider provider)
+    {
+        ArgumentNullException.ThrowIfNull(provider);
+
+        if (_tcpOptions == null)
+        {
+            throw new InvalidOperationException(
+                "A TCP transport must be configured (via WithTcpServer or WithEndPoint) before assigning a stream provider.");
+        }
+
+        _tcpOptions.StreamProvider = provider;
         return this;
     }
 

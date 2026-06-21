@@ -5,8 +5,12 @@
 using System.Buffers;
 using System.Diagnostics;
 using System.Globalization;
+using System.Net;
 using System.Net.Sockets;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics.Logger;
 using MQTTnet.Exceptions;
 using MQTTnet.Formatter;
 using MQTTnet.Internal;
@@ -452,6 +456,34 @@ public sealed class MqttClient_Tests : BaseTestClass
         {
             Assert.Fail(ex.Message);
         }
+    }
+
+    [TestMethod]
+    public async Task KeepAlive_Ping_Send_Timeout_Raises_Disconnected()
+    {
+        var adapterFactory = new KeepAliveTimeoutAdapterFactory();
+        var disconnected = new TaskCompletionSource<MqttClientDisconnectedEventArgs>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using var client = new MqttClientFactory().CreateMqttClient(adapterFactory);
+        client.DisconnectedAsync += eventArgs =>
+        {
+            disconnected.TrySetResult(eventArgs);
+            return CompletedTask.Instance;
+        };
+
+        var options = new MqttClientOptionsBuilder()
+            .WithTcpServer("localhost")
+            .WithKeepAlivePeriod(TimeSpan.FromSeconds(1))
+            .Build();
+
+        await client.ConnectAsync(options);
+
+        await adapterFactory.Adapter.PingRequestReceived.Task.WaitAsync(TimeSpan.FromSeconds(3));
+        var disconnectedEventArgs = await disconnected.Task.WaitAsync(TimeSpan.FromSeconds(3));
+
+        Assert.IsTrue(disconnectedEventArgs.ClientWasConnected);
+        Assert.IsInstanceOfType<OperationCanceledException>(disconnectedEventArgs.Exception);
+        Assert.IsFalse(client.IsConnected);
     }
 
     [TestMethod]
@@ -974,5 +1006,85 @@ public sealed class MqttClient_Tests : BaseTestClass
         Assert.IsFalse(disconnected, "Publisher must not disconnect during concurrent publishes.");
         Assert.IsTrue(publisher.IsConnected);
         Assert.AreEqual(Threads * MessagesPerThread, receivedCount);
+    }
+
+    sealed class KeepAliveTimeoutAdapterFactory : IMqttClientAdapterFactory
+    {
+        public KeepAliveTimeoutAdapter Adapter { get; private set; }
+
+        public IMqttChannelAdapter CreateClientAdapter(MqttClientOptions options, MqttPacketInspector packetInspector, IMqttNetLogger logger)
+        {
+            Adapter = new KeepAliveTimeoutAdapter(options.ProtocolVersion, options.WriterBufferSize, options.WriterBufferSizeMax);
+            return Adapter;
+        }
+    }
+
+    sealed class KeepAliveTimeoutAdapter : IMqttChannelAdapter
+    {
+        int _connAckReturned;
+
+        public KeepAliveTimeoutAdapter(MqttProtocolVersion protocolVersion, int writerBufferSize, int writerBufferSizeMax)
+        {
+            PacketFormatterAdapter = new MqttPacketFormatterAdapter(protocolVersion, new MqttBufferWriter(writerBufferSize, writerBufferSizeMax));
+        }
+
+        public long BytesReceived { get; }
+
+        public long BytesSent { get; }
+
+        public X509Certificate2 ClientCertificate { get; }
+
+        public EndPoint RemoteEndPoint { get; } = new DnsEndPoint("localhost", 1883);
+
+        public EndPoint LocalEndPoint { get; } = new DnsEndPoint("localhost", 0);
+
+        public bool IsSecureConnection { get; }
+
+        public MqttPacketFormatterAdapter PacketFormatterAdapter { get; }
+
+        public TaskCompletionSource PingRequestReceived { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public Task ConnectAsync(CancellationToken cancellationToken)
+        {
+            return CompletedTask.Instance;
+        }
+
+        public Task DisconnectAsync(CancellationToken cancellationToken)
+        {
+            return CompletedTask.Instance;
+        }
+
+        public void Dispose()
+        {
+        }
+
+        public async Task<MqttPacket> ReceivePacketAsync(CancellationToken cancellationToken)
+        {
+            if (Interlocked.Exchange(ref _connAckReturned, 1) == 0)
+            {
+                return new MqttConnAckPacket
+                {
+                    ReturnCode = MqttConnectReturnCode.ConnectionAccepted
+                };
+            }
+
+            await Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            return null;
+        }
+
+        public void ResetStatistics()
+        {
+        }
+
+        public Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
+        {
+            if (packet is MqttPingReqPacket)
+            {
+                PingRequestReceived.TrySetResult();
+                return Task.Delay(Timeout.InfiniteTimeSpan, cancellationToken);
+            }
+
+            return CompletedTask.Instance;
+        }
     }
 }

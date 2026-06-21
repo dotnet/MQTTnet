@@ -8,37 +8,26 @@ using MQTTnet.Server;
 
 namespace MQTTnet.AspNetCore;
 
-public sealed class MqttHostedServer : MqttServer, IHostedService
+public sealed class MqttHostedServer : BackgroundService
 {
-    readonly IHostApplicationLifetime _hostApplicationLifetime;
     readonly MqttServerFactory _mqttFactory;
-
     public MqttHostedServer(
-        IHostApplicationLifetime hostApplicationLifetime,
         MqttServerFactory mqttFactory,
         MqttServerOptions options,
         IEnumerable<IMqttServerAdapter> adapters,
-        IMqttNetLogger logger) : base(options, adapters, logger)
+        IMqttNetLogger logger
+        )
     {
+        MqttServer = new(options, adapters, logger);
         _mqttFactory = mqttFactory ?? throw new ArgumentNullException(nameof(mqttFactory));
-        _hostApplicationLifetime = hostApplicationLifetime;
     }
 
-    public async Task StartAsync(CancellationToken cancellationToken)
+    public MqttServer MqttServer { get; }
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        => MqttServer.StartAsync();
+    public override async Task StopAsync(CancellationToken cancellationToken)
     {
-        // The yield makes sure that the hosted service is considered up and running.
-        await Task.Yield();
-
-        _hostApplicationLifetime.ApplicationStarted.Register(OnStarted);
-    }
-
-    public Task StopAsync(CancellationToken cancellationToken)
-    {
-        return StopAsync(_mqttFactory.CreateMqttServerStopOptionsBuilder().Build());
-    }
-
-    void OnStarted()
-    {
-        _ = StartAsync();
+        await MqttServer.StopAsync(_mqttFactory.CreateMqttServerStopOptionsBuilder().Build());
+        await base.StopAsync(cancellationToken);
     }
 }

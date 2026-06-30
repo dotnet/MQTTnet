@@ -362,19 +362,14 @@ public sealed class MqttTcpChannel : IMqttChannel
 
     bool InternalUserCertificateValidationCallback(object sender, X509Certificate x509Certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
     {
+        var eventArgs = new MqttClientCertificateValidationEventArgs(x509Certificate, chain, sslPolicyErrors, _tcpOptions);
         var certificateValidationHandler = _tcpOptions?.TlsOptions?.CertificateValidationHandler;
         if (certificateValidationHandler != null)
         {
-            var eventArgs = new MqttClientCertificateValidationEventArgs(x509Certificate, chain, sslPolicyErrors, _tcpOptions);
             return certificateValidationHandler(eventArgs);
         }
 
-        if (_tcpOptions?.TlsOptions?.IgnoreCertificateChainErrors ?? false)
-        {
-            sslPolicyErrors &= ~SslPolicyErrors.RemoteCertificateChainErrors;
-        }
-
-        return sslPolicyErrors == SslPolicyErrors.None;
+        return MqttClientDefaultCertificateValidationHandler.Handle(eventArgs);
     }
 
     X509CertificateCollection LoadCertificates()

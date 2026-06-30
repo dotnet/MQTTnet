@@ -3,7 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using MQTTnet.Implementations;
 
 namespace MQTTnet.Tests;
@@ -12,6 +15,21 @@ namespace MQTTnet.Tests;
 [TestClass]
 public class MqttTcpChannel_Tests
 {
+    [TestMethod]
+    public void Certificate_Validation_Uses_Default_Handler_When_No_Custom_Handler()
+    {
+        var options = new MqttClientOptionsBuilder().WithTcpServer("localhost")
+            .WithTlsOptions(o => o.WithAllowUntrustedCertificates().WithIgnoreCertificateRevocationErrors())
+            .Build();
+
+        var tcpChannel = new MqttTcpChannel(options);
+
+        using var chain = new X509Chain();
+        var isValid = InvokeCertificateValidationCallback(tcpChannel, chain, SslPolicyErrors.RemoteCertificateChainErrors);
+
+        Assert.IsTrue(isValid);
+    }
+
     [TestMethod]
     public async Task Dispose_Channel_While_Used()
     {
@@ -76,5 +94,13 @@ public class MqttTcpChannel_Tests
         {
             ct.Cancel(false);
         }
+    }
+
+    static bool InvokeCertificateValidationCallback(MqttTcpChannel tcpChannel, X509Chain chain, SslPolicyErrors sslPolicyErrors)
+    {
+        var method = typeof(MqttTcpChannel).GetMethod("InternalUserCertificateValidationCallback", BindingFlags.Instance | BindingFlags.NonPublic);
+        Assert.IsNotNull(method);
+
+        return (bool)method.Invoke(tcpChannel, [null, null, chain, sslPolicyErrors]);
     }
 }

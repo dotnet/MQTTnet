@@ -51,7 +51,7 @@ public sealed class ExchangeEnhancedAuthenticationOptionsFactory
         return this;
     }
 
-    [Obsolete("Please use more performance `WithUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
+    [Obsolete("Please use more performant `WithUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
     public ExchangeEnhancedAuthenticationOptionsFactory WithUserProperty(string name, string value)
     {
         ArgumentNullException.ThrowIfNull(name);

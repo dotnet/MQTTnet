@@ -384,7 +384,7 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    [Obsolete("Please use more performance `WithUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
+    [Obsolete("Please use more performant `WithUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
     public MqttClientOptionsBuilder WithUserProperty(string name, string value)
     {
         if (_options.UserProperties == null)
@@ -512,7 +512,7 @@ public sealed class MqttClientOptionsBuilder
         return this;
     }
 
-    [Obsolete("Please use more performance `WithWillUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
+    [Obsolete("Please use more performant `WithWillUserProperty` with ArraySegment<byte> or ReadOnlyMemory<byte> for the value.")]
     public MqttClientOptionsBuilder WithWillUserProperty(string name, string value)
     {
         _options.WillUserProperties ??= [];

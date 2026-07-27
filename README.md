@@ -12,9 +12,9 @@
 
 # MQTTnet
 
-MQTTnet is a high performance .NET library for MQTT based communication. It provides a MQTT client and a MQTT server (
-broker) and supports the MQTT protocol up to version 5. It is compatible with mostly any supported .NET Framework
-version and CPU architecture.
+MQTTnet is a high performance .NET library for MQTT based communication.
+It provides a MQTT client and a MQTT server (broker) and supports the MQTT protocol up to version 5.
+It is compatible with mostly any supported .NET Framework version and CPU architecture.
 
 ## Features
 

@@ -33,6 +33,8 @@ public sealed class MqttPacketBusItem
     public void Fail(Exception exception)
     {
         _promise.TrySetException(exception);
+        // Queued packets may have no waiter. Observe the failure while preserving it for WaitAsync callers.
+        _ = _promise.Task.Exception;
     }
 
     public Task<MqttPacket> WaitAsync()

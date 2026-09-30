@@ -476,8 +476,28 @@ public sealed class MqttV5PacketDecoder
         }
 
         var propertiesReader = new MqttV5PropertiesReader(_bufferReader);
+        var seenSingletonProperties = 0;
         while (propertiesReader.MoveNext())
         {
+            // MQTT 5.0 section 3.3.2.3 permits only User Properties and
+            // Subscription Identifiers to occur more than once in PUBLISH.
+            var propertyFlag = propertiesReader.CurrentPropertyId switch
+            {
+                MqttPropertyId.PayloadFormatIndicator => 1,
+                MqttPropertyId.MessageExpiryInterval => 2,
+                MqttPropertyId.ContentType => 4,
+                MqttPropertyId.ResponseTopic => 8,
+                MqttPropertyId.CorrelationData => 16,
+                MqttPropertyId.TopicAlias => 32,
+                _ => 0
+            };
+
+            if ((seenSingletonProperties & propertyFlag) != 0)
+            {
+                throw new MqttProtocolViolationException($"Property '{propertiesReader.CurrentPropertyId}' must not occur more than once in a PUBLISH packet.");
+            }
+
+            seenSingletonProperties |= propertyFlag;
             if (propertiesReader.CurrentPropertyId == MqttPropertyId.PayloadFormatIndicator)
             {
                 packet.PayloadFormatIndicator = propertiesReader.ReadPayloadFormatIndicator();

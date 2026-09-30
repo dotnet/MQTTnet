@@ -32,6 +32,15 @@ public sealed class MqttClientPublishResultFactory
 
     public static MqttClientPublishResult Create(MqttPubRecPacket pubRecPacket, MqttPubCompPacket pubCompPacket)
     {
+        if (pubRecPacket != null && (int)pubRecPacket.ReasonCode >= 0x80)
+        {
+            return new MqttClientPublishResult(
+                pubRecPacket.PacketIdentifier,
+                (MqttClientPublishReasonCode)(int)pubRecPacket.ReasonCode,
+                pubRecPacket.ReasonString,
+                pubRecPacket.UserProperties ?? EmptyUserProperties);
+        }
+
         if (pubRecPacket == null || pubCompPacket == null)
         {
             var packetIdentifier = pubRecPacket?.PacketIdentifier ?? pubCompPacket?.PacketIdentifier;

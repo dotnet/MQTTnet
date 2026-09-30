@@ -714,6 +714,13 @@ public sealed class MqttClient : Disposable, IMqttClient
             return CompletedTask.Instance;
         }
 
+        // A negative MQTT 5 PUBREC terminates the exchange, including a late
+        // acknowledgement for which the publish awaiter no longer exists.
+        if ((int)pubRecPacket.ReasonCode >= 0x80)
+        {
+            return CompletedTask.Instance;
+        }
+
         // The packet is unknown, probably due to a restart of the client.
         // So we send this to the server to trigger a full resend of the message.
         var pubRelPacket = MqttPubRelPacketFactory.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.PacketIdentifierNotFound);
@@ -764,6 +771,13 @@ public sealed class MqttClient : Disposable, IMqttClient
         publishPacket.PacketIdentifier = _packetIdentifierProvider.GetNextPacketIdentifier();
 
         var pubRecPacket = await Request<MqttPubRecPacket>(publishPacket, cancellationToken).ConfigureAwait(false);
+
+        // MQTT-4.3.3-9: a negative PUBREC completes the QoS 2 exchange.
+        // Do not send PUBREL or replace this outcome with a later PUBCOMP.
+        if ((int)pubRecPacket.ReasonCode >= 0x80)
+        {
+            return MqttClientPublishResultFactory.Create(pubRecPacket, null);
+        }
 
         var pubRelPacket = MqttPubRelPacketFactory.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
 

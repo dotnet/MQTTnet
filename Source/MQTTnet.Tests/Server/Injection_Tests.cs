@@ -48,7 +48,7 @@ public sealed class Injection_Tests : BaseTestClass
     [TestMethod]
     public async Task Enqueue_Application_Message_At_Session_Level_QueueOverflow_DropNewMessageStrategy()
     {
-        using var testEnvironment = CreateTestEnvironment(trackUnobservedTaskException: false);
+        using var testEnvironment = CreateTestEnvironment();
 
         var server = await testEnvironment.StartServer(
             builder => builder
@@ -126,7 +126,7 @@ public sealed class Injection_Tests : BaseTestClass
     [TestMethod]
     public async Task Enqueue_Application_Message_At_Session_Level_QueueOverflow_DropOldestQueuedMessageStrategy()
     {
-        using var testEnvironment = CreateTestEnvironment(trackUnobservedTaskException: false);
+        using var testEnvironment = CreateTestEnvironment();
 
         var server = await testEnvironment.StartServer(
             builder => builder
@@ -322,7 +322,7 @@ public sealed class Injection_Tests : BaseTestClass
     [TestMethod]
     public async Task Deliver_Application_Message_At_Session_Level_QueueOverflow_DropOldestQueuedMessageStrategy()
     {
-        using var testEnvironment = CreateTestEnvironment(trackUnobservedTaskException: false);
+        using var testEnvironment = CreateTestEnvironment();
 
         var server = await testEnvironment.StartServer(
             builder => builder

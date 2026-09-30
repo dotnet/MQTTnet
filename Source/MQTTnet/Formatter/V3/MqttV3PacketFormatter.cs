@@ -200,7 +200,7 @@ public sealed class MqttV3PacketFormatter : IMqttPacketFormatter
             packet.WillQoS = (MqttQualityOfServiceLevel)willQoS;
             packet.WillRetain = willRetain;
 
-            packet.WillTopic = _bufferReader.ReadString();
+            packet.WillTopic = _bufferReader.ReadWillTopic();
             packet.WillMessage = _bufferReader.ReadBinaryData();
         }
 

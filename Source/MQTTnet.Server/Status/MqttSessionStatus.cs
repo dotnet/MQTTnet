@@ -80,10 +80,30 @@ public sealed class MqttSessionStatus
     /// </remarks>
     public bool TryEnqueueApplicationMessage(MqttApplicationMessage applicationMessage, out InjectMqttApplicationMessageResult injectResult)
     {
+        return TryEnqueueApplicationMessage(applicationMessage, out injectResult, true);
+    }
+
+    /// <summary>
+    /// Attempts to enqueue an application message, optionally prohibiting eviction to make room.
+    /// </summary>
+    /// <param name="applicationMessage">The application message to enqueue.</param>
+    /// <param name="injectResult">The accepted packet identifier, or <c>null</c> if the queue is full.</param>
+    /// <param name="allowEviction">
+    /// If <c>true</c>, use the configured overflow strategy. If <c>false</c>, reject a full queue without changing its contents.
+    /// </param>
+    /// <returns><c>true</c> if queued; <c>false</c> if rejected because the queue is full.</returns>
+    /// <remarks>
+    /// Rejection with eviction disabled does not assign a packet identifier or fail a delivery task.
+    /// Acceptance does not mean delivery or acknowledgement. Later enqueues using the configured overflow strategy may still evict this message.
+    /// </remarks>
+    /// <exception cref="ObjectDisposedException">The session has been disposed.</exception>
+    public bool TryEnqueueApplicationMessage(
+        MqttApplicationMessage applicationMessage, out InjectMqttApplicationMessageResult injectResult, bool allowEviction)
+    {
         ArgumentNullException.ThrowIfNull(applicationMessage);
 
         var publishPacket = MqttPublishPacketFactory.Create(applicationMessage);
-        var enqueueDataPacketResult = _session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+        var enqueueDataPacketResult = _session.EnqueueDataPacket(new MqttPacketBusItem(publishPacket), allowEviction, out var packetIdentifier);
 
         if (enqueueDataPacketResult != EnqueueDataPacketResult.Enqueued)
         {
@@ -91,7 +111,7 @@ public sealed class MqttSessionStatus
             return false;
         }
 
-        injectResult = new InjectMqttApplicationMessageResult() { PacketIdentifier = publishPacket.PacketIdentifier };
+        injectResult = new InjectMqttApplicationMessageResult() { PacketIdentifier = packetIdentifier };
         return true;
     }
 

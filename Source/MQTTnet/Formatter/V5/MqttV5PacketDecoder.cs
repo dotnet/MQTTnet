@@ -673,7 +673,17 @@ public sealed class MqttV5PacketDecoder
         {
             if (propertiesReader.CurrentPropertyId == MqttPropertyId.SubscriptionIdentifier)
             {
+                // MQTT 5.0 section 3.8.2.1.2 forbids zero and repeated identifiers.
+                if (packet.SubscriptionIdentifier != 0)
+                {
+                    throw new MqttProtocolViolationException("Subscription Identifier must not occur more than once in a SUBSCRIBE packet.");
+                }
+
                 packet.SubscriptionIdentifier = propertiesReader.ReadSubscriptionIdentifier();
+                if (packet.SubscriptionIdentifier == 0)
+                {
+                    throw new MqttProtocolViolationException("Subscription Identifier must not be zero.");
+                }
             }
             else
             {

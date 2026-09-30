@@ -127,6 +127,15 @@ public sealed class MqttSession : IDisposable
                 var firstItem = _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
                 if (firstItem != null)
                 {
+                    if (firstItem.Packet is MqttPublishPacket evictedPublishPacket)
+                    {
+                        lock (_unacknowledgedPublishPackets)
+                        {
+                            // Remove only the queued packet that was evicted, not an in-flight exchange.
+                            _unacknowledgedPublishPackets.Remove(evictedPublishPacket);
+                        }
+                    }
+
                     firstItem.Fail(new MqttPendingMessagesOverflowException(Id, _serverOptions.PendingMessagesOverflowStrategy));
 
                     if (_eventContainer.QueuedApplicationMessageOverwrittenEvent.HasHandlers)

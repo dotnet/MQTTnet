@@ -87,8 +87,16 @@ public sealed class MqttBufferReader
         ValidateReceiveBuffer(length);
 
         var bytes = _buffer.AsSpan(_position, length);
-        ValidateUtf8String(bytes);
-        var result = StrictUtf8.GetString(bytes);
+        ValidateUtf8NullCharacter(bytes);
+        string result;
+        try
+        {
+            result = StrictUtf8.GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            throw new MqttProtocolViolationException("UTF-8 Encoded String must contain valid UTF-8.");
+        }
 
         _position += length;
         return result;
@@ -103,6 +111,11 @@ public sealed class MqttBufferReader
         {
             throw new MqttProtocolViolationException("UTF-8 Encoded String must contain valid UTF-8.");
         }
+        ValidateUtf8NullCharacter(bytes);
+    }
+
+    static void ValidateUtf8NullCharacter(ReadOnlySpan<byte> bytes)
+    {
         if (bytes.IndexOf((byte)0) >= 0)
             throw new MqttProtocolViolationException("UTF-8 Encoded String must not contain a null character.");
     }

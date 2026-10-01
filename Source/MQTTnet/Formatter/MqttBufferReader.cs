@@ -13,6 +13,8 @@ namespace MQTTnet.Formatter;
 
 public sealed class MqttBufferReader
 {
+    static readonly UTF8Encoding StrictUtf8 = new(false, true);
+
     byte[] _buffer = EmptyBuffer.Array;
     int _maxPosition;
     int _offset;
@@ -84,11 +86,38 @@ public sealed class MqttBufferReader
 
         ValidateReceiveBuffer(length);
 
-        // AsSpan() version is slightly faster. Not much but at least a little bit.
-        var result = Encoding.UTF8.GetString(_buffer.AsSpan(_position, length));
+        var bytes = _buffer.AsSpan(_position, length);
+        ValidateUtf8NullCharacter(bytes);
+        string result;
+        try
+        {
+            result = StrictUtf8.GetString(bytes);
+        }
+        catch (DecoderFallbackException)
+        {
+            throw new MqttProtocolViolationException("UTF-8 Encoded String must contain valid UTF-8.");
+        }
 
         _position += length;
         return result;
+    }
+
+    internal static void ValidateUtf8String(ReadOnlySpan<byte> bytes)
+    {
+        // MQTT-1.5.4-1/2 apply to both decoded strings and byte-preserved
+        // User Property values. Binary Data fields are deliberately excluded.
+        try { _ = StrictUtf8.GetCharCount(bytes); }
+        catch (DecoderFallbackException)
+        {
+            throw new MqttProtocolViolationException("UTF-8 Encoded String must contain valid UTF-8.");
+        }
+        ValidateUtf8NullCharacter(bytes);
+    }
+
+    static void ValidateUtf8NullCharacter(ReadOnlySpan<byte> bytes)
+    {
+        if (bytes.IndexOf((byte)0) >= 0)
+            throw new MqttProtocolViolationException("UTF-8 Encoded String must not contain a null character.");
     }
 
     public ushort ReadTwoByteInteger()

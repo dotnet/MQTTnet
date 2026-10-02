@@ -37,6 +37,7 @@ public sealed class MqttClient : Disposable, IMqttClient
     List<MqttUserProperty> _disconnectUserProperties;
 
     Task _keepAlivePacketsSenderTask;
+    DateTime _lastPacketReceivedTimestamp;
     DateTime _lastPacketSentTimestamp;
 
     CancellationTokenSource _mqttClientAlive;
@@ -141,7 +142,7 @@ public sealed class MqttClient : Disposable, IMqttClient
                 return connectResult;
             }
 
-            _lastPacketSentTimestamp = DateTime.UtcNow;
+            _lastPacketReceivedTimestamp = _lastPacketSentTimestamp = DateTime.UtcNow;
 
             var keepAliveInterval = Options.KeepAlivePeriod;
             if (connectResult.ServerKeepAlive > 0)
@@ -786,6 +787,11 @@ public sealed class MqttClient : Disposable, IMqttClient
             packet = await packetTask.ConfigureAwait(false);
         }
 
+        if (packet != null)
+        {
+            _lastPacketReceivedTimestamp = DateTime.UtcNow;
+        }
+
         return packet;
     }
 
@@ -1034,9 +1040,13 @@ public sealed class MqttClient : Disposable, IMqttClient
             while (!cancellationToken.IsCancellationRequested)
             {
                 // Values described here: [MQTT-3.1.2-24].
-                var timeWithoutPacketSent = DateTime.UtcNow - _lastPacketSentTimestamp;
+                var currentTimestamp = DateTime.UtcNow;
+                var timeWithoutPacketReceived = currentTimestamp - _lastPacketReceivedTimestamp;
+                var timeWithoutPacketSent = currentTimestamp - _lastPacketSentTimestamp;
 
-                if (timeWithoutPacketSent > keepAlivePeriod)
+                // Outbound traffic satisfies the MQTT keep-alive requirement, but inbound silence still requires
+                // a ping to detect a half-open connection.
+                if (timeWithoutPacketReceived > keepAlivePeriod || timeWithoutPacketSent > keepAlivePeriod)
                 {
                     using var pingTimeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 

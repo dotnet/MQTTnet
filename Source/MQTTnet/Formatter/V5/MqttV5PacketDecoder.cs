@@ -356,6 +356,11 @@ public sealed class MqttV5PacketDecoder
         {
             if (propertiesReader.CurrentPropertyId == MqttPropertyId.SessionExpiryInterval)
             {
+                if (packet.HasSessionExpiryInterval)
+                {
+                    throw new MqttProtocolViolationException("Session Expiry Interval must not occur more than once in a DISCONNECT packet.");
+                }
+
                 packet.SessionExpiryInterval = propertiesReader.ReadSessionExpiryInterval();
             }
             else if (propertiesReader.CurrentPropertyId == MqttPropertyId.ReasonString)

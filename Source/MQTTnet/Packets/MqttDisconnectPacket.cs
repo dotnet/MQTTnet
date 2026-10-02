@@ -8,6 +8,14 @@ namespace MQTTnet.Packets;
 
 public sealed class MqttDisconnectPacket : MqttPacket
 {
+    uint _sessionExpiryInterval;
+
+    /// <summary>
+    ///     Whether Session Expiry Interval is present. Setting the interval sets this flag, including for zero.
+    ///     Set this to false to omit the property and retain the CONNECT interval.
+    /// </summary>
+    public bool HasSessionExpiryInterval { get; set; }
+
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
@@ -26,7 +34,15 @@ public sealed class MqttDisconnectPacket : MqttPacket
     /// <summary>
     ///     Added in MQTTv5.
     /// </summary>
-    public uint SessionExpiryInterval { get; set; }
+    public uint SessionExpiryInterval
+    {
+        get => _sessionExpiryInterval;
+        set
+        {
+            _sessionExpiryInterval = value;
+            HasSessionExpiryInterval = true;
+        }
+    }
 
     /// <summary>
     ///     Added in MQTTv5.

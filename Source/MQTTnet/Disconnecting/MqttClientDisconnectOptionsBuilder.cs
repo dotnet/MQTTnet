@@ -11,7 +11,7 @@ public sealed class MqttClientDisconnectOptionsBuilder
 {
     MqttClientDisconnectOptionsReason _reason = MqttClientDisconnectOptionsReason.NormalDisconnection;
     string _reasonString;
-    uint _sessionExpiryInterval;
+    uint? _sessionExpiryInterval;
     List<MqttUserProperty> _userProperties;
 
     public MqttClientDisconnectOptions Build()
@@ -21,7 +21,8 @@ public sealed class MqttClientDisconnectOptionsBuilder
             Reason = _reason,
             ReasonString = _reasonString,
             UserProperties = _userProperties,
-            SessionExpiryInterval = _sessionExpiryInterval
+            SessionExpiryInterval = _sessionExpiryInterval.GetValueOrDefault(),
+            HasSessionExpiryInterval = _sessionExpiryInterval.HasValue
         };
     }
 

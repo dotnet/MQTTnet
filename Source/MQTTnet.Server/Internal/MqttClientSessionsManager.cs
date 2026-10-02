@@ -705,14 +705,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
                 // It will not receive Application Messages published before it connected and has to subscribe afresh to any topics that it is interested
                 // in each time it connects.
 
-                var effectiveSessionExpiryInterval = connectedClient.DisconnectPacket?.SessionExpiryInterval ?? 0U;
-                if (effectiveSessionExpiryInterval == 0U)
-                {
-                    // From RFC: If the Session Expiry Interval is absent, the Session Expiry Interval in the CONNECT packet is used.
-                    effectiveSessionExpiryInterval = connectedClient.ConnectPacket.SessionExpiryInterval;
-                }
-
-                return effectiveSessionExpiryInterval != 0U;
+                return connectedClient.Session.ExpiryInterval != 0U;
             }
 
             case MqttProtocolVersion.V311:

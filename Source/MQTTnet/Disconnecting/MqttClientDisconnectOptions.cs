@@ -8,6 +8,14 @@ namespace MQTTnet;
 
 public sealed class MqttClientDisconnectOptions
 {
+    uint _sessionExpiryInterval;
+
+    /// <summary>
+    ///     Whether Session Expiry Interval is present. Setting the interval sets this flag, including for zero.
+    ///     Set this to false to omit the property and retain the CONNECT interval.
+    /// </summary>
+    public bool HasSessionExpiryInterval { get; set; }
+
     /// <summary>
     ///     Gets or sets the reason code.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
@@ -24,7 +32,15 @@ public sealed class MqttClientDisconnectOptions
     ///     Gets or sets the session expiry interval.
     ///     <remarks>MQTT 5.0.0+ feature.</remarks>
     /// </summary>
-    public uint SessionExpiryInterval { get; set; }
+    public uint SessionExpiryInterval
+    {
+        get => _sessionExpiryInterval;
+        set
+        {
+            _sessionExpiryInterval = value;
+            HasSessionExpiryInterval = true;
+        }
+    }
 
     /// <summary>
     ///     Gets or sets the user properties.

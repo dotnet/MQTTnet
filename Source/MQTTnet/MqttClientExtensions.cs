@@ -26,6 +26,9 @@ public static class MqttClientExtensions
             Reason = reason,
             ReasonString = reasonString,
             SessionExpiryInterval = sessionExpiryInterval,
+            // Preserve the optional parameter's legacy zero-as-absent behavior.
+            // Use MqttClientDisconnectOptions to send an explicit zero.
+            HasSessionExpiryInterval = sessionExpiryInterval != 0,
             UserProperties = userProperties
         };
 

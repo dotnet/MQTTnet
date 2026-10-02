@@ -14,8 +14,7 @@ public static class MqttDisconnectPacketFactory
         ReasonCode = MqttDisconnectReasonCode.NormalDisconnection,
         UserProperties = null,
         ReasonString = null,
-        ServerReference = null,
-        SessionExpiryInterval = 0
+        ServerReference = null
     };
 
     public static MqttDisconnectPacket Create(MqttClientDisconnectOptions clientDisconnectOptions)
@@ -29,7 +28,8 @@ public static class MqttDisconnectPacketFactory
         {
             ReasonCode = (MqttDisconnectReasonCode)clientDisconnectOptions.Reason,
             UserProperties = clientDisconnectOptions.UserProperties,
-            SessionExpiryInterval = clientDisconnectOptions.SessionExpiryInterval
+            SessionExpiryInterval = clientDisconnectOptions.SessionExpiryInterval,
+            HasSessionExpiryInterval = clientDisconnectOptions.HasSessionExpiryInterval
         };
     }
 }

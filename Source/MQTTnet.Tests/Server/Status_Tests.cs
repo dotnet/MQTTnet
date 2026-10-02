@@ -78,11 +78,11 @@ public sealed class Status_Tests : BaseTestClass
         var server = await testEnvironment.StartServer(o => o.WithPersistentSessions());
 
         var c1 = await testEnvironment.ConnectClient(
-            new MqttClientOptionsBuilder().WithClientId("client1").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V500));
+            new MqttClientOptionsBuilder().WithClientId("client1").WithCleanSession(false).WithSessionExpiryInterval(30).WithProtocolVersion(MqttProtocolVersion.V500));
         var c2 = await testEnvironment.ConnectClient(
-            new MqttClientOptionsBuilder().WithClientId("client2").WithCleanSession(false).WithProtocolVersion(MqttProtocolVersion.V500));
+            new MqttClientOptionsBuilder().WithClientId("client2").WithCleanSession(false).WithSessionExpiryInterval(30).WithProtocolVersion(MqttProtocolVersion.V500));
 
-        // The session expiry interval is mandatory for MQTT5.0.0 in order keep session!
+        // A nonzero CONNECT expiry permits replacing the interval on DISCONNECT.
         await c1.DisconnectAsync(sessionExpiryInterval: 60);
 
         await LongTestDelay();
@@ -93,7 +93,7 @@ public sealed class Status_Tests : BaseTestClass
         Assert.HasCount(1, clientStatus);
         Assert.HasCount(2, sessionStatus);
 
-        // The session expiry interval is mandatory for MQTT5.0.0 in order keep session!
+        // A nonzero CONNECT expiry permits replacing the interval on DISCONNECT.
         await c2.DisconnectAsync(sessionExpiryInterval: 60);
 
         await LongTestDelay();

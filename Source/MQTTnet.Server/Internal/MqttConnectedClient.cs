@@ -90,6 +90,7 @@ public sealed class MqttConnectedClient : IDisposable
         _logger.Info("Client '{0}': Session started", Id);
 
         Session.LatestConnectPacket = ConnectPacket;
+        Session.ExpiryInterval = ConnectPacket.SessionExpiryInterval;
         Session.WillMessageSent = false;
 
         try
@@ -449,6 +450,18 @@ public sealed class MqttConnectedClient : IDisposable
                 }
                 else if (currentPacket is MqttDisconnectPacket disconnectPacket)
                 {
+                    if (disconnectPacket.HasSessionExpiryInterval)
+                    {
+                        // MQTT 5.0 section 3.14.2.2.2 prohibits extending a zero CONNECT interval.
+                        if (ConnectPacket.SessionExpiryInterval == 0 && disconnectPacket.SessionExpiryInterval != 0)
+                        {
+                            await StopAsync(new MqttServerClientDisconnectOptions { ReasonCode = MqttDisconnectReasonCode.ProtocolError }).ConfigureAwait(false);
+                            return;
+                        }
+
+                        Session.ExpiryInterval = disconnectPacket.SessionExpiryInterval;
+                    }
+
                     DisconnectPacket = disconnectPacket;
                     return;
                 }

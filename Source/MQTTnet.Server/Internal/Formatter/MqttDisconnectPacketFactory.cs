@@ -14,8 +14,7 @@ public static class MqttDisconnectPacketFactory
         ReasonCode = MqttDisconnectReasonCode.NormalDisconnection,
         UserProperties = null,
         ReasonString = null,
-        ServerReference = null,
-        SessionExpiryInterval = 0
+        ServerReference = null
     };
 
     public static MqttDisconnectPacket Create(MqttServerClientDisconnectOptions clientDisconnectOptions)
@@ -30,8 +29,7 @@ public static class MqttDisconnectPacketFactory
             ReasonCode = clientDisconnectOptions.ReasonCode,
             UserProperties = clientDisconnectOptions.UserProperties,
             ReasonString = clientDisconnectOptions.ReasonString,
-            ServerReference = clientDisconnectOptions.ServerReference,
-            SessionExpiryInterval = 0 // TODO: Not yet supported!
+            ServerReference = clientDisconnectOptions.ServerReference
         };
     }
 }

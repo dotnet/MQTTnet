@@ -309,7 +309,7 @@ public sealed class Session_Tests : BaseTestClass
     }
 
     [TestMethod]
-    public async Task Will_Message_Do_Not_Send_On_Takeover()
+    public async Task Will_Message_Is_Sent_On_Takeover()
     {
         using var testEnvironment = CreateTestEnvironment();
         var receivedMessagesCount = 0;
@@ -336,7 +336,9 @@ public sealed class Session_Tests : BaseTestClass
 
         await Task.Delay(1000);
 
-        Assert.AreEqual(0, receivedMessagesCount);
+        // MQTT 3.1.1 [3.1.2-8] and [3.1.4-2]: takeover closes the old
+        // connection without receiving its DISCONNECT, so its Will is published.
+        Assert.AreEqual(1, receivedMessagesCount);
     }
 
     static async Task<IMqttClient> ConnectAndSubscribe(TestEnvironment testEnvironment, MqttClientOptionsBuilder options, Action onReceive)

@@ -23,6 +23,16 @@ public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapte
 
     public override async Task OnConnectedAsync(ConnectionContext connection)
     {
+        ArgumentNullException.ThrowIfNull(connection);
+
+        var serverOptions = _serverOptions;
+        var clientHandler = ClientHandler;
+        if (serverOptions == null || clientHandler == null)
+        {
+            connection.Abort();
+            return;
+        }
+
         // required for websocket transport to work
         var transferFormatFeature = connection.Features.Get<ITransferFormatFeature>();
         if (transferFormatFeature != null)
@@ -30,17 +40,15 @@ public sealed class MqttConnectionHandler : ConnectionHandler, IMqttServerAdapte
             transferFormatFeature.ActiveFormat = TransferFormat.Binary;
         }
 
-        var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(_serverOptions.WriterBufferSize, _serverOptions.WriterBufferSizeMax));
+        var formatter = new MqttPacketFormatterAdapter(new MqttBufferWriter(serverOptions.WriterBufferSize, serverOptions.WriterBufferSizeMax));
         using var adapter = new MqttConnectionContext(formatter, connection);
-        var clientHandler = ClientHandler;
-        if (clientHandler != null)
-        {
-            await clientHandler(adapter).ConfigureAwait(false);
-        }
+        await clientHandler(adapter).ConfigureAwait(false);
     }
 
     public Task StartAsync(MqttServerOptions options, IMqttNetLogger logger)
     {
+        ArgumentNullException.ThrowIfNull(options);
+
         _serverOptions = options;
 
         return Task.CompletedTask;

@@ -115,6 +115,31 @@ public class MqttConnectionContextTest
         await Assert.ThrowsExactlyAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(CancellationToken.None)).ConfigureAwait(false);
     }
 
+    [TestMethod]
+    public async Task ConnectionHandler_Aborts_Connection_When_Server_Not_Started()
+    {
+        var handler = new MqttConnectionHandler();
+        var connection = new AbortTrackingConnectionContext
+        {
+            Transport = new DuplexPipeMockup()
+        };
+
+        await handler.OnConnectedAsync(connection);
+
+        Assert.IsTrue(connection.Aborted);
+    }
+
+    sealed class AbortTrackingConnectionContext : DefaultConnectionContext
+    {
+        public bool Aborted { get; private set; }
+
+        public override void Abort(ConnectionAbortedException abortReason)
+        {
+            Aborted = true;
+            base.Abort(abortReason);
+        }
+    }
+
     sealed class Startup
     {
 #pragma warning disable CA1822

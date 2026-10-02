@@ -42,7 +42,12 @@ public sealed class MqttPacketBus : IDisposable
         }
     }
 
-    public async Task<MqttPacketBusItem> DequeueItemAsync(CancellationToken cancellationToken)
+    public Task<MqttPacketBusItem> DequeueItemAsync(CancellationToken cancellationToken)
+    {
+        return DequeueItemAsync(null, cancellationToken);
+    }
+
+    public async Task<MqttPacketBusItem> DequeueItemAsync(Func<MqttPacketBusItem, bool> canDequeue, CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
         {
@@ -65,7 +70,7 @@ public sealed class MqttPacketBus : IDisposable
 
                     var activePartition = _partitions[_activePartition];
 
-                    if (activePartition.First != null)
+                    if (activePartition.First != null && (canDequeue == null || canDequeue(activePartition.First.Value)))
                     {
                         var item = activePartition.First;
                         activePartition.RemoveFirst();
@@ -97,6 +102,11 @@ public sealed class MqttPacketBus : IDisposable
     public void Dispose()
     {
         _signal.Dispose();
+    }
+
+    public void Signal()
+    {
+        _signal.Set();
     }
 
     public MqttPacketBusItem DropFirstItem(MqttPacketBusPartition partition)

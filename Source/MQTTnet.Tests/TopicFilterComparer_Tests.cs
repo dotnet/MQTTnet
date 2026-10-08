@@ -84,6 +84,15 @@ public sealed class MqttTopicFilterComparer_Tests
     }
 
     [TestMethod]
+    public void MiddleOneLevelWildcardMatchEmptyLevel()
+    {
+        CompareAndAssert("parameter_value//wind/reference", "parameter_value/+/wind/reference", MqttTopicFilterCompareResult.IsMatch);
+        CompareAndAssert("/A", "+/A", MqttTopicFilterCompareResult.IsMatch);
+        CompareAndAssert("A//B", "A/+/+/B", MqttTopicFilterCompareResult.NoMatch);
+        CompareAndAssert("A///B", "A/+/+/B", MqttTopicFilterCompareResult.IsMatch);
+    }
+
+    [TestMethod]
     public void MiddleOneLevelWildcardNoMatch()
     {
         CompareAndAssert("A/B/C/D", "A/+/C", MqttTopicFilterCompareResult.NoMatch);

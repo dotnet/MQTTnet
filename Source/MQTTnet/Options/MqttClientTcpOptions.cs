@@ -12,7 +12,13 @@ public sealed class MqttClientTcpOptions : IMqttClientChannelOptions
 {
     public AddressFamily AddressFamily { get; set; } = AddressFamily.Unspecified;
 
-    public int BufferSize { get; set; } = 8192;
+    /// <summary>
+    ///     Gets or sets the socket send and receive buffer size in bytes.
+    ///     Values less than or equal to 0 keep the OS defaults (including TCP window auto-tuning).
+    ///     A small fixed value limits throughput for large payloads.
+    ///     Default: 0
+    /// </summary>
+    public int BufferSize { get; set; }
 
     /// <summary>
     ///     Gets or sets whether the underlying socket should run in dual mode.

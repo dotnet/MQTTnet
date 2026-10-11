@@ -439,6 +439,11 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public void OnSubscriptionsAdded(MqttSession clientSession, List<string> subscriptionsTopics)
     {
+        if (subscriptionsTopics.Count == 0)
+        {
+            return;
+        }
+
         _sessionsManagementLock.EnterWriteLock();
         try
         {

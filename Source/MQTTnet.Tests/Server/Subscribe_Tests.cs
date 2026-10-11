@@ -84,6 +84,52 @@ public sealed class Subscribe_Tests : BaseTestClass
         Assert.AreEqual(MqttClientSubscribeResultCode.TopicFilterInvalid, subscribeResult.Items.First().ResultCode);
     }
 
+    // Issue #2062: a SUBSCRIBE whose topic filters are all rejected by the interceptor must not
+    // register the session as a subscriber session.
+    [TestMethod]
+    public async Task Session_Not_Tracked_As_Subscriber_When_All_Subscriptions_Not_Processed()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
+
+        server.InterceptingSubscriptionAsync += e =>
+        {
+            e.ProcessSubscription = false;
+            return CompletedTask.Instance;
+        };
+
+        var client = await testEnvironment.ConnectClient();
+        await client.SubscribeAsync("A");
+        await client.SubscribeAsync("B");
+
+        Assert.AreEqual(0, GetSubscriberSessionsCount(server));
+    }
+
+    // Issue #2062: same as above, but rejected via a failure reason code instead of ProcessSubscription.
+    [TestMethod]
+    public async Task Session_Not_Tracked_As_Subscriber_When_All_Subscriptions_Denied()
+    {
+        using var testEnvironment = CreateTestEnvironment(MqttProtocolVersion.V500);
+        var server = await testEnvironment.StartServer();
+
+        server.InterceptingSubscriptionAsync += e =>
+        {
+            e.Response.ReasonCode = MqttSubscribeReasonCode.NotAuthorized;
+            return CompletedTask.Instance;
+        };
+
+        var client = await testEnvironment.ConnectClient();
+        await client.SubscribeAsync("A");
+
+        Assert.AreEqual(0, GetSubscriberSessionsCount(server));
+    }
+
+    static int GetSubscriberSessionsCount(MqttServer server)
+    {
+        var sessionsManager = server.GetFieldValue("_clientSessionsManager");
+        return ((HashSet<MQTTnet.Server.Internal.MqttSession>)sessionsManager.GetFieldValue("_subscriberSessions")).Count;
+    }
+
     [TestMethod]
     public async Task Intercept_Subscribe_With_User_Properties()
     {

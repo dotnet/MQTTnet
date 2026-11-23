@@ -35,6 +35,9 @@ public sealed class Subscribe_Tests : BaseTestClass
     [DataRow("A/B/C/D", "A/+/C/#", true)]
     [DataRow("A/B/C", "A/B/+", true)]
     [DataRow("A/B1/B2/C", "A/+/C", false)]
+    [DataRow("A//C", "A/+/C", true)]
+    [DataRow("/B/C", "+/B/C", true)]
+    [DataRow("A/C", "A/+/C", false)]
     public async Task Subscription_Roundtrip(string topic, string filter, bool shouldWork)
     {
         using var testEnvironment = CreateTestEnvironment();

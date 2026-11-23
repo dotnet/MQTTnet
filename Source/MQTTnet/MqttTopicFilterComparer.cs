@@ -32,20 +32,9 @@ public static class MqttTopicFilterComparer
         fixed (char* topicPointer = topic)
         fixed (char* filterPointer = filter)
         {
-            if (filterLength > topicLength)
-            {
-                // It is impossible to create a filter which is longer than the actual topic.
-                // The only way this can happen is when the last char is a wildcard char.
-                // sensor/7/temperature >> sensor/7/temperature = Equal
-                // sensor/+/temperature >> sensor/7/temperature = Equal
-                // sensor/7/+           >> sensor/7/temperature = Shorter
-                // sensor/#             >> sensor/7/temperature = Shorter
-                var lastFilterChar = filterPointer[filterLength - 1];
-                if (lastFilterChar != MultiLevelWildcard && lastFilterChar != SingleLevelWildcard)
-                {
-                    return MqttTopicFilterCompareResult.NoMatch;
-                }
-            }
+            // Note: A filter can be longer than the topic it matches because "+" also matches an
+            // empty topic level (e.g. "sensor/+/temperature" matches "sensor//temperature").
+            // So the length of the filter cannot be used to reject a topic early.
 
             var isMultiLevelFilter = filterPointer[filterLength - 1] == MultiLevelWildcard;
             var isReservedTopic = topicPointer[0] == ReservedTopicPrefix;

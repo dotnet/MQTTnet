@@ -115,6 +115,69 @@ public class MqttConnectionContextTest
         await Assert.ThrowsExactlyAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(CancellationToken.None)).ConfigureAwait(false);
     }
 
+    [TestMethod]
+    [DataRow(new byte[] { 0x10 })]
+    [DataRow(new byte[] { 0x10, 0x80 })]
+    [DataRow(new byte[] { 0x10, 0x0C, 0x00 })]
+    public async Task TestReceivePacketAsyncThrowsWhenReaderCompletedWithIncompletePacket(byte[] packet)
+    {
+        var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
+        var pipe = new DuplexPipeMockup();
+        var connection = new DefaultConnectionContext();
+        connection.Transport = pipe;
+        using var ctx = new MqttConnectionContext(serializer, connection);
+
+        await pipe.Receive.Writer.WriteAsync(packet).ConfigureAwait(false);
+        await pipe.Receive.Writer.CompleteAsync().ConfigureAwait(false);
+
+        // Bound the test if the receiver keeps reading the completed pipe instead of reporting EOF.
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        await Assert.ThrowsExactlyAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(timeout.Token)).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    [DataRow(new byte[] { 0xC0, 0x00, 0xC0, 0x00 })]
+    [DataRow(new byte[] { 0xC0, 0x00, 0xC0, 0x00, 0x10 })]
+    public async Task TestReceivePacketAsyncReadsBufferedPacketsBeforeReportingEof(byte[] packets)
+    {
+        var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
+        var pipe = new DuplexPipeMockup();
+        var connection = new DefaultConnectionContext();
+        connection.Transport = pipe;
+        using var ctx = new MqttConnectionContext(serializer, connection);
+
+        await pipe.Receive.Writer.WriteAsync(packets).ConfigureAwait(false);
+        await pipe.Receive.Writer.CompleteAsync().ConfigureAwait(false);
+
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        Assert.IsInstanceOfType<MqttPingReqPacket>(await ctx.ReceivePacketAsync(timeout.Token).ConfigureAwait(false));
+        Assert.IsInstanceOfType<MqttPingReqPacket>(await ctx.ReceivePacketAsync(timeout.Token).ConfigureAwait(false));
+        Assert.AreEqual(4L, ctx.BytesReceived);
+        await Assert.ThrowsExactlyAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(timeout.Token)).ConfigureAwait(false);
+    }
+
+    [TestMethod]
+    public async Task TestReceivePacketAsyncWaitsForRemainingBytesWhileReaderIsOpen()
+    {
+        var serializer = new MqttPacketFormatterAdapter(MqttProtocolVersion.V311, new MqttBufferWriter(4096, 65535));
+        var pipe = new DuplexPipeMockup();
+        var connection = new DefaultConnectionContext();
+        connection.Transport = pipe;
+        using var ctx = new MqttConnectionContext(serializer, connection);
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+
+        await pipe.Receive.Writer.WriteAsync(new byte[] { 0xC0 }).ConfigureAwait(false);
+        var receiveTask = ctx.ReceivePacketAsync(timeout.Token);
+        Assert.IsFalse(receiveTask.IsCompleted);
+
+        await pipe.Receive.Writer.WriteAsync(new byte[] { 0x00 }).ConfigureAwait(false);
+        Assert.IsInstanceOfType<MqttPingReqPacket>(await receiveTask.ConfigureAwait(false));
+        Assert.AreEqual(2L, ctx.BytesReceived);
+
+        await pipe.Receive.Writer.CompleteAsync().ConfigureAwait(false);
+        await Assert.ThrowsExactlyAsync<MqttCommunicationException>(() => ctx.ReceivePacketAsync(timeout.Token)).ConfigureAwait(false);
+    }
+
     sealed class Startup
     {
 #pragma warning disable CA1822

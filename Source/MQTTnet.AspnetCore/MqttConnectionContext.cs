@@ -180,7 +180,8 @@ public sealed class MqttConnectionContext : IMqttChannelAdapter
                             return packet;
                         }
                     }
-                    else if (readResult.IsCompleted)
+
+                    if (readResult.IsCompleted)
                     {
                         throw new MqttCommunicationException("Connection Aborted");
                     }

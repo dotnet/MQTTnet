@@ -23,8 +23,8 @@ public sealed class MqttSession : IDisposable
     // Do not use a dictionary in order to keep the ordering of the messages.
     readonly List<MqttPublishPacket> _unacknowledgedPublishPackets = new();
 
-    // Bookkeeping to know if this is a subscribing client; lazy initialize later.
-    HashSet<string> _subscribedTopics;
+    readonly HashSet<string> _subscribedSimpleTopics = [];
+    readonly HashSet<string> _subscribedWildcardTopics = [];
 
     public MqttSession(
         MqttConnectPacket connectPacket,
@@ -50,7 +50,9 @@ public sealed class MqttSession : IDisposable
 
     public uint ExpiryInterval => _connectPacket.SessionExpiryInterval;
 
-    public bool HasSubscribedTopics => _subscribedTopics != null && _subscribedTopics.Count > 0;
+    public bool HasSubscribedWildcardTopics => _subscribedWildcardTopics.Count > 0;
+
+    public HashSet<string> SubscribedSimpleTopics => _subscribedSimpleTopics;
 
     public string Id => _connectPacket.ClientId;
 
@@ -79,14 +81,16 @@ public sealed class MqttSession : IDisposable
         return publishPacket;
     }
 
-    public void AddSubscribedTopic(string topic)
+    public void AddSubscribedTopic(string topic, bool isWildcardTopic)
     {
-        if (_subscribedTopics == null)
+        if (isWildcardTopic)
         {
-            _subscribedTopics = new HashSet<string>();
+            _subscribedWildcardTopics.Add(topic);
         }
-
-        _subscribedTopics.Add(topic);
+        else
+        {
+            _subscribedSimpleTopics.Add(topic);
+        }
     }
 
     public Task DeleteAsync()
@@ -208,7 +212,8 @@ public sealed class MqttSession : IDisposable
 
     public void RemoveSubscribedTopic(string topic)
     {
-        _subscribedTopics?.Remove(topic);
+        _subscribedSimpleTopics.Remove(topic);
+        _subscribedWildcardTopics.Remove(topic);
     }
 
     public Task<SubscribeResult> Subscribe(MqttSubscribePacket subscribePacket, CancellationToken cancellationToken)

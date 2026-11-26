@@ -25,7 +25,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
     readonly Dictionary<string, MqttSubscription> _subscriptions = new Dictionary<string, MqttSubscription>();
 
     // Use subscription lock to maintain consistency across subscriptions and topic hash dictionaries
-    readonly ReaderWriterLockSlim _subscriptionsLock = new ReaderWriterLockSlim();
+    readonly SemaphoreSlim _subscriptionsLock = new SemaphoreSlim(1, 1);
     readonly Dictionary<ulong, TopicHashMaskSubscriptions> _wildcardSubscriptionsByTopicHash = new Dictionary<ulong, TopicHashMaskSubscriptions>();
 
     public MqttClientSubscriptionsManager(
@@ -45,7 +45,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
         var possibleSubscriptions = new List<MqttSubscription>();
 
         // Check for possible subscriptions. They might have collisions but this is fine.
-        _subscriptionsLock.EnterReadLock();
+        _subscriptionsLock.Wait();
         try
         {
             if (_noWildcardSubscriptionsByTopicHash.TryGetValue(topicHash, out var noWildcardSubscriptions))
@@ -70,7 +70,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
         }
         finally
         {
-            _subscriptionsLock.ExitReadLock();
+            _subscriptionsLock.Release();
         }
 
         // The pre check has evaluated that nothing is subscribed.
@@ -225,7 +225,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
 
         var removedSubscriptions = new List<string>();
 
-        _subscriptionsLock.EnterWriteLock();
+        await _subscriptionsLock.WaitAsync(cancellationToken);
         try
         {
             foreach (var topicFilter in unsubscribePacket.TopicFilters)
@@ -289,7 +289,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
         }
         finally
         {
-            _subscriptionsLock.ExitWriteLock();
+            _subscriptionsLock.Release();
             _subscriptionChangedNotification?.OnSubscriptionsRemoved(_session, removedSubscriptions);
         }
 
@@ -338,7 +338,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
 
         // Add to subscriptions and maintain topic hash dictionaries
 
-        _subscriptionsLock.EnterWriteLock();
+        _subscriptionsLock.Wait();
         try
         {
             MqttTopicHash.Calculate(topicFilter.Topic, out var topicHash, out _, out var hasWildcard);
@@ -391,7 +391,7 @@ public sealed class MqttClientSubscriptionsManager : IDisposable
         }
         finally
         {
-            _subscriptionsLock.ExitWriteLock();
+            _subscriptionsLock.Release();
         }
 
         return new CreateSubscriptionResult

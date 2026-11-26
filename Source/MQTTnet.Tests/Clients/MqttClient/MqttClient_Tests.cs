@@ -487,6 +487,61 @@ public sealed class MqttClient_Tests : BaseTestClass
     }
 
     [TestMethod]
+    public async Task KeepAlive_Timeout_Raises_Disconnected_While_Publishing()
+    {
+        var adapterFactory = new KeepAliveTimeoutAdapterFactory();
+        var disconnected = new TaskCompletionSource<MqttClientDisconnectedEventArgs>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        using var client = new MqttClientFactory().CreateMqttClient(adapterFactory);
+        client.DisconnectedAsync += eventArgs =>
+        {
+            disconnected.TrySetResult(eventArgs);
+            return CompletedTask.Instance;
+        };
+
+        var options = new MqttClientOptionsBuilder()
+            .WithTcpServer("localhost")
+            .WithKeepAlivePeriod(TimeSpan.FromSeconds(1))
+            .Build();
+
+        await client.ConnectAsync(options);
+
+        var message = new MqttApplicationMessageBuilder().WithTopic("keep-alive").Build();
+        using var publishCancellation = new CancellationTokenSource();
+        var publishTask = Task.Run(async () =>
+        {
+            try
+            {
+                while (!disconnected.Task.IsCompleted)
+                {
+                    await client.PublishAsync(message, publishCancellation.Token);
+                    await Task.Delay(TimeSpan.FromMilliseconds(100), publishCancellation.Token);
+                }
+            }
+            catch (OperationCanceledException) when (publishCancellation.IsCancellationRequested)
+            {
+            }
+            catch (MqttClientNotConnectedException) when (disconnected.Task.IsCompleted)
+            {
+            }
+        });
+
+        try
+        {
+            var disconnectedEventArgs = await disconnected.Task.WaitAsync(TimeSpan.FromSeconds(3));
+
+            Assert.IsTrue(disconnectedEventArgs.ClientWasConnected);
+            Assert.IsInstanceOfType<OperationCanceledException>(disconnectedEventArgs.Exception);
+            Assert.IsFalse(client.IsConnected);
+        }
+        finally
+        {
+            await publishCancellation.CancelAsync();
+            await publishTask;
+        }
+    }
+
+    [TestMethod]
     public async Task Publish_QoS_1_In_ApplicationMessageReceiveHandler()
     {
         using var testEnvironment = new TestEnvironment(TestContext);

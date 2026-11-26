@@ -90,7 +90,7 @@ public sealed class MqttTcpServerListener : IDisposable
 
             if (_options.TcpKeepAliveRetryCount.HasValue)
             {
-                _socket.TcpKeepAliveInterval = _options.TcpKeepAliveRetryCount.Value;
+                _socket.TcpKeepAliveRetryCount = _options.TcpKeepAliveRetryCount.Value;
             }
 
             if (_options.TcpKeepAliveTime.HasValue)

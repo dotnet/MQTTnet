@@ -2,3 +2,4 @@
 * Client: Add support for SOCKS5 proxies (#2251, thanks to @koepalex)
 * Client: Fixed keep alive ping send timeout disconnect handling (#2253, thanks to @suhashollakc)
 * Server: Fixed exposing Topic Alias to clients (#2250, thanks to @suhashollakc)
+* Client: `MqttClientTcpOptions.BufferSize` now defaults to the OS socket buffer sizes instead of a fixed 8 KB, which throttled large payload throughput (#2234)

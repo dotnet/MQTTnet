@@ -78,8 +78,11 @@ public sealed class MqttTcpChannel : IMqttChannel
                 socket.Bind(_tcpOptions.LocalEndpoint);
             }
 
-            socket.ReceiveBufferSize = _tcpOptions.BufferSize;
-            socket.SendBufferSize = _tcpOptions.BufferSize;
+            if (_tcpOptions.BufferSize > 0)
+            {
+                socket.ReceiveBufferSize = _tcpOptions.BufferSize;
+                socket.SendBufferSize = _tcpOptions.BufferSize;
+            }
             socket.SendTimeout = (int)_clientOptions.Timeout.TotalMilliseconds;
 
             if (_tcpOptions.ProtocolType == ProtocolType.Tcp)

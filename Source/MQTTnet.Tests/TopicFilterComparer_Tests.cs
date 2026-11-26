@@ -23,6 +23,12 @@ public sealed class MqttTopicFilterComparer_Tests
     }
 
     [TestMethod]
+    public void BeginningOneLevelWildcardMatchEmptyLevel()
+    {
+        CompareAndAssert("/B/C", "+/B/C", MqttTopicFilterCompareResult.IsMatch);
+    }
+
+    [TestMethod]
     public void Compare_UTF8_String_Match()
     {
         CompareAndAssert("öäüß", "öäüß", MqttTopicFilterCompareResult.IsMatch);
@@ -84,9 +90,34 @@ public sealed class MqttTopicFilterComparer_Tests
     }
 
     [TestMethod]
+    public void MiddleOneLevelWildcardMatchEmptyLevel()
+    {
+        // The single-level wildcard also matches an empty topic level (see #2275).
+        CompareAndAssert("A//C", "A/+/C", MqttTopicFilterCompareResult.IsMatch);
+        CompareAndAssert("parameter_value//wind/reference", "parameter_value/+/wind/reference", MqttTopicFilterCompareResult.IsMatch);
+    }
+
+    [TestMethod]
     public void MiddleOneLevelWildcardNoMatch()
     {
         CompareAndAssert("A/B/C/D", "A/+/C", MqttTopicFilterCompareResult.NoMatch);
+    }
+
+    [TestMethod]
+    public void MiddleOneLevelWildcardNoMatchEmptyLevel()
+    {
+        // The filter is longer than the topic but the number of levels does not match.
+        CompareAndAssert("A/C", "A/+/C", MqttTopicFilterCompareResult.NoMatch);
+        CompareAndAssert("A//C/D", "A/+/C", MqttTopicFilterCompareResult.NoMatch);
+        CompareAndAssert("A//B", "A/+/+/B", MqttTopicFilterCompareResult.NoMatch);
+        CompareAndAssert("A//X", "A/+/C", MqttTopicFilterCompareResult.NoMatch);
+    }
+
+    [TestMethod]
+    public void MultipleOneLevelWildcardsMatchEmptyLevels()
+    {
+        CompareAndAssert("A///D", "A/+/+/D", MqttTopicFilterCompareResult.IsMatch);
+        CompareAndAssert("//C", "+/+/C", MqttTopicFilterCompareResult.IsMatch);
     }
 
     [TestMethod]
@@ -144,6 +175,7 @@ public sealed class MqttTopicFilterComparer_Tests
         CompareAndAssert("/finance", "+/+", MqttTopicFilterCompareResult.IsMatch);
         CompareAndAssert("/finance", "/+", MqttTopicFilterCompareResult.IsMatch);
         CompareAndAssert("/finance", "+", MqttTopicFilterCompareResult.NoMatch);
+        CompareAndAssert("/finance", "+/finance", MqttTopicFilterCompareResult.IsMatch);
     }
 
     static void CompareAndAssert(string topic, string filter, MqttTopicFilterCompareResult expectedResult)

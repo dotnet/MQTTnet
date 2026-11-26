@@ -14,6 +14,7 @@ public sealed class MqttSession : IDisposable
 {
     readonly MqttClientSessionsManager _clientSessionsManager;
     readonly MqttConnectPacket _connectPacket;
+    readonly object _dataEnqueueLock = new();
     readonly MqttServerEventContainer _eventContainer;
     readonly MqttPacketBus _packetBus = new();
     readonly MqttPacketIdentifierProvider _packetIdentifierProvider = new();
@@ -25,6 +26,7 @@ public sealed class MqttSession : IDisposable
 
     // Bookkeeping to know if this is a subscribing client; lazy initialize later.
     HashSet<string> _subscribedTopics;
+    bool _disposed;
 
     public MqttSession(
         MqttConnectPacket connectPacket,
@@ -101,7 +103,17 @@ public sealed class MqttSession : IDisposable
 
     public void Dispose()
     {
-        _packetBus.Dispose();
+        lock (_dataEnqueueLock)
+        {
+            if (_disposed)
+            {
+                return;
+            }
+
+            _disposed = true;
+            _packetBus.Dispose();
+        }
+
         _subscriptionsManager.Dispose();
     }
 
@@ -112,8 +124,39 @@ public sealed class MqttSession : IDisposable
 
     public EnqueueDataPacketResult EnqueueDataPacket(MqttPacketBusItem packetBusItem)
     {
+        return EnqueueDataPacket(packetBusItem, true, out _);
+    }
+
+    internal EnqueueDataPacketResult EnqueueDataPacket(MqttPacketBusItem packetBusItem, bool allowEviction, out ushort packetIdentifier)
+    {
+        ArgumentNullException.ThrowIfNull(packetBusItem);
+        var publishPacket = (MqttPublishPacket)packetBusItem.Packet;
+        MqttPacketBusItem overwritten;
+        EnqueueDataPacketResult result;
+        lock (_dataEnqueueLock)
+        {
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            result = EnqueueDataPacketCore(packetBusItem, publishPacket, allowEviction, out overwritten);
+            packetIdentifier = result == EnqueueDataPacketResult.Enqueued ? publishPacket.PacketIdentifier : (ushort)0;
+        }
+
+        NotifyOverwrittenPacket(overwritten);
+        return result;
+    }
+
+    // All data producers and recovery share the admission gate. Dequeue may only free capacity.
+    EnqueueDataPacketResult EnqueueDataPacketCore(
+        MqttPacketBusItem packetBusItem, MqttPublishPacket publishPacket, bool allowEviction, out MqttPacketBusItem overwritten)
+    {
+        overwritten = null;
         if (PendingDataPacketsCount >= _serverOptions.MaxPendingMessagesPerClient)
         {
+            if (!allowEviction)
+            {
+                // Rejection is backpressure: no packet identifier, tracking entry or faulted promise.
+                return EnqueueDataPacketResult.Dropped;
+            }
+
             if (_serverOptions.PendingMessagesOverflowStrategy == MqttPendingMessagesOverflowStrategy.DropNewMessage)
             {
                 packetBusItem.Fail(new MqttPendingMessagesOverflowException(Id, _serverOptions.PendingMessagesOverflowStrategy));
@@ -124,21 +167,13 @@ public sealed class MqttSession : IDisposable
             {
                 // Only drop from the data partition. Dropping from control partition might break the connection
                 // because the client does not receive PINGREQ packets etc. any longer.
-                var firstItem = _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
-                if (firstItem != null)
+                overwritten = _packetBus.DropFirstItem(MqttPacketBusPartition.Data);
+                if (overwritten != null)
                 {
-                    firstItem.Fail(new MqttPendingMessagesOverflowException(Id, _serverOptions.PendingMessagesOverflowStrategy));
-
-                    if (_eventContainer.QueuedApplicationMessageOverwrittenEvent.HasHandlers)
-                    {
-                        var eventArgs = new QueueMessageOverwrittenEventArgs(Id, firstItem.Packet);
-                        _eventContainer.QueuedApplicationMessageOverwrittenEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
-                    }
+                    overwritten.Fail(new MqttPendingMessagesOverflowException(Id, _serverOptions.PendingMessagesOverflowStrategy));
                 }
             }
         }
-
-        var publishPacket = (MqttPublishPacket)packetBusItem.Packet;
 
         if (publishPacket.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce)
         {
@@ -152,6 +187,15 @@ public sealed class MqttSession : IDisposable
 
         _packetBus.EnqueueItem(packetBusItem, MqttPacketBusPartition.Data);
         return EnqueueDataPacketResult.Enqueued;
+    }
+
+    void NotifyOverwrittenPacket(MqttPacketBusItem overwritten)
+    {
+        if (overwritten != null && _eventContainer.QueuedApplicationMessageOverwrittenEvent.HasHandlers)
+        {
+            var eventArgs = new QueueMessageOverwrittenEventArgs(Id, overwritten.Packet);
+            _eventContainer.QueuedApplicationMessageOverwrittenEvent.InvokeAsync(eventArgs).ConfigureAwait(false);
+        }
     }
 
     public void EnqueueHealthPacket(MqttPacketBusItem packetBusItem)
@@ -191,18 +235,35 @@ public sealed class MqttSession : IDisposable
 
         // Create a copy of all currently unacknowledged publish packets and clear the storage.
         // We must re-enqueue them in order to trigger other code.
-        List<MqttPublishPacket> unacknowledgedPublishPackets;
-        lock (_unacknowledgedPublishPackets)
+        List<MqttPacketBusItem> overwrittenPackets = null;
+        lock (_dataEnqueueLock)
         {
-            unacknowledgedPublishPackets = _unacknowledgedPublishPackets.ToList();
-            _unacknowledgedPublishPackets.Clear();
+            ObjectDisposedException.ThrowIf(_disposed, this);
+            List<MqttPublishPacket> unacknowledgedPublishPackets;
+            lock (_unacknowledgedPublishPackets)
+            {
+                unacknowledgedPublishPackets = _unacknowledgedPublishPackets.ToList();
+                _unacknowledgedPublishPackets.Clear();
+            }
+
+            _packetBus.Clear();
+
+            foreach (var publishPacket in unacknowledgedPublishPackets)
+            {
+                EnqueueDataPacketCore(new MqttPacketBusItem(publishPacket), publishPacket, true, out var overwritten);
+                if (overwritten != null)
+                {
+                    (overwrittenPackets ??= new List<MqttPacketBusItem>()).Add(overwritten);
+                }
+            }
         }
 
-        _packetBus.Clear();
-
-        foreach (var publishPacket in unacknowledgedPublishPackets)
+        if (overwrittenPackets != null)
         {
-            EnqueueDataPacket(new MqttPacketBusItem(publishPacket));
+            foreach (var overwritten in overwrittenPackets)
+            {
+                NotifyOverwrittenPacket(overwritten);
+            }
         }
     }
 

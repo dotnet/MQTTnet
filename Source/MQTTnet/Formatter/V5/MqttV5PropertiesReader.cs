@@ -193,7 +193,9 @@ public struct MqttV5PropertiesReader
 
     public ReadOnlyMemory<byte> ReadUserPropertyValueBuffer()
     {
-        return _body.ReadBinaryData();
+        var value = _body.ReadBinaryData();
+        MqttBufferReader.ValidateUtf8String(value);
+        return value;
     }
 
     public bool ReadWildcardSubscriptionAvailable()

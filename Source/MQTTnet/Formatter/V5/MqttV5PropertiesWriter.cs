@@ -179,6 +179,12 @@ public sealed class MqttV5PropertiesWriter
         WriteAsFourByteInteger(MqttPropertyId.SessionExpiryInterval, value);
     }
 
+    internal void WriteDisconnectSessionExpiryInterval(uint value)
+    {
+        // Unlike CONNECT, an explicit zero on DISCONNECT differs from absence.
+        WriteAsFourByteInteger(MqttPropertyId.SessionExpiryInterval, value);
+    }
+
     public void WriteSharedSubscriptionAvailable(bool value)
     {
         if (value)

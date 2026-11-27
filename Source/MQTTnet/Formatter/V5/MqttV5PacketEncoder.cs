@@ -207,7 +207,10 @@ public sealed class MqttV5PacketEncoder(MqttBufferWriter bufferWriter)
 
         _propertiesWriter.WriteServerReference(packet.ServerReference);
         _propertiesWriter.WriteReasonString(packet.ReasonString);
-        _propertiesWriter.WriteSessionExpiryInterval(packet.SessionExpiryInterval);
+        if (packet.HasSessionExpiryInterval)
+        {
+            _propertiesWriter.WriteDisconnectSessionExpiryInterval(packet.SessionExpiryInterval);
+        }
         _propertiesWriter.WriteUserProperties(packet.UserProperties);
 
         _propertiesWriter.WriteTo(_bufferWriter);

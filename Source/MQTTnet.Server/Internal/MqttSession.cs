@@ -37,6 +37,7 @@ public sealed class MqttSession : IDisposable
         Items = items ?? throw new ArgumentNullException(nameof(items));
 
         _connectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
+        ExpiryInterval = connectPacket.SessionExpiryInterval;
         _serverOptions = serverOptions ?? throw new ArgumentNullException(nameof(serverOptions));
         _clientSessionsManager = clientSessionsManager ?? throw new ArgumentNullException(nameof(clientSessionsManager));
         _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
@@ -48,7 +49,7 @@ public sealed class MqttSession : IDisposable
 
     public DateTime? DisconnectedTimestamp { get; set; }
 
-    public uint ExpiryInterval => _connectPacket.SessionExpiryInterval;
+    public uint ExpiryInterval { get; internal set; }
 
     public bool HasSubscribedTopics => _subscribedTopics != null && _subscribedTopics.Count > 0;
 

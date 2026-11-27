@@ -17,7 +17,7 @@ public sealed class MqttClientUnexpectedDisconnectReceivedException(MqttDisconne
 
     public string ServerReference { get; } = disconnectPacket.ServerReference;
 
-    public uint? SessionExpiryInterval { get; } = disconnectPacket.SessionExpiryInterval;
+    public uint? SessionExpiryInterval { get; } = disconnectPacket.HasSessionExpiryInterval ? disconnectPacket.SessionExpiryInterval : null;
 
     public List<MqttUserProperty> UserProperties { get; } = disconnectPacket.UserProperties;
 }

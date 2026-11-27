@@ -17,6 +17,7 @@
   <Project Path="Source/MQTTnet.AspnetCore/MQTTnet.AspNetCore.csproj" />
   <Project Path="Source/MQTTnet.AspTestApp/MQTTnet.AspTestApp.csproj" />
   <Project Path="Source/MQTTnet.Benchmarks/MQTTnet.Benchmarks.csproj" />
+  <Project Path="Source/MQTTnet.Extensions.DelayedPublish/MQTTnet.Extensions.DelayedPublish.csproj" />
   <Project Path="Source/MQTTnet.Extensions.Rpc/MQTTnet.Extensions.Rpc.csproj" />
   <Project Path="Source/MQTTnet.Extensions.Socks5/MQTTnet.Extensions.Socks5.csproj" />
   <Project Path="Source/MQTTnet.Extensions.TopicTemplate/MQTTnet.Extensions.TopicTemplate.csproj" />

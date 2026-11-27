@@ -24,12 +24,17 @@ public sealed class MqttConnectedClient : IDisposable
 {
     readonly MqttServerEventContainer _eventContainer;
     readonly MqttNetSourceLogger _logger;
+    readonly AsyncLock _qos2AcknowledgementLock = new();
+    readonly HashSet<ushort> _qos2PublishPacketIdentifiersAwaitingPubRel = new();
     readonly MqttServerOptions _serverOptions;
     readonly MqttClientSessionsManager _sessionsManager;
+    readonly HashSet<ushort> _qos2PublishPacketIdentifiersAwaitingPubComp = new();
     readonly Dictionary<ushort, string> _topicAlias = new();
+    readonly int _initialSendQuota;
 
     CancellationTokenSource _cancellationToken = new();
     bool _disconnectPacketSent;
+    int _sendQuota;
 
     public MqttConnectedClient(
         MqttConnectPacket connectPacket,
@@ -46,6 +51,10 @@ public sealed class MqttConnectedClient : IDisposable
         ConnectPacket = connectPacket ?? throw new ArgumentNullException(nameof(connectPacket));
 
         ChannelAdapter = channelAdapter ?? throw new ArgumentNullException(nameof(channelAdapter));
+        _initialSendQuota = ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500 && connectPacket.ReceiveMaximum > 0
+            ? connectPacket.ReceiveMaximum
+            : ushort.MaxValue;
+        _sendQuota = _initialSendQuota;
         RemoteEndPoint = channelAdapter.RemoteEndPoint;
         Session = session ?? throw new ArgumentNullException(nameof(session));
 
@@ -77,6 +86,7 @@ public sealed class MqttConnectedClient : IDisposable
     public void Dispose()
     {
         _cancellationToken?.Dispose();
+        _qos2AcknowledgementLock.Dispose();
     }
 
     public void ResetStatistics()
@@ -130,16 +140,42 @@ public sealed class MqttConnectedClient : IDisposable
 
     public async Task SendPacketAsync(MqttPacket packet, CancellationToken cancellationToken)
     {
+        if (packet is MqttPubRelPacket pubRelPacket)
+        {
+            using (await _qos2AcknowledgementLock.EnterAsync(cancellationToken).ConfigureAwait(false))
+            {
+                var sentPacket = await SendPacketCoreAsync(packet, cancellationToken).ConfigureAwait(false);
+                if (sentPacket is MqttPubRelPacket && _qos2PublishPacketIdentifiersAwaitingPubRel.Remove(pubRelPacket.PacketIdentifier))
+                {
+                    _qos2PublishPacketIdentifiersAwaitingPubComp.Add(pubRelPacket.PacketIdentifier);
+                }
+            }
+
+            return;
+        }
+
+        await SendPacketCoreAsync(packet, cancellationToken).ConfigureAwait(false);
+    }
+
+    async Task<MqttPacket> SendPacketCoreAsync(MqttPacket packet, CancellationToken cancellationToken)
+    {
         packet = await InterceptPacketAsync(packet, cancellationToken).ConfigureAwait(false);
         if (packet == null)
         {
             // The interceptor has decided that this packet will not used at all.
             // This might break the protocol but the user wants that.
-            return;
+            return null;
+        }
+
+        if (packet is MqttPublishPacket publishPacket && publishPacket.QualityOfServiceLevel > MqttQualityOfServiceLevel.AtMostOnce &&
+            ChannelAdapter.PacketFormatterAdapter.ProtocolVersion == MqttProtocolVersion.V500)
+        {
+            Interlocked.Decrement(ref _sendQuota);
         }
 
         await ChannelAdapter.SendPacketAsync(packet, cancellationToken).ConfigureAwait(false);
         Statistics.HandleSentPacket(packet);
+        return packet;
     }
 
     public async Task StopAsync(MqttServerClientDisconnectOptions disconnectOptions)
@@ -191,26 +227,34 @@ public sealed class MqttConnectedClient : IDisposable
 
     Task HandleIncomingPubAckPacket(MqttPubAckPacket pubAckPacket)
     {
-        var acknowledgedPublishPacket = Session.AcknowledgePublishPacket(pubAckPacket.PacketIdentifier);
+        var acknowledgedPublishPacket = Session.AcknowledgePublishPacket(pubAckPacket.PacketIdentifier, MqttQualityOfServiceLevel.AtLeastOnce);
 
         if (acknowledgedPublishPacket != null)
         {
+            ReplenishSendQuota();
             return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubAckPacket);
         }
 
         return CompletedTask.Instance;
     }
 
-    Task HandleIncomingPubCompPacket(MqttPubCompPacket pubCompPacket)
+    async Task HandleIncomingPubCompPacket(MqttPubCompPacket pubCompPacket)
     {
-        var acknowledgedPublishPacket = Session.AcknowledgePublishPacket(pubCompPacket.PacketIdentifier);
-
-        if (acknowledgedPublishPacket != null)
+        using (await _qos2AcknowledgementLock.EnterAsync().ConfigureAwait(false))
         {
-            return ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubCompPacket);
-        }
+            if (!_qos2PublishPacketIdentifiersAwaitingPubComp.Remove(pubCompPacket.PacketIdentifier))
+            {
+                return;
+            }
 
-        return CompletedTask.Instance;
+            var acknowledgedPublishPacket = Session.AcknowledgePublishPacket(pubCompPacket.PacketIdentifier, MqttQualityOfServiceLevel.ExactlyOnce);
+
+            if (acknowledgedPublishPacket != null)
+            {
+                ReplenishSendQuota();
+                await ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubCompPacket).ConfigureAwait(false);
+            }
+        }
     }
 
     async Task HandleIncomingPublishPacket(MqttPublishPacket publishPacket, CancellationToken cancellationToken)
@@ -256,14 +300,41 @@ public sealed class MqttConnectedClient : IDisposable
         }
     }
 
-    Task HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
+    async Task HandleIncomingPubRecPacket(MqttPubRecPacket pubRecPacket)
     {
-        // Do not fire the event _ClientAcknowledgedPublishPacket_ here because the QoS 2 process is only finished
-        // properly when the client has sent the PUBCOMP packet.
+        using (await _qos2AcknowledgementLock.EnterAsync().ConfigureAwait(false))
+        {
+            if ((int)pubRecPacket.ReasonCode >= 0x80)
+            {
+                if (_qos2PublishPacketIdentifiersAwaitingPubRel.Contains(pubRecPacket.PacketIdentifier) ||
+                    _qos2PublishPacketIdentifiersAwaitingPubComp.Contains(pubRecPacket.PacketIdentifier))
+                {
+                    return;
+                }
+
+                var acknowledgedPublishPacket = Session.AcknowledgePublishPacket(pubRecPacket.PacketIdentifier, MqttQualityOfServiceLevel.ExactlyOnce);
+                if (acknowledgedPublishPacket != null)
+                {
+                    ReplenishSendQuota();
+                    await ClientAcknowledgedPublishPacket(acknowledgedPublishPacket, pubRecPacket).ConfigureAwait(false);
+                }
+
+                return;
+            }
+
+            // Do not fire the event _ClientAcknowledgedPublishPacket_ here because the QoS 2 process is only finished
+            // properly when the client has sent the PUBCOMP packet.
+            var publishPacket = Session.PeekAcknowledgePublishPacket(pubRecPacket.PacketIdentifier);
+            if (publishPacket?.QualityOfServiceLevel != MqttQualityOfServiceLevel.ExactlyOnce)
+            {
+                return;
+            }
+
+            _qos2PublishPacketIdentifiersAwaitingPubRel.Add(pubRecPacket.PacketIdentifier);
+        }
+
         var pubRelPacket = MqttPubRelPacketFactory.Create(pubRecPacket, MqttApplicationMessageReceivedReasonCode.Success);
         Session.EnqueueControlPacket(new MqttPacketBusItem(pubRelPacket));
-
-        return CompletedTask.Instance;
     }
 
     void HandleIncomingPubRelPacket(MqttPubRelPacket pubRelPacket)
@@ -496,7 +567,7 @@ public sealed class MqttConnectedClient : IDisposable
         {
             while (!cancellationToken.IsCancellationRequested && !IsTakenOver && IsRunning)
             {
-                packetBusItem = await Session.DequeuePacketAsync(cancellationToken).ConfigureAwait(false);
+                packetBusItem = await Session.DequeuePacketAsync(CanDequeuePacket, cancellationToken).ConfigureAwait(false);
 
                 // Also check the cancellation token here because the dequeue is blocking and may take some time.
                 if (cancellationToken.IsCancellationRequested)
@@ -517,10 +588,16 @@ public sealed class MqttConnectedClient : IDisposable
                 catch (OperationCanceledException)
                 {
                     packetBusItem.Cancel();
+                    StopInternal();
+                    return;
                 }
                 catch (Exception exception)
                 {
                     packetBusItem.Fail(exception);
+                    // A failed write may have sent part of the packet. End this connection
+                    // rather than waiting for an acknowledgement that can never replenish quota.
+                    StopInternal();
+                    return;
                 }
                 finally
                 {
@@ -562,6 +639,30 @@ public sealed class MqttConnectedClient : IDisposable
     void StopInternal()
     {
         _cancellationToken?.TryCancel();
+    }
+
+    bool CanDequeuePacket(MqttPacketBusItem item)
+    {
+        // MQTT 5.0 section 4.9 permits suspending all PUBLISH packets at zero quota.
+        // Control and health traffic must still progress, including QoS 2 PUBREL.
+        return item.Packet is not MqttPublishPacket || ChannelAdapter.PacketFormatterAdapter.ProtocolVersion != MqttProtocolVersion.V500 ||
+            Volatile.Read(ref _sendQuota) > 0;
+    }
+
+    void ReplenishSendQuota()
+    {
+        int quota;
+        do
+        {
+            quota = Volatile.Read(ref _sendQuota);
+            if (quota >= _initialSendQuota)
+            {
+                return;
+            }
+        }
+        while (Interlocked.CompareExchange(ref _sendQuota, quota + 1, quota) != quota);
+
+        Session.SignalPacketBus();
     }
 
     async Task TrySendDisconnectPacket(MqttServerClientDisconnectOptions options)

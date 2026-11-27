@@ -13,6 +13,36 @@ namespace MQTTnet.Tests.Internal;
 public sealed class MqttPacketBus_Tests
 {
     [TestMethod]
+    public async Task Blocked_Data_Does_Not_Block_Control_And_Resumes_On_Signal()
+    {
+        using var bus = new MqttPacketBus();
+        using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var allowPublish = false;
+        bool CanDequeue(MqttPacketBusItem item) => item.Packet is not MqttPublishPacket || allowPublish;
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPubRelPacket()), MqttPacketBusPartition.Control);
+        Assert.IsInstanceOfType<MqttPubRelPacket>((await bus.DequeueItemAsync(CanDequeue, timeout.Token)).Packet);
+        Assert.AreEqual(1, bus.TotalItemsCount);
+        var pending = bus.DequeueItemAsync(CanDequeue, timeout.Token);
+        Assert.IsFalse(pending.IsCompleted);
+        allowPublish = true;
+        bus.Signal();
+        Assert.IsInstanceOfType<MqttPublishPacket>((await pending).Packet);
+    }
+
+    [TestMethod]
+    public async Task Blocked_Data_Wait_Is_Cancellable()
+    {
+        using var bus = new MqttPacketBus();
+        using var cancellation = new CancellationTokenSource();
+        bus.EnqueueItem(new MqttPacketBusItem(new MqttPublishPacket()), MqttPacketBusPartition.Data);
+        var pending = bus.DequeueItemAsync(_ => false, cancellation.Token);
+        cancellation.Cancel();
+        await Assert.ThrowsAsync<OperationCanceledException>(async () => await pending);
+        Assert.AreEqual(1, bus.TotalItemsCount);
+    }
+
+    [TestMethod]
     public void Alternate_Priorities()
     {
         var bus = new MqttPacketBus();

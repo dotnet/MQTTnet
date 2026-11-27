@@ -66,13 +66,26 @@ public sealed class MqttSession : IDisposable
 
     public bool WillMessageSent { get; set; }
 
+    // Preserve identifier-only acknowledgement for existing callers. The server's
+    // packet handlers use the QoS-aware overload to validate wire acknowledgements.
     public MqttPublishPacket AcknowledgePublishPacket(ushort packetIdentifier)
+    {
+        lock (_unacknowledgedPublishPackets)
+        {
+            var publishPacket = _unacknowledgedPublishPackets.FirstOrDefault(p => p.PacketIdentifier.Equals(packetIdentifier));
+            _unacknowledgedPublishPackets.Remove(publishPacket);
+            return publishPacket;
+        }
+    }
+
+    public MqttPublishPacket AcknowledgePublishPacket(ushort packetIdentifier, MqttQualityOfServiceLevel qualityOfServiceLevel)
     {
         MqttPublishPacket publishPacket;
 
         lock (_unacknowledgedPublishPackets)
         {
-            publishPacket = _unacknowledgedPublishPackets.FirstOrDefault(p => p.PacketIdentifier.Equals(packetIdentifier));
+            publishPacket = _unacknowledgedPublishPackets.FirstOrDefault(
+                p => p.PacketIdentifier.Equals(packetIdentifier) && p.QualityOfServiceLevel == qualityOfServiceLevel);
             _unacknowledgedPublishPackets.Remove(publishPacket);
         }
 
@@ -97,6 +110,16 @@ public sealed class MqttSession : IDisposable
     public Task<MqttPacketBusItem> DequeuePacketAsync(CancellationToken cancellationToken)
     {
         return _packetBus.DequeueItemAsync(cancellationToken);
+    }
+
+    internal Task<MqttPacketBusItem> DequeuePacketAsync(Func<MqttPacketBusItem, bool> canDequeue, CancellationToken cancellationToken)
+    {
+        return _packetBus.DequeueItemAsync(canDequeue, cancellationToken);
+    }
+
+    internal void SignalPacketBus()
+    {
+        _packetBus.Signal();
     }
 
     public void Dispose()

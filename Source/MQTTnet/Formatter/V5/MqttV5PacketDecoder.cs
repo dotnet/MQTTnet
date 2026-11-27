@@ -313,7 +313,7 @@ public sealed class MqttV5PacketDecoder
                 }
             }
 
-            packet.WillTopic = _bufferReader.ReadString();
+            packet.WillTopic = _bufferReader.ReadWillTopic();
             packet.WillMessage = _bufferReader.ReadBinaryData();
             packet.WillUserProperties = willPropertiesReader.CollectedUserProperties;
         }

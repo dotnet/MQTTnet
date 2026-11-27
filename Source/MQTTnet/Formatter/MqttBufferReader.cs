@@ -13,6 +13,8 @@ namespace MQTTnet.Formatter;
 
 public sealed class MqttBufferReader
 {
+    static readonly UTF8Encoding StrictUtf8 = new(false, true);
+
     byte[] _buffer = EmptyBuffer.Array;
     int _maxPosition;
     int _offset;
@@ -89,6 +91,33 @@ public sealed class MqttBufferReader
 
         _position += length;
         return result;
+    }
+
+    internal string ReadWillTopic()
+    {
+        var length = ReadTwoByteInteger();
+        ValidateReceiveBuffer(length);
+
+        string topic;
+        try
+        {
+            topic = StrictUtf8.GetString(_buffer.AsSpan(_position, length));
+        }
+        catch (DecoderFallbackException)
+        {
+            throw new MqttProtocolViolationException("Will Topic must contain valid UTF-8.");
+        }
+
+        _position += length;
+
+        // MQTT 5.0 sections 3.1.3.3, 1.5.4 and 4.7.3 also apply to Will Topics.
+        Protocol.MqttTopicValidator.ThrowIfInvalid(topic);
+        if (topic.Contains('\0'))
+        {
+            throw new MqttProtocolViolationException("Will Topic must not contain a null character.");
+        }
+
+        return topic;
     }
 
     public ushort ReadTwoByteInteger()

@@ -52,6 +52,9 @@ public sealed class MqttSession : IDisposable
 
     public bool HasSubscribedTopics => _subscribedTopics != null && _subscribedTopics.Count > 0;
 
+    // Only read or changed while the sessions manager holds its sessions management lock.
+    internal IReadOnlyCollection<string> SubscribedTopics => (IReadOnlyCollection<string>)_subscribedTopics ?? Array.Empty<string>();
+
     public string Id => _connectPacket.ClientId;
 
     public string UserName => _connectPacket.Username;

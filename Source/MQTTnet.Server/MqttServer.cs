@@ -279,6 +279,8 @@ public class MqttServer : Disposable
 
         await _retainedMessagesManager.Start().ConfigureAwait(false);
         _clientSessionsManager.Start();
+        await _clientSessionsManager.StartWillsAsync().ConfigureAwait(false);
+        cancellationToken.ThrowIfCancellationRequested();
         _keepAliveMonitor.Start(cancellationToken);
 
         foreach (var adapter in _adapters)
@@ -314,6 +316,8 @@ public class MqttServer : Disposable
                 adapter.ClientHandler = null;
                 await adapter.StopAsync().ConfigureAwait(false);
             }
+
+            await _clientSessionsManager.StopWillsAsync(!_options.EnablePersistentSessions).ConfigureAwait(false);
         }
         finally
         {
@@ -368,6 +372,7 @@ public class MqttServer : Disposable
         if (disposing)
         {
             StopAsync(new MqttServerStopOptions()).GetAwaiter().GetResult();
+            _clientSessionsManager.StopWillsAsync(true).GetAwaiter().GetResult();
 
             foreach (var adapter in _adapters)
             {

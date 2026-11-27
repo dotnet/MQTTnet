@@ -112,19 +112,6 @@ public sealed class MqttConnectedClient : IDisposable
             _cancellationToken = null;
         }
 
-        var isCleanDisconnect = DisconnectPacket != null;
-
-        if (!IsTakenOver && !isCleanDisconnect && Session.LatestConnectPacket.WillFlag && !Session.WillMessageSent)
-        {
-            var willPublishPacket = MqttPublishPacketFactory.Create(Session.LatestConnectPacket);
-            var willApplicationMessage = MqttApplicationMessageFactory.Create(willPublishPacket);
-
-            _ = _sessionsManager.DispatchApplicationMessage(Id, UserName, Session.Items, willApplicationMessage, CancellationToken.None);
-            Session.WillMessageSent = true;
-
-            _logger.Info("Client '{0}': Published will message", Id);
-        }
-
         _logger.Info("Client '{0}': Connection stopped", Id);
     }
 

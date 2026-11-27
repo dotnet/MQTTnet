@@ -31,6 +31,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
     // See the MqttSubscription object for a detailed explanation.
     readonly MqttSessionsStorage _sessionsStorage = new();
     readonly HashSet<MqttSession> _subscriberSessions = [];
+    readonly MqttWillMessagesManager _willMessages;
 
     public MqttClientSessionsManager(MqttServerOptions options, MqttRetainedMessagesManager retainedMessagesManager, MqttServerEventContainer eventContainer, IMqttNetLogger logger)
     {
@@ -42,7 +43,14 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _retainedMessagesManager = retainedMessagesManager ?? throw new ArgumentNullException(nameof(retainedMessagesManager));
         _eventContainer = eventContainer ?? throw new ArgumentNullException(nameof(eventContainer));
+        _willMessages = new MqttWillMessagesManager(this, logger);
     }
+
+    internal void EndWillSession(MqttSession session) => _willMessages.SessionEnded(session);
+
+    internal Task StartWillsAsync() => _willMessages.StartAsync();
+
+    internal Task StopWillsAsync(bool endSessions) => _willMessages.StopAsync(endSessions);
 
     public async Task CloseAllConnections(MqttServerClientDisconnectOptions options)
     {
@@ -248,6 +256,8 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
     public void Dispose()
     {
+        CloseAllConnections(new MqttServerClientDisconnectOptions()).GetAwaiter().GetResult();
+        _willMessages.DisposeAsync().AsTask().GetAwaiter().GetResult();
         _createConnectionSyncRoot.Dispose();
 
         _sessionsManagementLock.EnterWriteLock();
@@ -399,6 +409,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
         {
             if (connectedClient != null)
             {
+                _willMessages.Disconnected(connectedClient);
                 if (connectedClient.Id != null)
                 {
                     // in case it is a takeover _clientConnections already contains the new connection
@@ -593,6 +604,7 @@ public sealed class MqttClientSessionsManager : ISubscriptionChangedNotification
 
                     connectedClient = CreateClient(connectPacket, channelAdapter, session);
                     _clients[connectPacket.ClientId] = connectedClient;
+                    _willMessages.Connected(connectedClient);
                 }
             }
             finally
